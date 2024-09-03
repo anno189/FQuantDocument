@@ -77,7 +77,7 @@ GetStockList(end_date=None)
 
 使用说明：
 
-- 每日开盘前初始化([celery 定时器](celery.md)，InitData)当天证券列表并填入 redis 缓存 [DataFrame_StockList](redis/DataFrame_StockList.md)
+- 每日开盘前初始化([celery 定时器](/server/celery)，InitData)当天证券列表并填入 redis 缓存 [DataFrame_StockList](/server/DataFrame_StockList)
 - limitup/limitdown: 仅在当日运算根据 ST 情况运算涨跌停，其他时间不考虑 ST 情况。因为未保存历史 ST 变化情况。
 - open, vol, bid_vol1, ask_vol1, bid_vol2, ask_vol2, ask, bid, bid1amo, ask1amo, oamo, vrate, orate, omemos, hsl, lb, 为当日竞价信息
 

@@ -8,7 +8,7 @@
 
   数据表：[financial](http://47.52.36.164:8001/app/quantaxis/quantaxis/financial/view)
 
-  ​	- [financial数据表说明](db/financial.md)
+  ​	- [financial数据表说明](/db/financial)
 
   列：
 

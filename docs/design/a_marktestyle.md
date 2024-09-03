@@ -43,11 +43,11 @@
 
 存储非传统行业的个别无概念股票，根据主营业务补充一些概念。
 
-- 与 redis 的 [dataframe_blocklist](redis/dataframe_blocklist.md)一致，便于运算时候使用。
+- 与 redis 的 [dataframe_blocklist](/server/DataFrame_BlockList)一致，便于运算时候使用。
 
 #### 算法
 
-1. 基础数据 [dataframe_blocklist](redis/dataframe_blocklist.md)，找出没有概念的个股
+1. 基础数据 [dataframe_blocklist](/server/DataFrame_BlockList)，找出没有概念的个股
 
 2. 根据code_block_industry中的三级行业，补充为概念。
 

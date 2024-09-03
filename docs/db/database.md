@@ -67,7 +67,7 @@
 
   - stock_adj
 
-## [基础代码表](db/basecode.md)
+## [基础代码表](/db/basecode)
 
 - 基础数据
 
