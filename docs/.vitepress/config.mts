@@ -14,6 +14,15 @@ export default defineConfig({
       { text: '设计逻辑', link: '/design/design', activeMatch: '/design/' },
     ],
     sidebar: {
+      '/': { 
+        items: [
+          { text: '开发说明', link: '/dev/development' },
+          { text: '服务端', link: '/server/server' },
+          { text: '数据库', link: '/db/database' },
+          { text: '设计逻辑', link: '/design/design' },
+        ],
+      },
+
       '/dev/': { base: '/dev/', 
         items: [
           {
