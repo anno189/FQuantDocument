@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: "FQuant Document"
-  text: "FQuant Development Dcouments"
-  tagline: 开发文档说明
+  text: "FQuant 开发文档说明"
+  tagline: FQuant服务端开发文档，备查。
   actions:
     - theme: brand
       text: 使用说明
