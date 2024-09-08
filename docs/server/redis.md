@@ -1,6 +1,6 @@
-## Redis Data
+# Redis 数据
 
-### 调用
+## 调用
 
 [direct_redis](https://github.com/yonghee12/direct-redis)：Serialize any python datatypes and does redis actions using redis-py。支持 pandas, numpy。
 
@@ -13,9 +13,9 @@ r.get('Today')
 r.delete('Today')
 ```
 
-### Key
+## Key
 
-#### 列表
+### 列表
 
 |      | Key                                                       | 类型      | 说明             | 备注                                   |
 | ---- | --------------------------------------------------------- | --------- | ---------------- | -------------------------------------- |
@@ -24,9 +24,9 @@ r.delete('Today')
 | 3    | [DataFrame_BaseInfoList](/server/DataFrame_BaseInfoList) | DataFrame | 基本财务数据     | 暂时未设置，未使用                     |
 | 4    | [DataFrame_KZZbondList](/server/DataFrame_KZZbondList)   | DataFrame | 可转债列表       |                                        |
 | 5    | [DataFrame_IndexList](/server/DataFrame_IndexList)       | DataFrame | 指数列表         |                                        |
-| 6 | DataFrame_ConceptList   | DataFrame | 行业列表 | 可以合并到 BlockList |
+| 6 | DataFrame_ConceptList   | DataFrame | 行业列表 | 目前仅盘中分析时使用，是否可以优化 |
 
-#### 分时运算
+### 分时运算
 
 
 |      | Key                                                         | 类型      | 说明             | 备注                                   |
@@ -39,7 +39,7 @@ r.delete('Today')
 | 6    | RTCOUNTTHRESHOLD                                            | str       | 日内做T标志      | BUY/SELL                               |
 | 7    | [DataFrame_StockScoreDay](/server/DataFrame_StockScoreDay) | DataFrame | 分时个股打分     | 暂未使用                               |
 
-#### 竞价
+### 竞价
 
 |      | Key                                                         | 类型      | 说明             | 备注                                                |
 | ---- | ----------------------------------------------------------- | --------- | ---------------- | --------------------------------------------------- |
@@ -47,7 +47,7 @@ r.delete('Today')
 | 2    | AMOUNTRATE                                                  | dict, k:v | 成交金额分时权重 | 近一年分钟的平均值运算权重。                        |
 | 3    | [DataFrame_BlockYestoday](/server/DataFrame_BlockYestoday) | DataFrame | 昨日高标数据保存 | '昨日涨停', '昨日上榜', '近期高标',用于取个股公告。 |
 
-#### 临时存储
+### 临时存储
 
 |      | Key              | 类型      | 说明                   | 备注                  |
 | ---- | ---------------- | --------- | ---------------------- | --------------------- |
@@ -55,21 +55,17 @@ r.delete('Today')
 | 2    | get_lhbyyb_date  | DataFrame | 东财龙虎榜每日榜单列表 | 临时保存，每日更新    |
 | 3    | stock_mins_chart | DataFrame | 每日实时分时图股票列表 | 龙虎榜正反馈+竞价放量 |
 
-
-
-### 已不使用，待清空
+## 已不使用，待清空
 
 DataFrame_StockIncCount
 
 DataFrame_predata/DataFrame_pretopdata: 竞价15,20,25分钟数据保存，因通达信数据传输方式改变，已无法使用。
 
-
-
 ---
 
-### ISSUE
+## ISSUE
 
-- [ ] DataFrame_ConceptList合并到DataFrame_IndexList
+- [ ] DataFrame_ConceptList合并到DataFrame_IndexList? 主要是n1name 字段，
 - [ ] datalimitup，跟踪逻辑待修订
 - [ ] RTCOUNTTHRESHOLD, 删除标志
 - [ ] AMOUNTRATE, 可以每分钟运算，并不影响效率

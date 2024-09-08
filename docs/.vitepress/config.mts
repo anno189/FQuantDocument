@@ -1,11 +1,15 @@
 import { defineConfig , type DefaultTheme } from 'vitepress'
 
+
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   title: "FQuant Document",
   description: "FQuant Development Dcouments",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
+    outline: {
+      level: 'deep'
+    },
     nav: [
       { text: '使用说明', link: '/readme' },
       { text: '开发说明', link: '/dev/development' , activeMatch: '/dev/'},
@@ -29,7 +33,7 @@ export default defineConfig({
             text: '开发说明',
             collapsed: false,
             items: [
-              { text: '开发说明', link: 'development' },
+              { text: '开发须知', link: 'development' },
               { text: 'issue', link: 'issue' },
               { text: '版本更新', link: 'changelog' },
             ]
