@@ -117,10 +117,21 @@ export default defineConfig({
             text: ' 设计逻辑',
             collapsed: false,
             items: [
-              { text: '算法设计', link: 'algorithm' },
+              {
+                text: '算法设计',
+                collapsed: true,
+                items: [
+                  { text: '龙虎榜', link: 'allhb' },
+                ]
+              },
               { text: '市场风格', link: 'a_marktestyle' },
-              { text: 'API', link: 'api' },
-              { text: '龙虎榜', link: 'lhb' },
+              {
+                text: 'API',
+                collapsed: true,
+                items: [
+                  { text: '龙虎榜', link: 'lhb' },
+                ]
+              },
             ]
           },
         ],
