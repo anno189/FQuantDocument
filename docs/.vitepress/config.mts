@@ -115,7 +115,7 @@ export default defineConfig({
         items: [
           {
             text: ' 设计逻辑',
-            collapsed: false,
+            collapsed: true,
             items: [
               {
                 text: '算法设计',
