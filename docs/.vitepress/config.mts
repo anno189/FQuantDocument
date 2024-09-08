@@ -11,6 +11,7 @@ export default defineConfig({
       level: 'deep'
     },
     nav: [
+      { text: 'Markdown语法', link: '/markdown' },
       { text: '使用说明', link: '/readme' },
       { text: '开发说明', link: '/dev/development' , activeMatch: '/dev/'},
       { text: '服务端', link: '/server/server', activeMatch: '/server/'},
@@ -74,13 +75,6 @@ export default defineConfig({
             ]
           },
           {
-            text: 'Function 函数',
-            collapsed: false,
-            items: [
-              { text: 'Function 函数', link: 'function' },
-            ]
-          },
-          {
             text: '过滤器',
             collapsed: false,
             items: [
@@ -107,6 +101,7 @@ export default defineConfig({
             items: [
               { text: '数据库', link: 'database' },
               { text: '基础代码表', link: 'basecode' },
+              { text: '龙虎榜', link: 'lhb' },
             ]
           },
         ],
