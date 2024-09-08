@@ -5,7 +5,7 @@ layout: home
 hero:
   name: "FQuant Document"
   text: "FQuant 开发文档说明"
-  tagline: FQuant服务端开发文档，备查。
+  tagline: FQuant Web Application 量化系统开发说明
   actions:
     - theme: brand
       text: 使用说明
@@ -13,6 +13,9 @@ hero:
     - theme: alt
       text: 开发说明
       link: /dev/development
+    - theme: alt
+      text: Markdown说明
+      link: /markdown
 
 features:
   - title: 服务端
