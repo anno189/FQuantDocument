@@ -5,6 +5,13 @@ import { defineConfig , type DefaultTheme } from 'vitepress'
 export default defineConfig({
   title: "FQuant Document",
   description: "FQuant Development Dcouments",
+  markdown: {
+    math: true,
+    image: {
+      // 默认禁用图片懒加载
+      lazyLoading: true
+    }
+  },
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     outline: {
@@ -110,11 +117,11 @@ export default defineConfig({
         items: [
           {
             text: ' 设计逻辑',
-            collapsed: true,
+            collapsed: false,
             items: [
               {
                 text: '算法设计',
-                collapsed: true,
+                collapsed: false,
                 items: [
                   { text: '龙虎榜', link: 'allhb' },
                 ]
@@ -122,7 +129,7 @@ export default defineConfig({
               { text: '市场风格', link: 'a_marktestyle' },
               {
                 text: 'API',
-                collapsed: true,
+                collapsed: false,
                 items: [
                   { text: '龙虎榜', link: 'lhb' },
                 ]

@@ -6,7 +6,7 @@
 
 逻辑：[龙虎榜](/design/allhb)
 
-## 输出
+## 龙虎榜输出
 
 ### getlbhyyb: 等到龙虎榜正负反馈营业部
 
@@ -14,12 +14,17 @@
 
 数据接口: akshare
 
+#### 声明
+
+getlbhyyb(count01=5, count03=15, count06=30, count12=60, renew=True, client=DATABASE)
+
 #### 入口参数
 
 - count01=5，上榜近一个月交易次数
 - count03=15，上榜近三个月交易次数
 - count06=30，上榜近六个月交易次数
 - count12=60，上榜近十二个月交易次数
+- renew=True，是否临时保存到 redis，调试的时候使用
 
 #### 返回：正负反馈营业部列表和低/高收益营业部列表
 
@@ -63,11 +68,24 @@
 #### 其他说明
 
 1. 因为取数是滚动的，所以每天数据都在变化，每次通过东财接口获取的汇总后数据无法在回测中使用。
+
 2. 该数据也暂未保存在数据库，临时保存在 redis 中，key: getlbhyyb
+
+   ```python
+   from direct_redis import DirectRedis
+   r = DirectRedis(host='localhost', port=6379)
+   r.get('getlbhyyb')
+   ```
+
 3. 数据清洗
    1. 东方财富证券股份有限公司拉萨八一路证券营业部更新为东方财富证券股份有限公司拉萨金融城南环路证券营业部。
    2. 其他的一些营业部格式错误。XXXX证券 XXXX 证券营业部
-4. 如果需要后期可以通过龙虎榜明细自己运算。
+
+::: tip 
+
+如果需要准确的上榜后数据，可以通过龙虎榜明细自己运算。
+
+:::
 
 ### saveLhb2Json: 统计龙虎榜营业部数据
 
@@ -79,11 +97,15 @@
 
 前置条件：需要保存某日龙虎榜明细数据
 
+#### 声明
+
+saveLhb2Json(end_date=None, renew=True)
+
 #### 入口参数
 
 end_date: str，'2024-01-01'
 
-#### 返回：
+#### 返回
 
 无
 
@@ -108,11 +130,17 @@ end_date: str，'2024-01-01'
 
 数据接口: akshare
 
+#### 声明
+
+get_lhbyyb_date(end_date, client=DATABASE)
+
 #### 入口参数
 
 - end_date:  str, 2024-01-01
 
-#### 返回：某一日期的龙虎榜营业部统计列表
+#### 返回
+
+某一日期的龙虎榜营业部统计列表
 
 - DataFrame
 
@@ -146,11 +174,17 @@ end_date: str，'2024-01-01'
 
 数据接口: akshare
 
+#### 声明
+
+save_lhb_data_eastmoney(end_date=None, client=DATABASE)
+
 #### 入口参数
 
 end_date：str，'2024-01-01'
 
-#### 返回：无
+#### 返回
+
+无
 
 #### 算法说明
 
@@ -162,13 +196,19 @@ end_date：str，'2024-01-01'
 
 数据接口: akshare
 
+#### 声明
+
+save_lhb_month_eastmoney(year=2024, month=1, client=DATABASE)
+
 #### 入口参数
 
 year：int，2024
 
 month: int, 1
 
-#### 返回：无
+#### 返回
+
+无
 
 #### 算法说明
 
@@ -181,6 +221,10 @@ month: int, 1
 数据接口: akshare
 
 数据表：stock_data_lhb_day
+
+#### 声明
+
+save_stock_lhb_stock_detail(code, end_date, flag="买入", client=DATABASE)
 
 #### 入口参数
 
@@ -204,11 +248,15 @@ flag: str, '买入'/'卖出'
 
 数据接口: akshare
 
+#### 声明
+
+save_stock_lhb_day(end_date=None)
+
 #### 入口参数
 
 end_date: str，'2024-01-01'
 
-#### 返回：
+#### 返回
 
 无
 
@@ -230,11 +278,15 @@ end_date: str，'2024-01-01'
 
 数据表：stock_data_lhb
 
+#### 声明
+
+load_lhb_data_eastmoney(end_date=None, client=DATABASE)
+
 #### 入口参数
 
 end_date: str，'2024-01-01'
 
-#### 返回：
+#### 返回
 
 DataFrame
 
@@ -253,6 +305,10 @@ DataFrame
 
 数据表：stock_data_lhb_day
 
+#### 声明
+
+load_stock_lhb_day(end_date=None, code=None, tag='B', client=DATABASE)
+
 #### 入口参数
 
 end_date: str，'2024-01-01'
@@ -261,7 +317,7 @@ code:  list, ['000001']
 
 tag: 'B/S'
 
-#### 返回：
+#### 返回
 
 DataFrame
 
@@ -284,18 +340,3 @@ yyb：营业部简称，一般在显示输出的时候使用。
 
 1. 数据清洗
    1. 将营业部分拆成公司和营业部两部分。
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

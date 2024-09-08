@@ -617,13 +617,6 @@ const line4 = 'This is line 4'
 <<< @/snippets/snippet.js{2}
 ```
 
-**Code file**
-
-<<< @/snippets/snippet.js
-
-**输出**
-
-<<< @/snippets/snippet.js{2}
 
 ::: tip
 `@` 的值对应于源代码根目录，默认情况下是 VitePress 项目根目录，除非配置了 `srcDir`。或者也可以从相对路径导入：
@@ -636,35 +629,6 @@ const line4 = 'This is line 4'
 
 也可以使用 [VS Code region](https://code.visualstudio.com/docs/editor/codebasics#_folding) 来只包含代码文件的相应部分。可以在文件目录后面的 `#` 符号后提供一个自定义的区域名：
 
-**输入**
-
-```md
-<<< @/snippets/snippet-with-region.js#snippet{1}
-```
-
-**Code file**
-
-<<< @/snippets/snippet-with-region.js
-
-**输出**
-
-<<< @/snippets/snippet-with-region.js#snippet{1}
-
-也可以像这样在大括号内(`{}`)指定语言：
-
-```md
-<<< @/snippets/snippet.cs{c#}
-
-<!-- 带行高亮: -->
-
-<<< @/snippets/snippet.cs{1,2,4-6 c#}
-
-<!-- 带行号: -->
-
-<<< @/snippets/snippet.cs{1,2,4-6 c#:line-numbers}
-```
-
-如果无法从文件扩展名推测出源语言，这将会很有帮助
 
 ## 代码组 {#code-groups}
 
@@ -726,33 +690,7 @@ export default config
 
 :::
 
-也可以在代码组中[导入代码片段](#import-code-snippets)：
 
-**输入**
-
-```md
-::: code-group
-
-<!-- 文件名默认用作标题 -->
-
-<<< @/snippets/snippet.js
-
-<!-- 也可以提供定制的代码组 -->
-
-<<< @/snippets/snippet-with-region.js#snippet{1,2 ts:line-numbers} [snippet with region]
-
-:::
-```
-
-**输出**
-
-::: code-group
-
-<<< @/snippets/snippet.js
-
-<<< @/snippets/snippet-with-region.js#snippet{1,2 ts:line-numbers} [snippet with region]
-
-:::
 
 ## 包含 markdown 文件 {#markdown-file-inclusion}
 
