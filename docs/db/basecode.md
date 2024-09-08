@@ -1,7 +1,7 @@
 ## ISSUE
 
--[ ] code_stock_industry的调用需要统一，目前使用的外部导入方法和数据库取数两种。
--[ ] cbnew_list 字段待补齐
+- [ ] code_stock_industry的调用需要统一，目前使用的外部导入方法和数据库取数两种。
+- [ ] cbnew_list 字段待补齐
 
 ## 基础数据
 
