@@ -1,6 +1,7 @@
 # 龙虎榜
 
-ToolsLbhData.py
+文件：ToolsLbhData.py
+逻辑：[龙虎榜](/design/allhb)
 
 ## getlbhyyb: 等到龙虎榜正负反馈营业部
 
