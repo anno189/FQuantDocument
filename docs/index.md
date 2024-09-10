@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: "FQuant Document"
-  text: "所有题材只是情绪的载体"
-  tagline: 上涨时看强度，分歧时看逻辑，高潮时不讲逻辑。
+  text: "上涨时看强度，分歧时看逻辑，高潮时不讲逻辑"
+  tagline: 所有题材只是情绪的载体
   actions:
     - theme: brand
       text: 使用说明
