@@ -4,8 +4,8 @@ layout: home
 
 hero:
   name: "FQuant Document"
-  text: "FQuant 开发文档说明"
-  tagline: FQuant Web Application 量化系统开发说明
+  text: "所有题材只是情绪的载体"
+  tagline: 上涨时看强度，分歧时看逻辑，高潮时不讲逻辑。
   actions:
     - theme: brand
       text: 使用说明
@@ -14,8 +14,8 @@ hero:
       text: 开发说明
       link: /dev/development
     - theme: alt
-      text: Markdown说明
-      link: /markdown
+      text: FQuantWep Application
+      link: https://fquant.1dian.site/
 
 features:
   - title: 服务端
