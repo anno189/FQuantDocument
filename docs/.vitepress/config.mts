@@ -74,6 +74,7 @@ export default defineConfig({
                   { text: 'DataFrame_StockScoreDay', link: 'DataFrame_StockScoreDay' },
                   { text: 'DataFrame_Realtime', link: 'DataFrame_Realtime' },
                   { text: 'DataFrame_BlockYestoday', link: 'DataFrame_BlockYestoday' },
+                  { text: 'stock_mins_chart', link: 'stock_mins_chart' },
                 ]
               }
             ]
@@ -104,6 +105,7 @@ export default defineConfig({
             collapsed: false,
             items: [
               { text: '数据库', link: 'database' },
+              { text: '变更说明', link: 'changelog' },
               { text: '基础代码表', link: 'basecode' },
               { text: '龙虎榜', link: 'lhb' },
             ]
