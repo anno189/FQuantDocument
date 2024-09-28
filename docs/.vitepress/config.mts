@@ -122,7 +122,14 @@ export default defineConfig({
                 text: '算法设计',
                 collapsed: false,
                 items: [
-                  { text: '龙虎榜', link: 'allhb' },
+                  { 
+                    text: '龙虎榜',
+                    collapsed: false,
+                    items: [
+                      { text: '龙虎榜', link: 'al/lhb' },
+                      { text: '龙虎榜 V1', link: 'al/lhbv1' },
+                    ]
+                  },
                 ]
               },
               { text: '市场风格', link: 'a_marktestyle' },
@@ -130,7 +137,8 @@ export default defineConfig({
                 text: 'API',
                 collapsed: false,
                 items: [
-                  { text: '龙虎榜', link: 'lhb' },
+                  { text: '龙虎榜', link: 'api/lhb' },
+                  { text: '沪深京A股公告', link: 'api/report' },
                 ]
               },
             ]

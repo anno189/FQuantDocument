@@ -2,9 +2,9 @@
 
 文件：ToolsLbhData.py
 
-数据：[龙虎榜](/db/lhb)
+逻辑：[龙虎榜](/design/al/lhb)
 
-逻辑：[龙虎榜](/design/allhb)
+数据：[龙虎榜](/db/lhb)
 
 ## 龙虎榜输出
 

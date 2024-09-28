@@ -53,7 +53,7 @@ r.delete('Today')
 | ---- | -------------------------------------------- | --------- | ---------------------- | --------------------- |
 | 1    | getlbhyyb                                    | DataFrame | 东财龙虎榜营业部列表   | 临时保存，每日更新    |
 | 2    | get_lhbyyb_date                              | DataFrame | 东财龙虎榜每日榜单列表 | 临时保存，每日更新    |
-| 3    | [stock_mins_chart](/server/stock_mins_chart) | DataFrame | 每日实时分时图股票列表 | 龙虎榜正反馈+竞价放量 |
+| 3    | [stock_open_mins0](/server/stock_open_mins0) | DataFrame | 每日实时分时图股票列表 | 龙虎榜正反馈+竞价放量 |
 
 ## 已不使用，待清空
 
