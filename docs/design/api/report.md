@@ -42,7 +42,7 @@ get_market_report(end_date=None)
 3. 用于股票信息列表在不同系统中的显示。
 4. 每次更新重新运算，不保存上次运算数据。
 
-### get_market_report_all: 得到全部类型的市场报告。
+### get_market_report_all2json: 得到全部类型的市场报告。
 
 数据来源: 东方财富
 
