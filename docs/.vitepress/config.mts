@@ -21,7 +21,7 @@ export default defineConfig({
       { text: '开发说明', link: '/dev/development' , activeMatch: '/dev/'},
       { text: '服务端', link: '/server/server', activeMatch: '/server/'},
       { text: '数据库', link: '/db/database', activeMatch: '/db/' },
-      { text: '设计逻辑', link: '/design/design', activeMatch: '/design/' },
+      { text: '设计逻辑', link: '/design/emotions', activeMatch: '/design/' },
     ],
     sidebar: {
       '/': { 
@@ -29,7 +29,7 @@ export default defineConfig({
           { text: '开发说明', link: '/dev/development' },
           { text: '服务端', link: '/server/server' },
           { text: '数据库', link: '/db/database' },
-          { text: '设计逻辑', link: '/design/design' },
+          { text: '设计逻辑', link: '/design/emotions' },
         ],
       },
 
@@ -115,6 +115,18 @@ export default defineConfig({
       },
       '/design/': { base: '/design/', 
         items: [
+          { text: '情绪', link: 'emotions' },
+          {
+            text: '游资心得',
+            collapsed: false,
+            items: [
+              
+                      { text: '不颜不语', link: 'thinks/byby' },
+                      { text: '92科比', link: 'thinks/92kb' },
+                    ]
+                
+            
+          },
           {
             text: ' 设计逻辑',
             collapsed: false,
@@ -133,13 +145,21 @@ export default defineConfig({
                   },
                 ]
               },
-              { text: '市场风格', link: 'a_marktestyle' },
+              
               {
-                text: 'API',
+                text: '算法API',
                 collapsed: false,
                 items: [
-                  { text: '龙虎榜', link: 'api/lhb' },
-                  { text: '沪深京A股公告', link: 'api/report' },
+                  { text: '龙虎榜', link: 'alapi/lhb' },
+                  { text: '沪深京A股公告', link: 'alapi/report' },
+                  { text: '市场风格', link: 'alapi/marktestyle' },
+                ]
+              },
+              {
+                text: '基础API',
+                collapsed: false,
+                items: [
+                  { text: '获取数据', link: 'baseapi/GetData' },
                 ]
               },
             ]
