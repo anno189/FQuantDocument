@@ -1,4 +1,4 @@
-# stock_mins_chart
+# stock_open_mins0
 
 说明：临时保存统计个股状态
 
