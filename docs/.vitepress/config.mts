@@ -75,7 +75,7 @@ export default defineConfig({
                   { text: 'DataFrame_StockScoreDay', link: 'DataFrame_StockScoreDay' },
                   { text: 'DataFrame_Realtime', link: 'DataFrame_Realtime' },
                   { text: 'DataFrame_BlockYestoday', link: 'DataFrame_BlockYestoday' },
-                  { text: 'stock_mins_chart', link: 'stock_mins_chart' },
+                  { text: 'stock_open_mins0', link: 'stock_open_mins0' },
                 ]
               }
             ]
