@@ -1,5 +1,5 @@
 import { defineConfig , type DefaultTheme } from 'vitepress'
-
+import markdownittasklists from 'markdown-it-task-lists'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -7,6 +7,9 @@ export default defineConfig({
   description: "FQuant Development Dcouments",
   markdown: {
     math: true,
+    config: (md) => {
+          md.use(markdownittasklists)
+      },
   },
   ignoreDeadLinks: true,
 
@@ -17,6 +20,7 @@ export default defineConfig({
     },
     nav: [
       { text: 'Markdown语法', link: '/markdown' },
+      { text: 'ISSUE', link: '/dev/issue', activeMatch: '/dev/'},
       { text: '使用说明', link: '/readme' },
       { text: '开发说明', link: '/dev/development' , activeMatch: '/dev/'},
       { text: '服务端', link: '/server/server', activeMatch: '/server/'},
