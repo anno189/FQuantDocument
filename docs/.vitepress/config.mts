@@ -25,6 +25,7 @@ export default defineConfig({
       { text: '开发说明', link: '/dev/development' , activeMatch: '/dev/'},
       { text: '服务端', link: '/server/server', activeMatch: '/server/'},
       { text: '数据库', link: '/db/database', activeMatch: '/db/' },
+      { text: '函数库', link: '/tools/tools', activeMatch: '/tools/' },
       { text: '设计逻辑', link: '/design/emotions', activeMatch: '/design/' },
     ],
     sidebar: {
@@ -113,6 +114,17 @@ export default defineConfig({
               { text: '变更说明', link: 'changelog' },
               { text: '基础代码表', link: 'basecode' },
               { text: '龙虎榜', link: 'lhb' },
+            ]
+          },
+        ],
+      },
+      '/tools/': { base: '/tools/',
+        items: [
+          {
+            text: '函数库',
+            collapsed: false,
+            items: [
+              { text: '工具函数库', link: ' tools' },
             ]
           },
         ],
