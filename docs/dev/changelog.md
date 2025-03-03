@@ -1,5 +1,11 @@
 # 更新日志
 
+## 2025.03.03
+1. 算法: 新增竞价分析股票池逻辑，getStraOneLimit
+2. 算法: 新增每日涨停因子分析，checkStraOneLimit
+3. 数据: 新增stock_amo_pct表
+4. 数据: 维护stock_data_extent表
+
 ## 2024.09.04
 
 1. 算法: 更新dataframe_stockblock的字段与运算方式。增加了概念分类选项。
