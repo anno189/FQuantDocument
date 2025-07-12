@@ -14,5 +14,13 @@
 
 - blockname:  '昨日涨停', '昨日上榜', '近期高标'
 
+查看：
+
+```
+from direct_redis import DirectRedis
+r = DirectRedis(host='localhost', port=6379)
+r.get('DataFrame_BlockYestoday')
+```
+
 
 
