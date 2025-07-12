@@ -30,3 +30,15 @@
 - N3: 连板
 - N4: 板型
 - step: 板型说明, 检查是否可以删除
+
+
+查看：
+
+```
+from direct_redis import DirectRedis
+r = DirectRedis(host='localhost', port=6379)
+r.get('DataFrame_StockList')
+```
+
+---
+

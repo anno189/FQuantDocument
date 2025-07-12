@@ -17,6 +17,16 @@
 - price_tips: 价格提示，“全价：148.200 最后更新：15:34:12”
 - MA10: 价格的10日平均
 
+
+查看：
+
+```
+from direct_redis import DirectRedis
+r = DirectRedis(host='localhost', port=6379)
+r.get('DataFrame_KZZbondList')
+```
+
+
 ---
 
 ## ISSUE

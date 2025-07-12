@@ -20,7 +20,17 @@
 - rup：5分钟最小涨幅
 - rdown: 5分钟最大跌幅
 
+
+查看：
+
+```
+from direct_redis import DirectRedis
+r = DirectRedis(host='localhost', port=6379)
+r.get('DataFrame_StockVRate')
+```
+
 ---
+
 
 
 

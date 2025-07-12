@@ -21,7 +21,17 @@
 - rate：[DataFrame_StockVRate](DataFrame_StockVRate.md).count
 - count：量价提升，分钟合计
 
+
+查看：
+
+```
+from direct_redis import DirectRedis
+r = DirectRedis(host='localhost', port=6379)
+r.get('DataFrame_StockScoreDay')
+```
+
 ---
+
 
 
 

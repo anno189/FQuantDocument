@@ -22,9 +22,19 @@
   - YQ0：昨日涨停符合预期，`每日竞价后更新`
   - YQ1：昨日涨停超预期，`每日竞价后更新`
 
----
+
 
 竞价完成后分析，并输出。
 
+
+查看：
+
+```
+from direct_redis import DirectRedis
+r = DirectRedis(host='localhost', port=6379)
+r.get('stock_open_mins0')
+```
+
+---
 
 
