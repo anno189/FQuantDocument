@@ -2,6 +2,18 @@
 
 ## 2025
 
+### 07.14
+- stock_limit_block_0
+  - 新增：昨曾涨停概念统计
+  - 列：`date`, `blockname`, `scount`, `srate`
+  - 从2025-01-01开始
+- stock_limit_block_1
+  - 新增：昨日涨停概念统计, 统计当日涨停的概念
+    - 涨停分类：全部涨停，连板涨停，首板涨停
+    - 当日曾经涨停概念统计保存在stock_limit_block_0中
+  - 列：`date`, `blockname`, `amean`, `asum`, `acount`, `bmean`, `bsum`, `bcount`, `cmean`, `csum`, `ccount`
+  - 从2025-01-01开始
+
 ### 07.13
 - stock_data_extent
   - 删除 `R9`, `R29` 列 (不在监控预测监管)
