@@ -2,6 +2,13 @@
 
 ## 2025
 
+### 07.26
+- stock_data_extent
+  - 新增：`tan10`, `HSE05`
+- stock_data_factor, index_data_factor
+  - 新增：`spcms`, `spcmm`, `spcml`
+  - 删除：`spcm60`
+
 ### 07.14
 - stock_limit_block_0
   - 新增：昨曾涨停概念统计
