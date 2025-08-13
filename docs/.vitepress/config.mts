@@ -102,6 +102,13 @@ export default defineConfig({
               { text: '发送数据到微信', link: 'send2wechat' },
             ]
           },
+          {
+            text: '部分算法逻辑',
+            collapsed: false,
+            items: [
+              { text: '资金量预测', link: 'amountforecast' },
+            ]
+          },
         ]
       },
       '/db/': { base: '/db/',

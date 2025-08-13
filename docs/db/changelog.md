@@ -3,6 +3,8 @@
 ## 2025
 
 ### 07.26
+- stock_concept_hot_list
+  - 新增数据表，取通达信hot.icfqs.com中概念数据，每天更新
 - stock_data_extent
   - 新增：`tan10`, `HSE05`
 - stock_data_factor, index_data_factor
