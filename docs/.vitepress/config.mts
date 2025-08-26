@@ -107,6 +107,7 @@ export default defineConfig({
             collapsed: false,
             items: [
               { text: '资金量预测', link: 'amountforecast' },
+              { text: '龙虎榜', link: 'lhb' },
             ]
           },
         ]
