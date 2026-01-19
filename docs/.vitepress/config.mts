@@ -31,6 +31,7 @@ export default defineConfig({
     sidebar: {
       '/': { 
         items: [
+          { text: 'Markdown', link: '/markdown' },
           { text: '开发说明', link: '/dev/development' },
           { text: '服务端', link: '/server/server' },
           { text: '数据库', link: '/db/database' },

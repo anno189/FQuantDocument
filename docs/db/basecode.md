@@ -215,7 +215,7 @@
 | name          | 名称       | str    |               |
 | pre_close     | 昨日收盘价 | dec    | 无效字段      |
 | sse           | 市场       | str    | sz / sh       |
-| sec           | 市场       | str    | bond2stock_cn |
+| sec           | 市场       | str    | bond2_cn |
 
 - 通达信取数
 
