@@ -71,6 +71,7 @@ export default defineConfig({
                 items: [
                   { text: 'DataFrame_StockList', link: 'DataFrame_StockList' },
                   { text: 'DataFrame_BlockList', link: 'DataFrame_BlockList' },
+                  { text: 'DataFrame_Concept', link: 'DataFrame_Concept' },
                   { text: 'DataFrame_BaseInfoList', link: 'DataFrame_BaseInfoList' },
                   { text: 'DataFrame_KZZbondList', link: 'DataFrame_KZZbondList' },
                   { text: 'DataFrame_IndexList', link: 'DataFrame_IndexList' },
