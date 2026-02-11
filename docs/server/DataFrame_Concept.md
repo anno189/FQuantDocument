@@ -7,10 +7,12 @@
   文件：BBlock.py
 
   数据表：[code_stock_concept](http://47.52.36.164:8001/app/quantaxis/quantaxis/code_stock_concept/view)
+
   数据表：[code_stock_industry](http://47.52.36.164:8001/app/quantaxis/quantaxis/code_stock_industry/view)
 
-  ​	- [code_stock_industry 数据表说明](/db/code_stock_industry)
-  ​ - [code_stock_concept数据表说明](/db/code_stock_concept)
+  - [code_stock_industry 数据表说明](/db/code_stock_industry)
+
+  - [code_stock_concept 数据表说明](/db/code_stock_concept)
 
   列：
 
