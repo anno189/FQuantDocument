@@ -46,8 +46,59 @@ export default defineConfig({
             collapsed: false,
             items: [
               { text: '开发须知', link: 'development' },
+              { text: '后端开发指南', link: 'backend-guide' },
+              { text: '后端项目地图', link: 'project-map-backend' },
+              { text: '前端开发指南', link: 'frontend-guide' },
+              { text: '前端项目地图', link: 'project-map-frontend' },
               { text: 'issue', link: 'issue' },
               { text: '版本更新', link: 'changelog' },
+              { text: '工作流程', link: 'workflow' },
+            ]
+          },
+          {
+            text: '核心模块',
+            collapsed: false,
+            items: [
+              { text: '板块与主线分析：BBlock.py', link: 'module-bblock' },
+              { text: 'CBaseData', link: 'module-CBaseData' },
+              { text: 'CConceptData', link: 'module-CConceptData' },
+              { text: 'CDataDay', link: 'module-CDataDay' },
+              { text: 'CDataTick', link: 'module-CDataTick' },
+              { text: 'CExtentData', link: 'module-CExtentData' },
+              { text: 'CFactorData', link: 'module-CFactorData' },
+              { text: 'CFutureData', link: 'module-CFutureData' },
+              { text: 'CIndexData', link: 'module-CIndexData' },
+              { text: 'CIndustryData', link: 'module-CIndustryData' },
+              { text: 'CMarket', link: 'module-CMarket' },
+              { text: 'CRPSData', link: 'module-CRPSData' },
+              { text: 'CStockData', link: 'module-CStockData' },
+              { text: 'Parameter', link: 'module-Parameter' },
+            ]
+          },
+          {
+            text: '工具模块',
+            collapsed: false,
+            items: [
+              { text: 'Tools', link: 'module-Tools' },
+              { text: 'ToolsCRCData', link: 'module-ToolsCRCData' },
+              { text: 'ToolsCheckData', link: 'module-ToolsCheckData' },
+              { text: 'ToolsGMI', link: 'module-ToolsGMI' },
+              {
+                text: 'ToolsGetData',
+                collapsed: false,
+                items: [
+                  { text: 'ToolsGetData', link: 'module-ToolsGetData' },
+                  { text: '核心函数解析：get_open_select_stock_list', link: 'func-get-open-select-stock-list' },
+                ]
+              },
+              { text: 'ToolsGetWebNews', link: 'module-ToolsGetWebNews' },
+              { text: 'ToolsJianGuan', link: 'module-ToolsJianGuan' },
+              { text: 'ToolsLhbData', link: 'module-ToolsLhbData' },
+              { text: 'ToolsRedisData', link: 'module-ToolsRedisData' },
+              { text: 'ToolsSaveAkshare', link: 'module-ToolsSaveAkshare' },
+              { text: 'ToolsSaveData', link: 'module-ToolsSaveData' },
+              { text: 'ToolsSaveLocalData', link: 'module-ToolsSaveLocalData' },
+              { text: 'ToolsStrategyPools', link: 'module-ToolsStrategyPools' },
             ]
           },
         ],
@@ -55,6 +106,14 @@ export default defineConfig({
 
       '/server/': { base: '/server/', 
         items: [
+          {
+            text: '服务端',
+            collapsed: false,
+            items: [
+              { text: '服务端说明', link: 'server' },
+              { text: '函数说明', link: 'function' },
+            ]
+          },
           {
             text: 'celery 定时器',
             collapsed: false,
@@ -110,6 +169,7 @@ export default defineConfig({
             items: [
               { text: '资金量预测', link: 'amountforecast' },
               { text: '龙虎榜', link: 'lhb' },
+              { text: '龙虎榜数据', link: 'lbh' },
             ]
           },
         ]
@@ -123,6 +183,7 @@ export default defineConfig({
               { text: '数据库', link: 'database' },
               { text: '变更说明', link: 'changelog' },
               { text: '基础代码表', link: 'basecode' },
+              { text: '财务数据', link: 'financial' },
               { text: '龙虎榜', link: 'lhb' },
             ]
           },
@@ -142,6 +203,7 @@ export default defineConfig({
       '/design/': { base: '/design/', 
         items: [
           { text: '情绪', link: 'emotions' },
+          { text: '算法', link: 'algorithm' },
           {
             text: '游资心得',
             collapsed: false,
@@ -167,6 +229,7 @@ export default defineConfig({
                     items: [
                       { text: '龙虎榜', link: 'al/lhb' },
                       { text: '龙虎榜 V1', link: 'al/lhbv1' },
+                      { text: '游资', link: 'al/yq' },
                     ]
                   },
                 ]

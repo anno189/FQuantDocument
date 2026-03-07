@@ -1,5 +1,13 @@
 # 更新日志
 
+## 2026.03.07
+1. 核心模块：BBlock.py 升级为双模型算法系统
+   - 实时/竞价主线模型 (GetMainBlockRealTime)：捕捉集合竞价阶段的资金进攻意图
+   - 盘后确认模型 (GetMainBlockPostMarket)：确认全天交易后形成的市场共识
+   - 市值分层加权：根据不同市值层级动态调整权重，提高板块分析准确性
+   - 主线偏离度分析：量化对比实时与盘后模型结果差异，监控日内主线背离
+   - 辅助诊断工具：getmarketshizhiquantile、analyze_market_shizhi_quantile等
+
 ## 2025.03.03
 1. 算法: 新增竞价分析股票池逻辑，getStraOneLimit
 2. 算法: 新增每日涨停因子分析，checkStraOneLimit
