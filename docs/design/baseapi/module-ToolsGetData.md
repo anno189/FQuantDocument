@@ -52,6 +52,7 @@ bj_stocks = fetch_stock_list_bj()
 **使用示例**:
 ```python
 # 获取市场高标股票
+from FQMarket.FQUtil.ToolsSaveLocalData import getMarketHighStock
 high_stocks = getMarketHighStock('2026-03-05', count=20)
 ```
 

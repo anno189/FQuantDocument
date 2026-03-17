@@ -97,8 +97,22 @@ export default defineConfig({
               { text: 'ToolsRedisData', link: 'module-ToolsRedisData' },
               { text: 'ToolsSaveAkshare', link: 'module-ToolsSaveAkshare' },
               { text: 'ToolsSaveData', link: 'module-ToolsSaveData' },
-              { text: 'ToolsSaveLocalData', link: 'module-ToolsSaveLocalData' },
+              { 
+                text: 'ToolsSaveLocalData', 
+                collapsed: false,
+                items: [
+                  { text: 'ToolsSaveLocalData', link: 'module-ToolsSaveLocalData' },
+                ]
+              },
               { text: 'ToolsStrategyPools', link: 'module-ToolsStrategyPools' },
+
+              { 
+                text: 'MonitorMarket', 
+                collapsed: false,
+                items: [
+                  { text: 'MonitorMarket', link: 'module-monitormarket' },
+                ]
+              },
             ]
           },
         ],
