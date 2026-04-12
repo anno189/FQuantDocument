@@ -1,3 +1,53 @@
+# MongoDB 数据库文档
+
+**数据库**: `quantaxis`
+**MongoDB URI**: `mongodb://10.211.55.16:27017/quantaxis`
+
+## 概述
+
+本文档记录了 FQuant 项目 MongoDB 数据库 `quantaxis` 的集合结构。
+
+详细集合信息请查看 [collections.md](collections.md)。
+
+## 集合分类
+
+### 行情数据类
+- 指数: `index_day`, `index_min`
+- 个股: `stock_day`, `stock_week`, `stock_month`, `stock_year`, `stock_min`
+- ETF: `etf_day`, `etf_min`
+
+### 因子数据类
+- 个股因子: `stock_data_factor`, `stock_data_corr`
+- 指数因子: `index_data_factor`, `index_data_corr`, `index_min_data_factor`
+
+### 扩展数据类
+- 个股扩展: `stock_data_extent`
+- 指数扩展: `index_data_extent`
+
+### 基本数据类
+- 个股基本: `stock_data_base`
+- 市场数据: `market_data_base`, `market_data_extent`, `market_data_open`
+- 板块数据: `concept_data_base`, `industry_data_base`
+
+### 列表配置类
+- 股票列表: `stock_list`, `stock_list_bj`
+- 指数列表: `index_list`
+- 产品列表: `etf_list`, `bond_list`, `option_list`, `future_list`
+- 股票信息: `stock_info`
+
+### 板块数据类
+- `stock_block`, `code_stock_industry`, `code_stock_concept`, `stock_concept_hot_list`
+
+### 事件数据类
+- `stock_xdxr` (除权除息), `stock_adj` (复权因子)
+
+### 涨停数据类
+- `stock_data_limit`, `stock_limit_block_0`, `stock_limit_block_1`
+- `stock_data_open`, `stock_data_open_extent`
+
+### 财务数据类
+- `financial`, `stock_data_gubenZ`
+
 ## 基础数据表
 
 - 指数

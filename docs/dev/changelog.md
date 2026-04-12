@@ -1,5 +1,17 @@
 # 更新日志
 
+## 2026.03.25
+1. 核心模块：FQBase 目录结构变更导致路径问题修复
+   - 问题：FQBase 包采用 `FQBase/FQBase/` 嵌套结构，所有使用 `__file__` 的相对路径计算失效
+   - 受影响文件：
+     - `FQConfig/redis.py`：`.env` 路径从 `'..', '..', '.env'` 修正为 `'..', '..', '..', '.env'`
+     - `FQCore/env.py`：`.env` 路径从 `'..', '.env'` 修正为 `'..', '..', '..', '.env'`
+     - `FQNotification/config.py`：`.env` 路径从 `'..', '.env'` 修正为 `'..', '..', '..', '.env'`
+     - `FQUtil/logger.py`：`logging.yaml` 路径从 `'..', 'FQConfig', 'logging.yaml'` 修正为 `'..', '..', 'FQConfig', 'logging.yaml'`
+     - `FQUtil/logger.py`：`logs` 路径从 `'..', 'logs'` 修正为 `'..', '..', 'logs'`
+   - 环境变量懒加载：修复 `FQConfig/paths.py` 中 `_PathConfig` 在模块导入时直接读取环境变量导致 `.env` 未加载的问题
+   - 文档更新：更新 `FQuant_Design_v5.md` 记录嵌套目录结构说明
+
 ## 2026.03.12
 1. 核心模块：BBlock.py 新增 `find_similar_blocknames` 函数
    - 功能：找出板块列表中名称可能相似的记录，用于识别重复或高度相似的板块
