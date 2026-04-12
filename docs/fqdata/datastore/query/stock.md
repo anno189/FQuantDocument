@@ -2,6 +2,12 @@
 
 提供股票日线、分钟线、列表、板块、财务等数据查询功能。
 
+## 模块路径
+
+```
+FQData.DataStore.query.stock
+```
+
 ## 导入
 
 ```python
@@ -25,236 +31,249 @@ from FQData.DataStore.query import (
 
 ## query_stock_day
 
-查询股票日线数据。
-
 ```python
 def query_stock_day(
     code: Union[str, List[str]],
-    start: str,
-    end: str,
-    frequence: str = 'day',
-    adjust: str = 'qfq'
-) -> pd.DataFrame
+    start_date: str,
+    end_date: str,
+    format: str = 'pd'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
 ```
+
+查询股票日线数据。
+
+**参数：**
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | code | str/List[str] | 股票代码 |
-| start | str | 开始日期 (YYYY-MM-DD) |
-| end | str | 结束日期 (YYYY-MM-DD) |
-| frequence | str | 频率: 'day', 'week', 'month' |
-| adjust | str | 复权类型: 'qfq', 'hfq', 'none' |
+| start_date | str | 开始日期 (YYYY-MM-DD) |
+| end_date | str | 结束日期 (YYYY-MM-DD) |
+| format | str | 返回格式 ('pd', 'numpy', 'list', 'dict') |
 
-**返回**: DataFrame，包含 date, open, high, low, close, volume 等列
+**返回：** 股票日线数据
 
-**示例**:
+**示例：**
 
 ```python
-# 查询单只股票日线
 data = query_stock_day(
     code='600000',
-    start='2024-01-01',
-    end='2024-12-31'
+    start_date='2024-01-01',
+    end_date='2024-12-31'
 )
 
-# 查询多只股票日线
 data = query_stock_day(
     code=['600000', '000001'],
-    start='2024-01-01',
-    end='2024-12-31'
-)
-
-# 查询周线
-week_data = query_stock_day(
-    code='600000',
-    start='2024-01-01',
-    end='2024-12-31',
-    frequence='week'
-)
-
-# 查询不复权数据
-raw_data = query_stock_day(
-    code='600000',
-    start='2024-01-01',
-    end='2024-12-31',
-    adjust='none'
+    start_date='2024-01-01',
+    end_date='2024-12-31'
 )
 ```
 
-## query_stock_min
+---
 
-查询股票分钟数据。
+## query_stock_adj
+
+```python
+def query_stock_adj(
+    code: Union[str, List[str]],
+    start: str,
+    end: str,
+    collections: str = None
+) -> pd.DataFrame
+```
+
+查询股票复权系数 ADJ。
+
+**参数：**
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| code | str/List[str] | 股票代码 |
+| start | str | 开始日期 |
+| end | str | 结束日期 |
+| collections | str | 集合名称（已废弃） |
+
+**返回：** 复权系数数据
+
+---
+
+## query_stock_min
 
 ```python
 def query_stock_min(
     code: Union[str, List[str]],
-    start: str,
-    end: str,
-    frequence: str = '5min'
-) -> pd.DataFrame
+    start_date: str,
+    end_date: str,
+    format: str = 'pd',
+    frequence: str = '1min'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
 ```
+
+查询股票分钟线数据。
+
+**参数：**
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
 | code | str/List[str] | 股票代码 |
-| start | str | 开始时间 |
-| end | str | 结束时间 |
-| frequence | str | 频率: '1min', '5min', '15min', '30min', '60min' |
+| start_date | str | 开始时间 |
+| end_date | str | 结束时间 |
+| format | str | 返回格式 |
+| frequence | str | 频率 ('1min', '5min', '15min', '30min', '60min') |
 
-**示例**:
+**示例：**
 
 ```python
-# 查询 5 分钟数据
 data = query_stock_min(
     code='600000',
-    start='2024-01-01 09:30:00',
-    end='2024-01-01 15:00:00',
+    start_date='2024-01-01 09:30:00',
+    end_date='2024-01-01 15:00:00',
     frequence='5min'
 )
-
-# 查询 15 分钟数据
-data = query_stock_min(
-    code='600000',
-    start='2024-01-01',
-    end='2024-01-31',
-    frequence='15min'
-)
 ```
 
-## query_stock_list
-
-查询股票列表。
-
-```python
-def query_stock_list(market: str = 'sh') -> pd.DataFrame
-```
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| market | str | 市场: 'sh', 'sz', 'bj', 'all' |
-
-**返回**: DataFrame，包含 code, name, market 等列
-
-**示例**:
-
-```python
-# 查询上海股票列表
-sh_list = query_stock_list(market='sh')
-
-# 查询深圳股票列表
-sz_list = query_stock_list(market='sz')
-
-# 查询北京股票列表
-bj_list = query_stock_list(market='bj')
-
-# 查询全部股票
-all_list = query_stock_list(market='all')
-```
-
-## query_stock_info
-
-查询股票基本信息。
-
-```python
-def query_stock_info(code: str) -> pd.DataFrame
-```
-
-**示例**:
-
-```python
-info = query_stock_info('600000')
-print(f"股票名称: {info['name']}")
-print(f"总股本: {info['total_share']}")
-print(f"流通股本: {info['float_share']}")
-```
-
-## query_stock_block
-
-查询股票所属板块。
-
-```python
-def query_stock_block(code: str) -> pd.DataFrame
-```
-
-**示例**:
-
-```python
-blocks = query_stock_block('600000')
-print(blocks)
-#    code block_code block_name
-# 0  600000    BK0001      银行板块
-# 1  600000    BK0002      沪深300
-```
-
-## query_stock_xdxr
-
-查询股票除权除息数据。
-
-```python
-def query_stock_xdxr(code: str, start: str, end: str) -> pd.DataFrame
-```
-
-**示例**:
-
-```python
-xdxr = query_stock_xdxr(
-    code='600000',
-    start='2024-01-01',
-    end='2024-12-31'
-)
-print(xdxr)
-#    date  dividend  split  ...
-```
+---
 
 ## query_stock_transaction
 
-查询股票成交明细。
-
 ```python
 def query_stock_transaction(
-    code: str,
-    date: str,
-    start: int = 0,
-    count: int = 100
-) -> pd.DataFrame
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    format: str = 'pd',
+    frequence: str = 'tick'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
 ```
 
-**示例**:
+查询股票分笔数据。
+
+---
+
+## query_stock_list
 
 ```python
-trans = query_stock_transaction(
-    code='600000',
-    date='2024-01-01',
-    start=0,
-    count=100
-)
+def query_stock_list() -> pd.DataFrame
 ```
+
+获取股票列表（沪深）。
+
+**返回：** 股票列表 DataFrame
+
+---
+
+## query_stock_list_bj
+
+```python
+def query_stock_list_bj() -> pd.DataFrame
+```
+
+获取北交所股票列表。
+
+**返回：** 北交所股票列表 DataFrame
+
+---
+
+## query_stock_terminated
+
+```python
+def query_stock_terminated() -> pd.DataFrame
+```
+
+获取已退市股票列表。
+
+**返回：** 退市股票列表 DataFrame
+
+---
+
+## query_stock_block
+
+```python
+def query_stock_block(code: str = None, format: str = 'pd') -> pd.DataFrame
+```
+
+查询股票板块数据。
+
+**参数：**
+
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| code | str | 股票代码（可选） |
+| format | str | 返回格式 |
+
+**返回：** 股票板块数据
+
+---
+
+## query_stock_info
+
+```python
+def query_stock_info(code: Union[str, List[str]], format: str = 'pd') -> pd.DataFrame
+```
+
+查询股票基本信息。
+
+---
+
+## query_stock_name
+
+```python
+def query_stock_name(code: Union[str, List[str]]) -> Union[str, pd.DataFrame]
+```
+
+查询股票名称。
+
+**参数：**
+- 单个代码返回 str
+- 列表返回 DataFrame
+
+---
+
+## query_stock_full
+
+```python
+def query_stock_full(date: str, format: str = 'pd') -> Union[pd.DataFrame, np.ndarray, List]
+```
+
+获取全市场某一日的数据。
+
+---
+
+## query_stock_xdxr
+
+```python
+def query_stock_xdxr(code: Union[str, List[str]], format: str = 'pd') -> pd.DataFrame
+```
+
+查询股票除权信息。
+
+---
 
 ## query_stock_list_all
 
-查询全部股票列表（带缓存）。
-
 ```python
-def query_stock_list_all(refresh: bool = False) -> pd.DataFrame
+def query_stock_list_all(debug: bool = True) -> pd.DataFrame
 ```
 
-**示例**:
+获取所有股票列表（沪深 + 北交所）。
 
-```python
-# 获取缓存的股票列表
-all_stocks = query_stock_list_all()
+**参数：**
+- debug=True: 返回调试样本（5个主板 + 5个创业板 + 5个北交所）
+- debug=False: 返回完整列表
 
-# 强制刷新缓存
-all_stocks = query_stock_list_all(refresh=True)
-```
+**返回：** 所有股票列表 DataFrame，包含 code, name, zongguben, liutongguben, ipo_date 列
+
+---
 
 ## refresh_stock_list_all_cache
 
-刷新全部股票列表缓存。
-
 ```python
-def refresh_stock_list_all_cache() -> None
+def refresh_stock_list_all_cache()
 ```
+
+刷新股票列表缓存（供 Celery 定时任务调用）。
+
+---
 
 ## 相关文档
 

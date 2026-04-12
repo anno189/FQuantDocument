@@ -1,6 +1,12 @@
-# ETF 查询
+# ETF/LOF 查询
 
-提供 ETF 列表和名称查询功能。
+提供 ETF/LOF 列表、名称等查询功能。
+
+## 模块路径
+
+```
+FQData.DataStore.query.etf
+```
 
 ## 导入
 
@@ -13,47 +19,31 @@ from FQData.DataStore.query import (
 
 ## query_etf_list
 
-查询 ETF 列表。
-
 ```python
 def query_etf_list() -> pd.DataFrame
 ```
 
-**返回**: DataFrame，包含 ETF 代码、名称、跟踪指数等信息
+获取ETF列表。
 
-**示例**:
+**返回：** ETF列表 DataFrame
 
-```python
-# 查询 ETF 列表
-etf_list = query_etf_list()
-print(f"ETF 数量: {len(etf_list)}")
-print(etf_list.head())
-```
+---
 
 ## query_etf_name
 
-查询 ETF 名称。
-
 ```python
-def query_etf_name(code: str) -> str
+def query_etf_name(code: Union[str, List[str]]) -> Union[str, pd.DataFrame]
 ```
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| code | str | ETF 代码 |
+查询ETF名称。
 
-**返回**: ETF 名称字符串
+**参数：**
+- 单个代码返回 str
+- 列表返回 DataFrame
 
-**示例**:
-
-```python
-# 查询 ETF 名称
-name = query_etf_name('510300')
-print(f"ETF 名称: {name}")  # 沪深300ETF
-```
+---
 
 ## 相关文档
 
 - [Query 模块 README](./README.md)
-- [股票查询](./stock.md)
-- [债券查询](./bond.md)
+- [指数查询](./index.md)

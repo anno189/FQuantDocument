@@ -1,213 +1,497 @@
-# DataStore query 模块
+# 查询核心 (query.py)
 
-数据查询核心模块，提供从存储层查询各类行情数据的功能。
+提供从存储层查询各类行情和基础数据的功能，包含通用查询和回测查询。
 
-## 模块结构
+## 模块路径
 
 ```
-query.py
+FQData.DataStore.query.query
 ```
 
-## 核心查询函数
+## 通用查询
 
-### 股票数据
+### query_stock_day
 
 ```python
-from FQData.DataStore.query import (
-    query_stock_day,
-    query_stock_min,
-    query_stock_list,
-    query_stock_info,
-    query_stock_block,
-    query_stock_adj,
-    query_stock_full,
-    query_stock_terminated,
-)
+def query_stock_day(
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    format: str = 'pd'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
 ```
 
-| 函数 | 说明 |
-|------|------|
-| `query_stock_day` | 查询股票日线 |
-| `query_stock_min` | 查询股票分钟线 |
-| `query_stock_list` | 查询股票列表 |
-| `query_stock_info` | 查询股票信息 |
-| `query_stock_block` | 查询股票板块 |
-| `query_stock_adj` | 查询股票复权因子 |
-| `query_stock_full` | 查询完整股票数据 |
-| `query_stock_terminated` | 查询已退市股票 |
-
-### 指数数据
-
-```python
-from FQData.DataStore.query import (
-    query_index_day,
-    query_index_min,
-    query_index_list,
-    query_index_name,
-    query_index_transaction,
-)
-```
-
-| 函数 | 说明 |
-|------|------|
-| `query_index_day` | 查询指数日线 |
-| `query_index_min` | 查询指数分钟线 |
-| `query_index_list` | 查询指数列表 |
-| `query_index_name` | 查询指数名称 |
-| `query_index_transaction` | 查询指数成交明细 |
-
-### 期货数据
-
-```python
-from FQData.DataStore.query import (
-    query_future_day,
-    query_future_min,
-    query_future_tick,
-    query_future_list,
-    query_ctp_tick,
-)
-```
-
-| 函数 | 说明 |
-|------|------|
-| `query_future_day` | 查询期货日线 |
-| `query_future_min` | 查询期货分钟线 |
-| `query_future_tick` | 查询期货 Tick |
-| `query_future_list` | 查询期货列表 |
-| `query_ctp_tick` | 查询 CTP Tick |
-
-### 其他查询
-
-```python
-from FQData.DataStore.query import (
-    query_trade_date,
-    query_stock_name,
-    query_etf_name,
-    query_bond2stock_day,
-    query_bond2stock_min,
-)
-```
-
-| 函数 | 说明 |
-|------|------|
-| `query_trade_date` | 查询交易日 |
-| `query_stock_name` | 查询股票名称 |
-| `query_etf_name` | 查询 ETF 名称 |
-| `query_bond2stock_day` | 查询可转债日线 |
-| `query_bond2stock_min` | 查询可转债分钟线 |
+查询股票日线数据。
 
 ---
 
-## 工具函数
-
-### _normalize_date
-
-统一日期参数处理。
+### query_stock_adj
 
 ```python
-from FQData.DataStore.query import _normalize_date
-
-date_str = _normalize_date('2024-01-01')
-date_str = _normalize_date(None)  # 自动使用上一交易日
+def query_stock_adj(
+    code: Union[str, List[str]],
+    start: str,
+    end: str,
+    collections: str = None
+) -> pd.DataFrame
 ```
 
-**参数：**
+查询股票复权系数 ADJ。
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `date_val` | Any | - | 日期值（str/date/datetime/None） |
-| `default` | str | None | 默认日期 |
+---
 
-**返回：** str - YYYY-MM-DD 格式的交易日期
-
-### _validate_code_list
-
-验证并标准化代码列表。
+### query_stock_min
 
 ```python
-from FQData.DataStore.query import _validate_code_list
-
-codes = _validate_code_list('600000')  # ['600000']
-codes = _validate_code_list(['600000', '000001'])  # ['600000', '000001']
-codes = _validate_code_list(None)  # []
+def query_stock_min(
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    format: str = 'pd',
+    frequence: str = '1min'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
 ```
+
+查询股票分钟线数据。
+
+---
+
+### query_stock_transaction
+
+```python
+def query_stock_transaction(
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    format: str = 'pd',
+    frequence: str = 'tick'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
+```
+
+查询股票分笔数据。
+
+---
+
+### query_index_transaction
+
+```python
+def query_index_transaction(
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    format: str = 'pd',
+    frequence: str = 'tick'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
+```
+
+查询指数分笔数据。
+
+---
+
+### query_trade_date
+
+```python
+def query_trade_date() -> pd.Series
+```
+
+获取交易日期序列。
+
+---
+
+### query_stock_list
+
+```python
+def query_stock_list() -> pd.DataFrame
+```
+
+获取股票列表（沪深）。
+
+---
+
+### query_stock_list_bj
+
+```python
+def query_stock_list_bj() -> pd.DataFrame
+```
+
+获取北交所股票列表。
+
+---
+
+### query_stock_list_all
+
+```python
+def query_stock_list_all(debug: bool = True) -> pd.DataFrame
+```
+
+获取所有股票列表（沪深 + 北交所）。
+
+---
+
+### refresh_stock_list_all_cache
+
+```python
+def refresh_stock_list_all_cache()
+```
+
+刷新股票列表缓存（供 Celery 定时任务调用）。
+
+---
+
+### query_bond2stock_list
+
+```python
+def query_bond2stock_list() -> pd.DataFrame
+```
+
+获取可转债正股列表。
+
+---
+
+### query_etf_list
+
+```python
+def query_etf_list() -> pd.DataFrame
+```
+
+获取ETF列表。
+
+---
+
+### query_index_list
+
+```python
+def query_index_list() -> pd.DataFrame
+```
+
+获取指数列表。
+
+---
+
+### query_stock_terminated
+
+```python
+def query_stock_terminated() -> pd.DataFrame
+```
+
+获取已退市股票列表。
+
+---
+
+### query_stock_full
+
+```python
+def query_stock_full(date: str, format: str = 'pd') -> Union[pd.DataFrame, np.ndarray, List]
+```
+
+获取全市场某一日的数据。
+
+---
+
+### query_bond2stock_day
+
+```python
+def query_bond2stock_day(
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    format: str = 'pd'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
+```
+
+查询可转债正股日线数据。
+
+---
+
+### query_index_day
+
+```python
+def query_index_day(
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    format: str = 'pd'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
+```
+
+查询指数日线数据。
+
+---
+
+### query_index_min
+
+```python
+def query_index_min(
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    format: str = 'pd',
+    frequence: str = '1min'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
+```
+
+查询指数分钟线数据。
+
+---
+
+### query_bond2stock_min
+
+```python
+def query_bond2stock_min(
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    format: str = 'pd',
+    frequence: str = '1min'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
+```
+
+查询可转债正股分钟数据。
+
+---
+
+### query_future_day
+
+```python
+def query_future_day(
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    format: str = 'pd'
+) -> Union[pd.DataFrame, np.ndarray, List, Dict]
+```
+
+查询期货日线数据。
+
+---
+
+### query_future_min
+
+```python
+def query_future_min(
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    format: str = 'pd',
+    frequence: str = '1min'
+) -> Union[pd.DataFrame, np.ndarray, List]
+```
+
+查询期货分钟数据。
+
+---
+
+### query_future_list
+
+```python
+def query_future_list() -> pd.DataFrame
+```
+
+获取期货列表。
+
+---
+
+### query_future_tick
+
+```python
+def query_future_tick()
+```
+
+查询期货tick数据（暂未实现）。
+
+---
+
+### query_ctp_tick
+
+```python
+def query_ctp_tick(
+    code: Union[str, List[str]],
+    start_date: str,
+    end_date: str,
+    frequence: str,
+    format: str = 'pd'
+) -> pd.DataFrame
+```
+
+查询CTP Tick数据。
+
+---
+
+### query_stock_xdxr
+
+```python
+def query_stock_xdxr(code: Union[str, List[str]], format: str = 'pd') -> pd.DataFrame
+```
+
+查询股票除权信息。
+
+---
+
+### query_stock_block
+
+```python
+def query_stock_block(code: str = None, format: str = 'pd') -> pd.DataFrame
+```
+
+查询股票板块数据。
+
+---
+
+### query_stock_info
+
+```python
+def query_stock_info(code: Union[str, List[str]], format: str = 'pd') -> pd.DataFrame
+```
+
+查询股票基本信息。
+
+---
+
+### query_stock_name
+
+```python
+def query_stock_name(code: Union[str, List[str]]) -> Union[str, pd.DataFrame]
+```
+
+查询股票名称。
+
+---
+
+### query_index_name
+
+```python
+def query_index_name(code: Union[str, List[str]]) -> Union[str, pd.DataFrame]
+```
+
+查询指数名称。
+
+---
+
+### query_etf_name
+
+```python
+def query_etf_name(code: Union[str, List[str]]) -> Union[str, pd.DataFrame]
+```
+
+查询ETF名称。
+
+---
+
+### query_quotation
+
+```python
+def query_quotation(code: str, date: date = None) -> pd.DataFrame
+```
+
+查询实时行情存储结果。
+
+---
+
+### query_quotations
+
+```python
+def query_quotations(date: date = None) -> pd.DataFrame
+```
+
+查询全部实时行情存储结果。
+
+---
+
+### query_account
+
+```python
+def query_account(message: Dict = None) -> List
+```
+
+查询账户信息。
+
+---
+
+### query_risk
+
+```python
+def query_risk(message: Dict = None) -> List
+```
+
+查询风险信息。
+
+---
+
+### query_user
+
+```python
+def query_user(user_cookie: str) -> List
+```
+
+查询用户信息。
+
+---
+
+### query_strategy
+
+```python
+def query_strategy(message: Dict = None) -> List
+```
+
+查询策略信息。
+
+---
+
+### query_lhb
+
+```python
+def query_lhb(date: str) -> pd.DataFrame
+```
+
+查询龙虎榜数据。
+
+---
+
+## 回测查询
+
+### query_backtest_info
+
+```python
+def query_backtest_info(
+    user: str = None,
+    account_cookie: str = None,
+    strategy: str = None,
+    stock_list: str = None
+) -> Dict
+```
+
+查询回测账户信息。
 
 **参数：**
 
 | 参数 | 类型 | 说明 |
 |------|------|------|
-| `code` | str/List[str] | 单个代码或代码列表 |
-
-**返回：** List[str] - 代码列表
-
----
-
-## 工具常量
-
-### _FREQUENCE_MAP
-
-频率映射表。
-
-```python
-from FQData.DataStore.query import _FREQUENCE_MAP
-
-freq = _FREQUENCE_MAP.get('5min')  # '5min'
-freq = _FREQUENCE_MAP.get('5m')     # '5min'
-```
+| user | str | 用户标识 |
+| account_cookie | str | 账户cookie |
+| strategy | str | 策略标识 |
+| stock_list | str | 股票列表 |
 
 ---
 
-## 使用示例
-
-### 基本查询
+### query_backtest_history
 
 ```python
-from FQData.DataStore.query import query_stock_day
-
-df = query_stock_day(
-    code='600000',
-    start_date='2024-01-01',
-    end_date='2024-12-31'
-)
-print(df.head())
+def query_backtest_history(cookie: str = None) -> pd.DataFrame
 ```
 
-### 批量查询
+查询回测历史。
 
-```python
-df = query_stock_day(
-    code=['600000', '000001', '000002'],
-    start_date='2024-01-01',
-    end_date='2024-06-30'
-)
-print(df.head())
-```
+**参数：**
 
-### 不同返回格式
-
-```python
-from FQData.DataStore.query import query_stock_day
-
-# DataFrame (默认)
-df = query_stock_day(code='600000', start_date='2024-01-01', end_date='2024-01-31', format='pd')
-
-# numpy
-arr = query_stock_day(code='600000', start_date='2024-01-01', end_date='2024-01-31', format='numpy')
-
-# list
-lst = query_stock_day(code='600000', start_date='2024-01-01', end_date='2024-01-31', format='list')
-
-# dict
-d = query_stock_day(code='600000', start_date='2024-01-01', end_date='2024-01-31', format='dict')
-```
+| 参数 | 类型 | 说明 |
+|------|------|------|
+| cookie | str | 回测cookie |
 
 ---
 
 ## 相关文档
 
-- [query/README](README.md)
-- [query/stock](stock.md)
-- [query/index](index.md)
-- [query/future](future.md)
-- [query/bond](bond.md)
-- [query/etf](etf.md)
+- [Query 模块 README](./README.md)
+- [股票查询](./stock.md)
+- [指数查询](./index.md)
+- [期货查询](./future.md)

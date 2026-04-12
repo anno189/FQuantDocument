@@ -1,36 +1,22 @@
-# DataSource 开发指南
+# DataSource 模块 - 开发指南
 
-## 模块简介
+## 概述
 
-DataSource 模块提供统一的数据源接口，支持多数据源动态切换。目前支持通达信(TDX)和东方财富(EastMoney)适配器。
+本指南帮助开发者理解、扩展和调试 DataSource 模块。
 
-### 核心组件
-
-| 组件 | 说明 |
-|------|------|
-| `DataSource` | 数据源统一入口 |
-| `DataSourceRegistry` | 数据源注册表 |
-| `DataSourceAdapter` | 适配器基类 |
-| `TdxStockAdapter` | 通达信股票适配器 |
-| `TdxIndexAdapter` | 通达信指数适配器 |
-| `TdxFutureAdapter` | 通达信期货适配器 |
-
----
-
-## 开发环境
+## 开发环境设置
 
 ### 环境要求
 
 - Python 3.8+
-- pytdx (通达信数据接口)
-- pymongo (MongoDB 存储)
-- pytest
+- pytdx >= 1.80
+- pandas >= 1.5.0
+- FQBase >= 1.0.0
 
-### 安装
+### 安装依赖
 
 ```bash
-cd /Users/A.D.189/FQuant/FQuant.Server/FQData
-pip install -e .
+pip install -e "FQData[datasource]"
 ```
 
 ### 验证安装
@@ -39,232 +25,196 @@ pip install -e .
 from FQData.DataSource import get_datasource
 
 ds = get_datasource()
-print(ds)  # <FQData.DataSource.facade.DataSource object at ...>
+print(ds.health_check())
 ```
 
----
+## 项目结构
 
-## 本地调试
+```
+FQData/
+└── DataSource/
+    ├── __init__.py           # 模块导出
+    ├── base.py              # 基类和协议
+    ├── facade.py             # 统一入口
+    ├── registry.py           # 注册表
+    ├── health_check.py       # 健康检查
+    └── adapters/
+        ├── tdx/            # 通达信适配器
+        ├── akshare/         # AkShare 适配器
+        ├── efinance/         # EFinance 适配器
+        ├── eastmoney/        # 东方财富适配器
+        ├── ths/             # 同花顺适配器
+        ├── exchange/         # 交易所适配器
+        └── jisilu/          # 集思录适配器
+```
 
-### 基本调试流程
+## 创建自定义适配器
+
+### 1. 创建适配器类
 
 ```python
-from FQData.DataSource import get_datasource, DataSourceMode
+from FQData.DataSource import DataSourceAdapter
 
-# 获取数据源
+class MyAdapter(DataSourceAdapter):
+    def __init__(self):
+        super().__init__("my_adapter")
+        self._connected = False
+
+    def connect(self) -> bool:
+        """建立连接"""
+        try:
+            # 连接逻辑
+            self._connected = True
+            return True
+        except Exception:
+            return False
+
+    def disconnect(self) -> None:
+        """断开连接"""
+        self._connected = False
+
+    def health_check(self) -> bool:
+        """健康检查"""
+        return self._connected
+
+    def get_stock_day(self, code, start, end, frequence="day"):
+        """获取股票日线"""
+        # 实现逻辑
+        pass
+```
+
+### 2. 注册适配器
+
+```python
+from FQData.DataSource import register_source
+
+register_source('my_adapter', MyAdapter)
+```
+
+### 3. 使用适配器
+
+```python
+from FQData import get_datasource
+
 ds = get_datasource()
+ds.set_mode('my_adapter')
 
-# 设置模式
-ds.set_mode(DataSourceMode.TDX)
-
-# 调试：打印请求参数
-data = ds.get_stock_day(
-    code='600000',
-    start='2024-01-01',
-    end='2024-01-10'
-)
-print(f"获取数据: {len(data)} 条")
+data = ds.get_stock_day('600000', '2024-01-01', '2024-12-31')
 ```
 
-### 调试适配器
-
-```python
-from FQData.DataSource.adapters.tdx import TdxStockAdapter
-
-adapter = TdxStockAdapter()
-
-# 测试连接
-try:
-    data = adapter.get_security_bars(
-        code='600000',
-        category=9,  # 日线
-        start=0,
-        count=10
-    )
-    print(f"连接成功，数据: {data}")
-except Exception as e:
-    print(f"连接失败: {e}")
-```
-
-### 调试多数据源切换
-
-```python
-from FQData.DataSource import get_datasource
-
-ds = get_datasource()
-
-# 切换到 TDX
-ds.set_mode('tdx')
-data_tdx = ds.get_stock_day('600000')
-print(f"TDX 数据: {len(data_tdx)} 条")
-
-# 切换到东方财富
-ds.set_mode('eastmoney')
-data_em = ds.get_stock_day('600000')
-print(f"东方财富数据: {len(data_em)} 条")
-```
-
----
-
-## 测试指南
+## 测试
 
 ### 运行测试
 
 ```bash
-cd /Users/A.D.189/FQuant/FQuant.Server/FQData
-pytest -v FQData/DataSource/
+pytest tests/DataSource/
 ```
 
-### 测试结构
+### 编写测试
 
 ```python
 import pytest
-from FQData.DataSource import get_datasource, DataSourceMode
+from FQData.DataSource import DataSourceAdapter
 
-class TestDataSource:
-    def test_get_datasource_singleton(self):
-        ds1 = get_datasource()
-        ds2 = get_datasource()
-        assert ds1 is ds2  # 单例模式
+class TestMyAdapter:
+    def setup_method(self):
+        self.adapter = MyAdapter()
 
-    def test_set_mode(self):
-        ds = get_datasource()
-        ds.set_mode(DataSourceMode.TDX)
-        assert ds._current_mode == DataSourceMode.TDX
+    def test_connect(self):
+        assert self.adapter.connect() is True
 
-    def test_get_stock_day(self):
-        ds = get_datasource()
-        ds.set_mode(DataSourceMode.TDX)
-        data = ds.get_stock_day('600000', start='2024-01-01', end='2024-01-10')
-        assert data is not None
-        assert len(data) > 0
+    def test_health_check(self):
+        self.adapter.connect()
+        assert self.adapter.health_check() is True
 
-class TestTdxAdapter:
-    def test_connection(self):
-        adapter = TdxStockAdapter()
-        assert adapter.is_connected()
-
-    def test_get_bars(self):
-        adapter = TdxStockAdapter()
-        data = adapter.get_security_bars('600000', 9, 0, 10)
-        assert len(data) <= 10
+    def test_disconnect(self):
+        self.adapter.connect()
+        self.adapter.disconnect()
+        assert self.adapter.is_connected is False
 ```
 
----
+## 调试
+
+### 启用调试日志
+
+```python
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+
+logger = logging.getLogger('FQData.DataSource')
+logger.setLevel(logging.DEBUG)
+```
+
+### 常见问题排查
+
+| 问题 | 可能原因 | 解决方案 |
+|------|----------|----------|
+| 连接超时 | 网络问题/IP被封 | 更换IP |
+| 数据返回为空 | 代码错误/日期范围错误 | 检查参数 |
+| 适配器未注册 | 注册时机问题 | 在模块导入时注册 |
+| 健康检查失败 | 服务未启动 | 启动数据源服务 |
 
 ## 代码规范
 
-### 适配器命名
+### 命名规范
+
+- 类名：`PascalCase`，如 `TdxStockAdapter`
+- 方法名：`snake_case`，如 `get_stock_day`
+- 常量：`UPPER_SNAKE_CASE`，如 `DEFAULT_TIMEOUT`
+
+### 类型注解
 
 ```python
-# 推荐：明确的适配器命名
-class TdxStockAdapter:
-    """通达信股票适配器"""
-    pass
+from typing import Optional, List, Union
+import pandas as pd
 
-class EastMoneyFundAdapter:
-    """东方财富基金适配器"""
-    pass
-
-# 避免：过于通用的命名
-class DataAdapter:
-    """数据适配器...什么数据？"""
-    pass
-```
-
-### 方法命名
-
-```python
-# 推荐：清晰的动词命名
-def get_security_bars(self, code, category, start, count):
-    """获取证券K线"""
-    pass
-
-def query_stock_day(self, code, start, end):
-    """查询股票日线"""
-    pass
-
-# 避免：模糊的命名
-def get_data(self, params):
-    """获取数据"""
+def get_stock_day(
+    self,
+    code: Union[str, List[str]],
+    start: str,
+    end: str,
+    frequence: str = "day"
+) -> Optional[pd.DataFrame]:
     pass
 ```
 
----
-
-## 调试技巧
-
-### 查看健康状态
+### 文档字符串
 
 ```python
-from FQData.DataSource import DataSourceHealthCheck
+def get_stock_day(self, code: str, start: str, end: str) -> Optional[pd.DataFrame]:
+    """获取股票日线数据。
 
-checker = DataSourceHealthCheck()
+    Args:
+        code: 证券代码
+        start: 开始日期 (YYYY-MM-DD)
+        end: 结束日期 (YYYY-MM-DD)
 
-# 检查所有适配器
-status = checker.check()
-print(f"状态: {status.status}")
-print(f"消息: {status.message}")
-print(f"详情: {status.details}")
+    Returns:
+        包含日线数据的 DataFrame，失败返回 None
+
+    Raises:
+        DataSourceError: 数据源错误
+
+    Example:
+        >>> adapter = TdxStockAdapter()
+        >>> df = adapter.get_stock_day('600000', '2024-01-01', '2024-01-10')
+        >>> print(df.head())
+    """
+    pass
 ```
 
-### 追踪数据源切换
+## 贡献指南
 
-```python
-from FQData.DataSource import get_datasource
-
-ds = get_datasource()
-
-# 设置切换回调
-def on_mode_change(old_mode, new_mode):
-    print(f"模式切换: {old_mode} -> {new_mode}")
-
-ds.set_mode_change_callback(on_mode_change)
-```
-
----
-
-## 常见问题
-
-### Q: 数据获取失败
-
-```python
-# 检查网络连接
-from FQData.DataSource import DataSourceHealthCheck
-
-checker = DataSourceHealthCheck()
-status = checker.check_adapter('tdx')
-
-if not status.is_healthy:
-    print(f"TDX 适配器不可用: {status.message}")
-```
-
-### Q: 如何添加新的数据源适配器
-
-```python
-from FQData.DataSource import DataSourceAdapter, register_source
-
-class MyAdapter(DataSourceAdapter):
-    def __init__(self):
-        self._connected = False
-
-    def connect(self):
-        # 初始化连接
-        self._connected = True
-
-    def get_stock_day(self, code, start, end):
-        # 实现获取逻辑
-        return data
-
-# 注册适配器
-register_source('my_adapter', MyAdapter)
-```
-
----
+1. Fork 仓库
+2. 创建特性分支 (`git checkout -b feature/my-feature`)
+3. 提交更改 (`git commit -am 'Add my feature'`)
+4. 推送到分支 (`git push origin feature/my-feature`)
+5. 创建 Pull Request
 
 ## 相关文档
 
-- [API 参考](api.md)
-- [使用指南](usage.md)
-- [最佳实践](best-practices.md)
-- [FAQ](faq.md)
+- [API 参考](./api.md)
+- [架构文档](./architecture.md)
+- [设计文档](./design.md)
+- [最佳实践](./best-practices.md)

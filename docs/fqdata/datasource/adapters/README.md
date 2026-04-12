@@ -204,6 +204,21 @@ fund_flow = get_stock_fund_flow('600000')
 
 ## 文档索引
 
+| 文档 | 说明 |
+|------|------|
+| [README](README.md) | 本文档，模块索引 |
+| [框架集成](framework.md) | 框架集成与生命周期 |
+| [架构文档](architecture.md) | 系统架构与技术架构 |
+| [设计文档](design.md) | 设计原则与决策 |
+| [API](api.md) | 完整API参考 |
+| [使用指南](usage.md) | 使用指南与示例 |
+| [开发指南](development.md) | 开发环境、调试、测试 |
+| [最佳实践](best-practices.md) | 开发建议与注意事项 |
+| [FAQ](faq.md) | 常见问题解答 |
+| [更新日志](changelog.md) | 版本历史与迁移指南 |
+
+### 子适配器文档
+
 | 适配器 | 文档 |
 |--------|------|
 | 通达信 | [tdx/README](tdx/README.md) |
@@ -218,4 +233,5 @@ fund_flow = get_stock_fund_flow('600000')
 
 - [DataSource 模块](../README.md)
 - [DataSource API](../api.md)
+- [DataSource 框架集成](../framework.md)
 - [FQData 模块](../../README.md)
