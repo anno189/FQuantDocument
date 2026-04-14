@@ -1,187 +1,323 @@
-# FQBase 框架文档
+---
+title: FQBase - FQuant 基础框架
+description: FQuant 系统的基础框架包，提供事件总线、日志、通知、验证、重试、缓存等核心基础设施能力
+tag:
+  - fqbase
+  - framework
 
-FQBase 是 FQuant 系统的基础框架，提供金融量化系统所需的核心基础设施组件。
+summary:
+  type: container
+  complexity: high
+  maturity: stable
+  size: xl
+  sub_modules:
+    - core
+    - foundation
+    - util
+    - config
+    - cache
+    - date
+    - datastore
+    - crawler
 
-## 文档索引
+relationships:
+  belongs_to:
+    - fquant
+  contains:
+    - fquant.fqbase.core
+    - fquant.fqbase.foundation
+    - fquant.fqbase.util
+    - fquant.fqbase.config
+    - fquant.fqbase.cache
+    - fquant.fqbase.date
+    - fquant.fqbase.datastore
+    - fquant.fqbase.crawler
+  used_by:
+    - fquant.fqdata
+    - fquant.fqfactor
 
-### 综合文档
+concepts:
+  provides:
+    - name: 事件驱动
+      definition: 基于发布-订阅模式的事件驱动架构
+    - name: 统一日志
+      definition: 集中式日志记录系统
+    - name: 多渠道通知
+      definition: 支持企业微信、Server酱、PushBear等多种通知渠道
+    - name: 数据验证
+      definition: 统一的数据验证框架
+    - name: 重试机制
+      definition: 支持指数退避的重试装饰器
+    - name: 熔断器
+      definition: 防止级联故障的熔断器模式
+    - name: 缓存抽象
+      definition: 统一的缓存接口，支持Redis等多种适配器
+    - name: 配置管理
+      definition: 环境变量配置和热更新支持
+---
 
-| 类型 | 文档 | 链接 |
-|------|------|------|
-| 快速开始 | 快速开始 | [quick-start](./quick-start) |
-| 架构 | 系统架构 | [architecture](./architecture) |
-| 设计 | 设计原则 | [design](./design) |
-| 开发 | 开发指南 | [development](./development) |
-| 最佳实践 | 最佳实践 | [best-practices](./best-practices) |
-| API 规范 | API 规范 | [api-spec](./api-spec) |
-| 应用示例 | 应用示例 | [application-examples](./application-examples) |
-| 系统集成 | 系统集成 | [system-integration](./system-integration) |
+# FQBase - FQuant 基础框架
 
-## 核心模块
+## 阅读路径
 
-FQBase 采用分层架构，核心模块包括：
+| 角色 | 阅读路径 |
+|------|---------|
+| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [子模块文档] → [案例库](./examples.md) |
+| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → [API参考](./api.md) → [子模块文档] |
+| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [配置指南](./configuration.md) |
+| 🟠 架构师 | [README](./README.md) → [技术架构](./architecture.md) → [设计模式](./patterns.md) → [数据流](./data-flow.md) |
+| 📚 案例库 | **[案例库](./examples.md)** → [跨模块集成示例](./examples.md#跨模块集成) |
+| 📖 索引 | [README](./README.md) → [变更日志](./changelog.md) |
 
-| 模块 | 说明 | 文档 |
-|------|------|------|
-| [Foundation](./foundation/) | 底层基础组件（熔断器、重试、生命周期等） | [API](./foundation/api) |
-| [Core](./core/) | 核心服务（事件总线、日志、通知） | [API](./core/) |
-| [Config](./config/) | 配置管理（环境变量、缓存配置等） | [API](./config/core/api) |
-| [Cache](./cache/) | 缓存层（LocalCache、Redis、MongoDB） | [API](./cache/api) |
-| [DataStore](./datastore/) | 数据存储（MongoDB 操作） | [API](./datastore/) |
-| [Date](./date/) | 日期工具（交易日判断等） | [API](./date/api) |
-| [Crawler](./crawler/) | 爬虫功能（BrowserPool） | [API](./crawler/browser/api) |
-| [Util](./util/) | 工具函数（并行处理、数据转换等） | [API](./util/) |
 
-## 架构分层
+## 一句话总览
+
+📌 **FQuant 系统的基础框架包**
+
+**TL;DR**：
+- 功能：提供事件驱动、日志、通知、验证、重试、缓存等基础设施能力
+- 包含：8 个核心子模块
+- 定位：FQuant 系统的基础设施层，所有业务模块依赖的核心服务
+
+## 子模块概览
+
+本模块是一个**容器模块**，聚合了以下核心子模块：
+
+| 子模块 | 说明 | 文档级别 | 文档链接 |
+|--------|------|---------|----------|
+| [core](./core/) | 基础设施核心（事件总线、日志、通知） | L3 完整 | [README](./core/README.md) |
+| [foundation](./foundation/) | 基础组件（验证、异常、重试、单例） | L3 完整 | [README](./foundation/README.md) |
+| [util](./util/) | 工具函数（转换、编码、并行） | L2 标准 | [README](./util/README.md) |
+| [config](./config/) | 配置管理（环境变量、热更新） | L2 标准 | [README](./config/README.md) |
+| [cache](./cache/) | 缓存抽象（Redis适配器、序列化） | L3 完整 | [README](./cache/README.md) |
+| [date](./date/) | 日期时间（时间戳、交易日） | L1 基础 | [README](./date/README.md) |
+| [datastore](./datastore/) | 数据存储（MongoDB客户端） | L2 标准 | [README](./datastore/README.md) |
+| [crawler](./crawler/) | 网页爬虫（浏览器池、解析器） | L2 标准 | [README](./crawler/README.md) |
+
+## 架构图
 
 ```
-┌─────────────────────────────────────────────┐
-│                 Util                        │  <- 工具层
-├─────────────────────────────────────────────┤
-│  Foundation  |  Core  |  Cache  |  Config │  <- 基础设施层
-├─────────────────────────────────────────────┤
-│         DataStore  |  Date  |  Crawler     │  <- 数据层
-├─────────────────────────────────────────────┤
-│               FQuant Server                 │  <- 应用层
-└─────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────┐
+│                        FQBase 基础框架                        │
+├─────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐        │
+│  │    Core     │  │ Foundation  │  │    Util     │        │
+│  │  事件/日志/  │  │ 验证/异常/   │  │ 转换/编码/   │        │
+│  │    通知     │  │   重试/单例  │  │   并行      │        │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘        │
+│         │                 │                 │                │
+│  ┌──────┴──────┐  ┌──────┴──────┐  ┌──────┴──────┐        │
+│  │    Config   │  │    Cache    │  │    Date     │        │
+│  │  配置管理    │  │   缓存抽象   │  │  日期时间    │        │
+│  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘        │
+│         │                 │                 │                │
+│  ┌──────┴────────────────┼─────────────────┴──────┐        │
+│  │                   DataStore                    │        │
+│  │                    数据存储                     │        │
+│  └──────────────────────┬───────────────────────┘        │
+│                          │                                   │
+│                   ┌──────┴──────┐                           │
+│                   │   Crawler   │                           │
+│                   │   网页爬虫   │                           │
+│                   └─────────────┘                           │
+└─────────────────────────────────────────────────────────────┘
 ```
-
-**层次说明：**
-
-- **工具层 (Util)** - 提供通用工具函数，不依赖其他 FQBase 模块
-- **基础设施层** - Foundation 提供底层模式，Core 提供核心服务，Cache 提供缓存，Config 提供配置
-- **数据层** - DataStore 数据持久化，Date 日期处理，Crawler 网页爬取
-
-## 设计原则
-
-1. **依赖倒置** - 核心接口与实现分离
-2. **单一职责** - 每个模块专注于一件事
-3. **开闭原则** - 对扩展开放，对修改关闭
-4. **接口隔离** - 使用协议定义接口
 
 ## 快速开始
 
 ### 安装
 
 ```bash
-pip install FQBase
+pip install fquant-fqbase
 ```
 
-### 缓存使用
+### 组合使用示例
 
 ```python
-from FQBase.Cache import LocalCache
+from FQBase.Core import (
+    get_event_bus,
+    get_logger,
+    NotificationManager,
+    Event,
+)
+from FQBase.Foundation import retry, validate_code
+from FQBase.Config import get_env
 
-cache = LocalCache(name='my_cache', ttl=3600)
-cache.set('key', 'value')
-value = cache.get('key')
+# 初始化各个组件
+event_bus = get_event_bus()
+logger = get_logger('my_app')
+notifier = NotificationManager()
+
+# 事件驱动 + 日志 + 通知 的完整流程
+@event_bus.subscribe('task_completed')
+def on_task_completed(event):
+    logger.info(f"任务完成: {event.data}")
+    notifier.send(f"任务完成: {event.data}", channel='SYSTEM')
+
+event_bus.publish(Event('task_completed', {'task_id': 123}))
+
+# 使用重试装饰器
+@retry(max_attempts=3, delay=1)
+def fetch_data():
+    pass
+
+# 数据验证
+validate_code('000001')
 ```
+
+## 跨模块场景
+
+### 场景 1: 事件驱动的交易信号通知
+
+**场景描述：** 当交易策略产生信号时，通过事件总线发布消息，触发日志记录和通知推送
+
+**涉及子模块：**
+- [core/event_bus](./core/event_bus/) - 事件驱动
+- [core/logger](./core/logger/) - 日志记录
+- [core/notification](./core/notification/) - 通知推送
+
+**代码示例：**
+
+```python
+from FQBase.Core import get_event_bus, get_logger, NotificationManager, Event
+from FQBase.Foundation import retry
+
+# 初始化组件
+event_bus = get_event_bus()
+logger = get_logger('strategy')
+notifier = NotificationManager()
+
+# 订阅交易信号事件
+@event_bus.subscribe('trade_signal')
+def handle_trade_signal(event):
+    signal = event.data
+    logger.info(f"收到交易信号: {signal}")
+    notifier.send(f"交易信号: {signal}", channel='WECOM')
+
+# 策略产生信号后发布
+event_bus.publish(Event('trade_signal', {
+    'code': '000001',
+    'signal': 'BUY',
+    'price': 12.50
+}))
+```
+
+### 场景 2: 带熔断器的数据获取
+
+**场景描述：** 使用重试机制和熔断器保护外部数据调用
+
+**涉及子模块：**
+- [foundation/retry](./foundation/retry/) - 重试机制
+- [foundation/circuit_breaker](./foundation/circuit_breaker/) - 熔断器
+- [cache](./cache/) - 缓存结果
+
+**代码示例：**
+
+```python
+from FQBase.Foundation import retry, RetryError
+from FQBase.Foundation.circuit_breaker import CircuitBreaker
+from FQBase.Cache import CacheAdapter
+
+# 配置熔断器
+circuit_breaker = CircuitBreaker(
+    failure_threshold=5,
+    recovery_timeout=60
+)
+
+# 配置缓存
+cache = CacheAdapter()
+
+@circuit_breaker
+@retry(max_attempts=3, delay=1, backoff=2)
+def fetch_market_data(code):
+    # 尝试从缓存获取
+    cached = cache.get(f"market_data:{code}")
+    if cached:
+        return cached
+    
+    # 从外部获取数据
+    data = external_api.fetch(code)
+    cache.set(f"market_data:{code}", data, ttl=300)
+    return data
+```
+
+## 快速链接
+
+| 文档 | 说明 |
+|------|------|
+| [技术架构](./architecture.md) | 子模块架构与关系 |
+| [API参考](./api.md) | 跨模块组合 API |
+| [案例库](./examples.md) | 跨模块集成示例 |
+| [变更日志](./changelog.md) | 各子模块变更汇总 |
+
+## 核心 API 概览
 
 ### 事件总线
 
 ```python
-from FQBase.Core import Event, get_event_bus
+from FQBase.Core import get_event_bus, Event
 
-bus = get_event_bus()
-
-@bus.subscribe('order.created')
-def on_order_created(event):
-    print(f"Order created: {event.data}")
-
-bus.publish(Event('order.created', data={'order_id': 1}))
+event_bus = get_event_bus()
+event_bus.subscribe('topic', handler)
+event_bus.publish(Event('topic', data))
 ```
 
-### 熔断器
+### 日志系统
 
 ```python
-from FQBase.Foundation import circuit_breaker
+from FQBase.Core import get_logger
 
-@circuit_breaker(failure_threshold=5, recovery_timeout=60)
-def call_remote_service():
-    # 可能失败的服务调用
-    return remote_call()
+logger = get_logger('module_name')
+logger.info('message')
+```
+
+### 通知服务
+
+```python
+from FQBase.Core import NotificationManager
+
+notifier = NotificationManager()
+notifier.send('message', channel='WECOM')
+```
+
+### 数据验证
+
+```python
+from FQBase.Foundation import validate_code, validate_date
+
+validate_code('000001')
+validate_date('2024-01-01')
+```
+
+### 重试机制
+
+```python
+from FQBase.Foundation import retry
+
+@retry(max_attempts=3, delay=1)
+def unreliable_operation():
+    pass
 ```
 
 ### 配置管理
 
 ```python
-from FQBase.Config.core import get_env, get_cache_config
+from FQBase.Config import get_env, load_env
 
-# 获取环境变量
-debug = get_env('DEBUG', 'false')
-
-# 获取缓存配置
-cache_config = get_cache_config()
+value = get_env('KEY')
+load_env('.env')
 ```
 
-## API 索引
+## 相关文档
 
-### Cache 模块
-- [LocalCache](./cache/api.md#localcache) - 本地内存缓存
-- [RedisCacheAdapter](./cache/api.md#rediscacheadapter) - Redis 缓存适配器
-- [MongoCacheAdapter](./cache/api.md#mongocacheadapter) - MongoDB 缓存适配器
-
-### Core 模块
-- [EventBus](./core/eventbus/api.md) - 事件总线
-- [Event](./core/eventbus/api.md#event) - 事件对象
-- [get_logger](./core/logger/api.md#get_logger) - 获取日志记录器
-- [NotificationManager](./core/notification/api.md) - 通知管理器
-
-### Foundation 模块
-- [retry](./foundation/retry/api.md) - 重试装饰器
-- [circuit_breaker](./foundation/circuit_breaker/api.md) - 熔断器装饰器
-- [Validator](./foundation/validators/api.md) - 验证器类
-- [dotty](./foundation/dotty/api.md) - 嵌套字典访问
-- [ServiceContainer](./foundation/container/api.md) - 依赖注入容器
-- [singleton](./foundation/singleton/api.md) - 单例装饰器
-
-### Config 模块
-- [cache_config](./config/core/api.md#cacheconfig) - 缓存配置
-- [get_env](./config/core/api.md#get_env) - 获取环境变量
-- [EnvManager](./config/core/api.md#envmanager) - 环境管理器
-
-### DataStore 模块
-- [MongoClientManager](./datastore/mongo_client/api.md) - MongoDB 客户端管理器
-- [MongoDB](./datastore/mongo_db/api.md) - MongoDB 操作类
-
-### Util 模块
-- [ParallelProcess](./util/parallel.md) - 多进程并行处理
-- [dict_to_df](./util/converters.md#dict_to_df) - 字典转 DataFrame
-
-### Date 模块
-- [util_if_trade](./date/api.md#util_if_trade) - 判断是否为交易日
-- [util_get_next_trade_date](./date/api.md#util_get_next_trade_date) - 获取下一个交易日
-
-### Crawler 模块
-- [BrowserPool](./crawler/browser/api.md#browserpool) - 浏览器池
-- [BaseCrawler](./crawler/browser/api.md#basecrawler) - 基础爬虫类
-
-## 系统集成
-
-FQBase 与 FQData、FQFactor 等项目集成：
-
-- [FQData](../fqdata/) - FQData 使用 FQBase 的缓存和配置管理
-- [FQFactor](../fqfactor/) - FQFactor 使用 FQBase 的容器和熔断器
-
-## 文档导航
-
-```
-FQBase/
-├── README.md                  # 本文档（索引）
-├── quick-start.md           # 快速开始
-├── architecture.md          # 架构说明
-├── design.md               # 设计原则
-├── development.md          # 开发指南
-├── best-practices.md      # 最佳实践
-├── api-spec.md           # API 规范
-├── application-examples.md # 应用示例
-├── system-integration.md  # 系统集成
-├── foundation/            # Foundation 模块文档
-├── core/                 # Core 模块文档
-├── config/               # Config 模块文档
-├── cache/                # Cache 模块文档
-├── datastore/             # DataStore 模块文档
-├── date/                 # Date 模块文档
-├── crawler/              # Crawler 模块文档
-└── util/                 # Util 模块文档
-```
+| 类型 | 文档 | 链接 |
+|------|------|------|
+| 项目首页 | FQuant 首页 | [README](../README.md) |
+| 子模块 | 核心组件 | [core README](./core/README.md) |
+| 子模块 | 基础组件 | [foundation README](./foundation/README.md) |
+| 子模块 | 工具函数 | [util README](./util/README.md) |
+| 子模块 | 配置管理 | [config README](./config/README.md) |
+| 子模块 | 缓存系统 | [cache README](./cache/README.md) |
+| 子模块 | 日期时间 | [date README](./date/README.md) |
+| 子模块 | 数据存储 | [datastore README](./datastore/README.md) |
+| 子模块 | 网页爬虫 | [crawler README](./crawler/README.md) |

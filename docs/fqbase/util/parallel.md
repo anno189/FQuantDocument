@@ -1,275 +1,243 @@
-# Parallel 模块
+---
+title: Parallel
+description: 并行计算工具，提供多进程和多线程封装，支持任务统计和健康检查
+tag:
+  - fqbase
+  - util
 
-并行计算工具，提供多进程和多线程封装，支持任务统计和健康检查。
+summary:
+  type: utility
+  complexity: medium
+  maturity: stable
+  core_classes:
+    - ParallelProcess
+    - ParallelThread
+---
+
+# Parallel
+
+## 一句话总览
+
+📌 **并行计算工具，多进程和多线程封装，支持任务统计和健康检查**
+
+**TL;DR**：
+- 核心能力：多进程并行、多线程并行、任务统计、健康检查
+- 入门难度：🟢 简单
+
+## 快速开始
+
+```python
+from FQBase.Util.parallel import ParallelProcess, ParallelThread
+
+# 多进程（CPU密集型）
+process = ParallelProcess(max_workers=4)
+results = process.map(worker_function, data_list)
+
+# 多线程（I/O密集型）
+thread = ParallelThread(max_workers=8)
+results = thread.map(worker_function, data_list)
+```
 
 ## 类
 
 ### ParallelProcess
 
-多进程并行处理封装。
+**描述：** 多进程并行处理封装，适用于 CPU 密集型任务
 
-**适用场景**：CPU 密集型任务
+**位置：** `FQBase/Util/parallel.py`
 
 ```python
-from FQBase.Util import ParallelProcess
+from FQBase.Util.parallel import ParallelProcess
 
-process = ParallelProcess(max_workers=4)
-results = process.map(worker_function, data_list)
+process = ParallelProcess(max_workers=None)
 ```
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| max_workers | int | 否 | CPU核心数 | 最大工作进程数 |
+
+**方法：**
+
+#### map
+
+```python
+result = process.map(func, iterable)
+```
+
+使用进程池映射函数
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| func | Callable | 是 | 处理函数 |
+| iterable | Iterable | 是 | 可迭代数据 |
+
+**返回：** `list` - 结果列表
+
+#### apply
+
+```python
+result = process.apply(func, args=(), kwargs=None)
+```
+
+在进程池中执行函数
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| func | Callable | 是 | 处理函数 |
+| args | tuple | 否 | 位置参数 |
+| kwargs | dict | 否 | 关键字参数 |
+
+**返回：** `Any` - 函数执行结果
+
+#### get_stats
+
+```python
+stats = process.get_stats()
+```
+
+获取任务统计信息
+
+**返回：** `Dict[str, Any]` - 包含 submitted, completed, failed, max_workers, pending
+
+#### health_check
+
+```python
+is_healthy = process.health_check()
+```
+
+健康检查
+
+**返回：** `bool` - 进程池是否健康
+
+#### reset_stats
+
+```python
+process.reset_stats()
+```
+
+重置统计计数器
 
 ---
 
 ### ParallelThread
 
-多线程并行处理封装。
+**描述：** 多线程并行处理封装，适用于 I/O 密集型任务
 
-**适用场景**：I/O 密集型任务（网络请求、文件读写）
-
-```python
-from FQBase.Util import ParallelThread
-
-thread = ParallelThread(max_workers=8)
-results = thread.map(worker_function, data_list)
-```
-
----
-
-## 方法
-
-### map
-
-使用进程/线程池映射函数。
+**位置：** `FQBase/Util/parallel.py`
 
 ```python
-def worker_function(x):
-    return x * 2
+from FQBase.Util.parallel import ParallelThread
 
-# 多进程
-process = ParallelProcess(max_workers=4)
-results = process.map(worker_function, range(100))
-
-# 多线程
-thread = ParallelThread(max_workers=8)
-results = thread.map(worker_function, range(100))
+thread = ParallelThread(max_workers=None)
 ```
 
----
+**参数：**
 
-### apply
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| max_workers | int | 否 | CPU核心数 | 最大工作线程数 |
 
-在池中执行单个任务。
+**方法：**
+
+#### map
 
 ```python
-process = ParallelProcess(max_workers=4)
-
-# 提交任务
-future = process.apply(heavy_function, args=(data,), kwargs={'option': 'value'})
-result = future.result()
+result = thread.map(func, iterable)
 ```
 
----
+使用线程池映射函数
 
-### get_stats
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| func | Callable | 是 | 处理函数 |
+| iterable | Iterable | 是 | 可迭代数据 |
 
-获取任务统计信息。
+**返回：** `list` - 结果列表
+
+#### apply
 
 ```python
-process = ParallelProcess(max_workers=4)
-process.map(worker_function, range(100))
-
-stats = process.get_stats()
-print(stats)
-# {'submitted': 100, 'completed': 100, 'failed': 0, 'max_workers': 4, 'pending': 0}
+result = thread.apply(func, args=(), kwargs=None)
 ```
 
-**返回值**：
+在线程池中执行函数
 
-| 字段 | 说明 |
-|------|------|
-| `submitted` | 提交任务数 |
-| `completed` | 完成任务数 |
-| `failed` | 失败任务数 |
-| `max_workers` | 最大工作进程/线程数 |
-| `pending` | 等待任务数 |
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| func | Callable | 是 | 处理函数 |
+| args | tuple | 否 | 位置参数 |
+| kwargs | dict | 否 | 关键字参数 |
 
----
+**返回：** `Any` - 函数执行结果
 
-### health_check
-
-健康检查。
+#### get_stats
 
 ```python
-process = ParallelProcess(max_workers=4)
-
-if process.health_check():
-    print("进程池健康")
-else:
-    print("进程池正在关闭")
+stats = thread.get_stats()
 ```
 
----
+获取任务统计信息
 
-### reset_stats
+**返回：** `Dict[str, Any]` - 包含 submitted, completed, failed, max_workers, pending
 
-重置统计计数器。
+#### health_check
 
 ```python
-process = ParallelProcess(max_workers=4)
-process.map(worker_function, range(100))
-
-# 重置统计
-process.reset_stats()
-print(process.get_stats())  # 所有计数归零
+is_healthy = thread.health_check()
 ```
+
+健康检查
+
+**返回：** `bool` - 线程池是否健康
+
+#### reset_stats
+
+```python
+thread.reset_stats()
+```
+
+重置统计计数器
 
 ---
 
 ## 使用示例
 
-### CPU 密集型任务
+### CPU 密集型任务（多进程）
 
 ```python
-from FQBase.Util import ParallelProcess
-import time
+from FQBase.Util.parallel import ParallelProcess
+import math
 
-def calculate_fibonacci(n):
-    """计算斐波那契数列"""
-    if n <= 1:
-        return n
-    return calculate_fibonacci(n-1) + calculate_fibonacci(n-2)
+def heavy_compute(n):
+    return sum(math.factorial(i) for i in range(n))
 
-# 使用多进程加速计算
 process = ParallelProcess(max_workers=4)
+results = process.map(heavy_compute, range(100))
 
-start = time.time()
-# 计算多个斐波那契数
-numbers = [30, 31, 32, 33, 34]
-results = process.map(calculate_fibonacci, numbers)
-elapsed = time.time() - start
-
-print(f"结果: {results}")
-print(f"耗时: {elapsed:.2f}秒")
+stats = process.get_stats()
+print(f"完成: {stats['completed']}, 失败: {stats['failed']}")
 ```
 
-### I/O 密集型任务
+### I/O 密集型任务（多线程）
 
 ```python
-from FQBase.Util import ParallelThread
-import time
-import urllib.request
+from FQBase.Util.parallel import ParallelThread
+import requests
 
 def fetch_url(url):
-    """获取 URL 内容"""
-    try:
-        with urllib.request.urlopen(url, timeout=5) as response:
-            return url, len(response.read())
-    except:
-        return url, None
+    return requests.get(url).status_code
 
-# 使用多线程并发请求
-thread = ParallelThread(max_workers=10)
-
-urls = [
-    'https://api.example.com/data/1',
-    'https://api.example.com/data/2',
-    'https://api.example.com/data/3',
-    # ... 更多 URL
-]
-
-start = time.time()
+urls = ['https://example.com', 'https://python.org']
+thread = ParallelThread(max_workers=8)
 results = thread.map(fetch_url, urls)
-elapsed = time.time() - start
-
-print(f"获取 {len(urls)} 个 URL 耗时: {elapsed:.2f}秒")
-```
-
-### 批量数据处理
-
-```python
-from FQBase.Util import ParallelProcess
-
-def process_stock_data(stock_code):
-    """处理单只股票数据"""
-    # 模拟数据处理
-    return {
-        'code': stock_code,
-        'price': 100.0,
-        'volume': 10000
-    }
-
-# 批量处理股票
-codes = [f'{i:06d}' for i in range(1, 101)]  # 100只股票
-
-process = ParallelProcess(max_workers=8)
-results = process.map(process_stock_data, codes)
-
-# 检查统计
-print(f"处理完成: {process.get_stats()['completed']} 只股票")
-```
-
-### 错误处理
-
-```python
-from FQBase.Util import ParallelProcess
-
-def risky_operation(x):
-    """可能失败的操作"""
-    if x % 10 == 0:
-        raise ValueError(f"Error on {x}")
-    return x * 2
-
-process = ParallelProcess(max_workers=4)
-
-try:
-    results = process.map(risky_operation, range(100))
-except Exception as e:
-    stats = process.get_stats()
-    print(f"失败任务数: {stats['failed']}")
-    print(f"完成任务数: {stats['completed']}")
 ```
 
 ---
 
-## 性能对比
+## 变更日志
 
-### 场景选择
-
-| 场景 | 推荐 | 原因 |
+| 版本 | 日期 | 变更 |
 |------|------|------|
-| CPU 计算（数学运算、数据处理） | `ParallelProcess` | 绕过 GIL，多核利用 |
-| I/O 操作（网络请求、文件读写） | `ParallelThread` | 线程共享 GIL，适合等待 |
-| 混合型 | `ParallelProcess` | CPU 部分用进程，I/O 部分用线程池 |
-
-### 性能测试
-
-```python
-import time
-from FQBase.Util import ParallelProcess, ParallelThread
-
-def cpu_task(n):
-    return sum(i * i for i in range(n))
-
-def io_task(n):
-    time.sleep(0.001)
-    return n
-
-# CPU 密集型：多进程更快
-process = ParallelProcess(max_workers=4)
-start = time.time()
-process.map(cpu_task, [1000000] * 10)
-print(f"多进程耗时: {time.time() - start:.2f}s")
-
-# I/O 密集型：多线程更快
-thread = ParallelThread(max_workers=10)
-start = time.time()
-thread.map(io_task, [1] * 100)
-print(f"多线程耗时: {time.time() - start:.2f}s")
-```
-
----
-
-## 相关文档
-
-- [Util 模块](../README.md)
-- [文件工具](../file.md)
-- [数据转换](../converters.md)
+| v1.0.0 | 2024-01-01 | 初始版本 |

@@ -22,6 +22,9 @@ adapters/
 │   ├── ip_selector.py  # IP 选择器
 │   ├── financial.py  # 财务数据
 │   └── base.py     # 基类
+├── local/            # 本地文件适配器
+│   ├── base.py      # 适配器基类
+│   └── csv_reader.py  # CSV 读取器
 ├── akshare/         # AkShare 适配器
 │   ├── base.py      # 适配器基类
 │   ├── stock.py     # 股票数据
@@ -76,6 +79,28 @@ from FQData.DataSource.adapters.tdx import (
 | `TdxTransactionAdapter` | 成交明细适配器 |
 | `TdxMacroAdapter` | 宏观数据适配器 |
 | `TdxExchangeAdapter` | 交易所数据适配器 |
+
+### 本地文件 (Local)
+
+本地文件数据适配器，用于读取本地 CSV 文件。
+
+```python
+from FQData.DataSource.adapters.local import (
+    LocalAdapter,
+    CSVReader,
+)
+
+adapter = LocalAdapter(base_path="/data")
+df = adapter.read_csv("stock_data.csv")
+
+reader = CSVReader(base_path="/data")
+df = reader.read_with_date_parse("daily.csv")
+```
+
+| 适配器 | 说明 |
+|--------|------|
+| `LocalAdapter` | 本地文件适配器基类 |
+| `CSVReader` | CSV 文件读取器 |
 
 ### AkShare
 
@@ -222,6 +247,7 @@ fund_flow = get_stock_fund_flow('600000')
 | 适配器 | 文档 |
 |--------|------|
 | 通达信 | [tdx/README](tdx/README.md) |
+| 本地文件 | [local/README](local/README.md) |
 | AkShare | [akshare/README](akshare/README.md) |
 | EFinance | [efinance/README](efinance/README.md) |
 | 东方财富 | [eastmoney/README](eastmoney/README.md) |

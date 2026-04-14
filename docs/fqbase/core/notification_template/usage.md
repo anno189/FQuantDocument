@@ -1,241 +1,254 @@
-# NotificationTemplate 使用指南
-
-**模块路径**: `FQBase.Core.notification_template`
-**源码**: [notification_template.py](file:///Users/A.D.189/FQuant/FQuant.Server/FQBase/FQBase/Core/notification_template.py)
-
+---
+title: 通知模板 - 使用指南
+description: 通知模板详细使用指南
+tag:
+  - fqbase
+  - core
+  - notification_template
 ---
 
-## 一、基本使用
+# 通知模板 - 使用指南
+
+## 阅读路径
+
+| 角色 | 阅读路径 |
+|------|---------|
+| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [速查表](./cheatsheet.md) → [动手实验室](./workshop.md) → **[使用指南](./usage.md)** → [案例库](./examples.md) |
+| 🔵 开发者 | [README](./README.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) → [设计原则](./design.md) → [API参考](./api.md) → [开发指南](./development.md) → **[使用指南](./usage.md)** → [最佳实践](./best-practices.md) |
+
+
+## 概述
+
+本指南详细介绍如何有效地使用通知模板模块，包括基本用法、自定义模板和高级用法。
+
+## 基本用法
+
+### 使用预设模板
 
 ```python
 from FQBase.Core.notification_template import NotificationTemplate
 
-message = NotificationTemplate.render(
+# 交易信号
+signal_msg = NotificationTemplate.render(
     'trade_signal',
     strategy='均值回归',
     code='000001',
     price=12.50,
     time='2024-01-15 10:30:00'
 )
-print(message)
-# 输出:
-# 【交易信号】均值回归
-# 股票: 000001
-# 价格: 12.5
-# 时间: 2024-01-15 10:30:00
+
+# 风险预警
+alert_msg = NotificationTemplate.render(
+    'risk_alert',
+    risk_type='价格异动',
+    details='跌幅超过 5%',
+    time='2024-01-15 14:30:00'
+)
+
+# 系统异常
+error_msg = NotificationTemplate.render(
+    'system_error',
+    error_type='数据库连接失败',
+    details='无法连接到主数据库',
+    time='2024-01-15 15:00:00'
+)
 ```
 
----
-
-## 二、渲染为字典
+### 获取结构化数据
 
 ```python
-from FQBase.Core.notification_template import NotificationTemplate
-
+# 渲染为字典，包含更多信息
 result = NotificationTemplate.render_dict(
-    'trade_signal',
-    strategy='均值回归',
-    code='000001',
-    price=12.50,
-    time='2024-01-15 10:30:00'
+    'order_update',
+    order_id='ORDER_20240115_001',
+    code='600000',
+    direction='买入',
+    volume=1000,
+    status='已成交'
 )
-print(result)
-# 输出:
+
+# result 包含:
 # {
-#     'name': 'trade_signal',
-#     'title': '【交易信号】',
-#     'body': '均值回归\n股票: 000001\n价格: 12.5\n时间: 2024-01-15 10:30:00',
+#     'name': 'order_update',
+#     'title': '【订单更新】',
+#     'body': '订单号: ORDER_20240115_001\n标的: 600000\n...',
 #     'level': 'info',
 #     'variables': {...}
 # }
 ```
 
----
+## 自定义模板
 
-## 三、自定义模板
+### 注册自定义模板
 
 ```python
-from FQBase.Core.notification_template import NotificationTemplate, NotificationTemplate as NP
+from FQBase.Core.notification_template import NotificationTemplate, NotificationTemplateRegistry
 
-custom_template = NotificationTemplate(
-    name='custom_alert',
-    title='【自定义告警】',
-    body_template='告警类型: {alert_type}\n标的: {code}\n原因: {reason}',
-    level='warning'
+# 方式一：使用快捷类方法
+new_template = NotificationTemplate(
+    name='daily_summary',
+    title='【每日汇总】',
+    body_template='日期: {date}\n订单数: {order_count}\n成交额: {volume}',
+    level='info'
 )
+NotificationTemplate.register(new_template)
 
-NotificationTemplate.register(custom_template)
+# 方式二：创建注册表实例
+registry = NotificationTemplateRegistry()
+registry.register(new_template)
+```
 
-message = NotificationTemplate.render(
-    'custom_alert',
-    alert_type='价格异动',
-    code='000001',
-    reason='涨跌幅超过5%'
+### 使用自定义模板
+
+```python
+# 注册后即可使用
+summary = NotificationTemplate.render(
+    'daily_summary',
+    date='2024-01-15',
+    order_count=100,
+    volume=1000000
 )
 ```
 
----
+### 注销模板
 
-## 四、与通知服务集成
+```python
+# 注销模板
+result = NotificationTemplate.unregister('daily_summary')
+print(f"注销结果: {result}")  # True 或 False
+```
+
+### 模板列表管理
+
+```python
+# 列出所有可用模板
+names = NotificationTemplate.list_names()
+print(f"可用模板: {names}")
+
+# 检查模板是否存在
+template = NotificationTemplate.get('trade_signal')
+if template:
+    print(f"模板存在: {template.name}")
+```
+
+## 高级用法
+
+### 与通知服务集成
 
 ```python
 from FQBase.Core.notification_template import NotificationTemplate
 from FQBase.Core.notification import sendWechat
 
+# 渲染并发送
 message = NotificationTemplate.render(
     'trade_signal',
-    strategy='均值回归',
-    code='000001',
-    price=12.50,
+    strategy='趋势跟踪',
+    code='600000',
+    price=15.80,
     time='2024-01-15 10:30:00'
 )
 
 sendWechat(message, channel='DEFAULT')
 ```
 
----
-
-## 五、列出所有模板
+### 批量处理
 
 ```python
 from FQBase.Core.notification_template import NotificationTemplate
 
-names = NotificationTemplate.list_names()
-print(names)
-# ['trade_signal', 'risk_alert', 'system_error', 'order_update', ...]
+# 为多个标的生成消息
+signals = [
+    {'strategy': '策略A', 'code': '000001', 'price': 10.5, 'time': '10:30'},
+    {'strategy': '策略B', 'code': '600000', 'price': 15.8, 'time': '10:31'},
+    {'strategy': '策略C', 'code': '300001', 'price': 25.2, 'time': '10:32'},
+]
 
-template = NotificationTemplate.get('trade_signal')
-print(template.title)  # '【交易信号】'
+messages = []
+for sig in signals:
+    msg = NotificationTemplate.render('trade_signal', **sig)
+    messages.append(msg)
+
+# 合并发送
+combined = "\n\n".join(messages)
 ```
 
----
-
-## 六、预设模板详情
-
-### 6.1 trade_signal 交易信号
-
-```python
-NotificationTemplate.render('trade_signal',
-    strategy='策略名称',
-    code='000001',
-    price=12.50,
-    time='2024-01-15 10:30:00'
-)
-# 输出:
-# 【交易信号】策略名称
-# 股票: 000001
-# 价格: 12.5
-# 时间: 2024-01-15 10:30:00
-```
-
-### 6.2 risk_alert 风险预警
-
-```python
-NotificationTemplate.render('risk_alert',
-    risk_type='持仓超限',
-    details='股票 000001 持仓比例 15%，超过上限 10%',
-    time='2024-01-15 10:30:00'
-)
-# 输出:
-# 【风险预警】持仓超限
-# 详情: 股票 000001 持仓比例 15%，超过上限 10%
-# 时间: 2024-01-15 10:30:00
-```
-
-### 6.3 order_update 订单更新
-
-```python
-NotificationTemplate.render('order_update',
-    order_id='ORD12345',
-    code='000001',
-    direction='BUY',
-    volume=1000,
-    status='已成交'
-)
-# 输出:
-# 【订单更新】订单号: ORD12345
-# 标的: 000001
-# 方向: BUY
-# 数量: 1000
-# 状态: 已成交
-```
-
-### 6.4 backtest_complete 回测完成
-
-```python
-NotificationTemplate.render('backtest_complete',
-    strategy='均值回归',
-    return_rate='15.6%',
-    sharpe='2.1',
-    max_drawdown='8.3%'
-)
-# 输出:
-# 【回测完成】策略: 均值回归
-# 收益: 15.6%
-# 夏普比率: 2.1
-# 最大回撤: 8.3%
-```
-
----
-
-## 七、量化交易场景
-
-### 7.1 交易信号通知
+### 根据通知级别选择渠道
 
 ```python
 from FQBase.Core.notification_template import NotificationTemplate
 from FQBase.Core.notification import sendWechat
 
-def notify_trade_signal(signal: dict):
-    message = NotificationTemplate.render('trade_signal', **signal)
-    sendWechat(message, channel='DEFAULT')
-    return message
+def send_with_level(template_name: str, **kwargs):
+    """根据模板级别选择渠道发送"""
+    result = NotificationTemplate.render_dict(template_name, **kwargs)
+    level = result.get('level', 'info')
+    body = result.get('title', '') + '\n' + result.get('body', '')
 
-notify_trade_signal({
-    'strategy': '双均线策略',
-    'code': '000001',
-    'price': 12.50,
-    'time': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-})
+    # 根据级别选择渠道
+    channel = {
+        'error': 'SYSTEM',
+        'warning': 'SYSTEM',
+        'info': 'DEFAULT'
+    }.get(level, 'DEFAULT')
+
+    return sendWechat(body, channel=channel)
+
+# 使用
+send_with_level('system_error', error_type='超时', details='处理超时', time='15:00')
 ```
 
-### 7.2 风控告警
+## 模板设计最佳实践
+
+### 保持简洁
 
 ```python
-from FQBase.Core.notification_template import NotificationTemplate
-from FQBase.Core.notification import NotificationManager
+# 好：简洁的模板
+body_template = '标的: {code}\n价格: {price}\n数量: {volume}'
 
-def notify_risk_alert(risk_type: str, details: str):
-    manager = NotificationManager()
-
-    if risk_type in ['持仓超限', '资金不足']:
-        channel = 'BOND'
-    elif risk_type in ['异常交易', '频繁撤单']:
-        channel = 'HIGH'
-    else:
-        channel = 'DEFAULT'
-
-    message = NotificationTemplate.render('risk_alert',
-        risk_type=risk_type,
-        details=details,
-        time=datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    )
-
-    manager.send(message, channel=channel)
+# 避免：过于复杂的模板
+body_template = '详细信息：\n标的代码：{code}\n当前价格：{price}\n交易数量：{volume}...'
 ```
 
-### 7.3 回测完成通知
+### 包含时间信息
 
 ```python
-from FQBase.Core.notification_template import NotificationTemplate
-from FQBase.Core.notification import sendWechat
+# 好：包含时间
+body_template = '股票: {code}\n价格: {price}\n时间: {time}'
 
-def notify_backtest_complete(strategy: str, result: dict):
-    message = NotificationTemplate.render('backtest_complete',
-        strategy=strategy,
-        return_rate=f"{result['return_rate']:.2f}%",
-        sharpe=f"{result['sharpe']:.2f}",
-        max_drawdown=f"{result['max_drawdown']:.2f}%"
-    )
-    sendWechat(message, channel='SYSTEM')
+# 避免：缺少时间
+body_template = '股票: {code}\n价格: {price}'
 ```
+
+### 使用合适的通知级别
+
+```python
+# 错误/异常用 error 级别
+NotificationTemplate(
+    name='error_template',
+    title='【系统异常】',
+    body_template='...',
+    level='error'  # 错误级别
+)
+
+# 警告用 warning 级别
+NotificationTemplate(
+    name='warning_template',
+    title='【风险预警】',
+    body_template='...',
+    level='warning'  # 警告级别
+)
+
+# 一般信息用 info 级别
+NotificationTemplate(
+    name='info_template',
+    title='【交易信号】',
+    body_template='...',
+    level='info'  # 信息级别
+)
+```
+
+## 相关文档
+
+- [API参考](./api.md)
+- [开发指南](./development.md)
+- [最佳实践](./best-practices.md)

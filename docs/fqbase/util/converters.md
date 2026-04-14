@@ -1,220 +1,251 @@
-# Converters 模块
+---
+title: Converters
+description: 数据转换工具，包含日期、代码、数字转换函数
+tag:
+  - fqbase
+  - util
+  - utility
 
-数据转换工具，提供日期、数字、百分比等常用转换功能。
+summary:
+  type: utility
+  complexity: minimal
+  maturity: stable
+  functions:
+    - date_to_str
+    - str_to_date
+    - normalize_code
+    - parse_number
+    - safe_divide
+    - percentage_change
+    - format_percentage
+---
 
-## 日期转换
+# Converters
+
+## 一句话总览
+
+📌 **数据转换工具，日期、代码、数字格式转换**
+
+**TL;DR**：
+- 核心能力：日期转换、代码标准化、数字处理、百分比计算
+- 入门难度：🟢 简单
+
+## 快速开始
+
+```python
+from FQBase.Util.converters import date_to_str, parse_number
+
+date_str = date_to_str('2024-01-01')
+num = parse_number('123.45')
+```
+
+## 函数列表
 
 ### date_to_str
 
-日期转换为字符串。
+```python
+from FQBase.Util.converters import date_to_str
+
+result = date_to_str(date, format='%Y-%m-%d')
+```
+
+**描述：** 日期转换为字符串
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| date | datetime \| str \| pd.Timestamp | 是 | 日期对象 |
+| format | str | 否 | 输出格式，默认 '%Y-%m-%d' |
+
+**返回：** `str` - 日期字符串
+
+**示例：**
 
 ```python
-from FQBase.Util import date_to_str
 from datetime import datetime
-import pandas as pd
-
-# datetime 转字符串
-date_to_str(datetime.now())  # '2024-01-15'
-
-# pandas Timestamp 转字符串
-date_to_str(pd.Timestamp('2024-01-15'))  # '2024-01-15'
-
-# 自定义格式
-date_to_str(datetime.now(), '%Y/%m/%d')  # '2024/01/15'
-date_to_str(datetime.now(), '%Y%m%d')  # '20240115'
+date_str = date_to_str(datetime(2024, 1, 1))
+print(date_str)  # '2024-01-01'
 ```
 
 ---
 
 ### str_to_date
 
-字符串转换为日期。
+```python
+from FQBase.Util.converters import str_to_date
+
+result = str_to_date(date_str, format='%Y-%m-%d')
+```
+
+**描述：** 字符串转换为日期
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| date_str | str | 是 | 日期字符串 |
+| format | str | 否 | 输入格式，默认 '%Y-%m-%d' |
+
+**返回：** `datetime` - datetime 对象
+
+**示例：**
 
 ```python
-from FQBase.Util import str_to_date
-
-# 解析日期
-dt = str_to_date('2024-01-15')  # datetime(2024, 1, 15)
-
-# 自定义格式
-dt = str_to_date('2024/01/15', '%Y/%m/%d')  # datetime(2024, 1, 15)
+date = str_to_date('2024-01-01')
+print(date)  # 2024-01-01 00:00:00
 ```
 
 ---
-
-## 代码转换
 
 ### normalize_code
 
-标准化股票代码。
+```python
+from FQBase.Util.converters import normalize_code
+
+result = normalize_code(code)
+```
+
+**描述：** 标准化股票代码
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| code | str | 是 | 原始代码 |
+
+**返回：** `str` - 标准化后的代码
+
+**示例：**
 
 ```python
-from FQBase.Util import normalize_code
-
-normalize_code('  600000  ')  # '600000'
-normalize_code('600000')       # '600000'
-normalize_code('abc')         # 'ABC'
-normalize_code(600000)        # '600000'
+code = normalize_code('600000')
+print(code)  # '600000'
 ```
 
 ---
 
-## 数字转换
-
 ### parse_number
 
-解析数字，处理异常。
+```python
+from FQBase.Util.converters import parse_number
+
+result = parse_number(value, default=0.0)
+```
+
+**描述：** 解析数字，处理异常
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| value | Any | 是 | 待解析的值 |
+| default | float | 否 | 默认值，默认 0.0 |
+
+**返回：** `float` - 解析后的数字
+
+**示例：**
 
 ```python
-from FQBase.Util import parse_number
+num = parse_number('123.45')
+print(num)  # 123.45
 
-parse_number('123.45')          # 123.45
-parse_number('invalid')         # 0.0
-parse_number('123.45', default=1.0)  # 123.45
-parse_number(None, default=1.0)  # 1.0
-parse_number('', default=0.0)    # 0.0
+num = parse_number(None, default=0.0)
+print(num)  # 0.0
 ```
 
 ---
 
 ### safe_divide
 
-安全除法。
+```python
+from FQBase.Util.converters import safe_divide
+
+result = safe_divide(a, b, default=0.0)
+```
+
+**描述：** 安全除法，避免除零错误
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| a | float | 是 | 被除数 |
+| b | float | 是 | 除数 |
+| default | float | 否 | 默认值，默认 0.0 |
+
+**返回：** `float` - 计算结果
+
+**示例：**
 
 ```python
-from FQBase.Util import safe_divide
+result = safe_divide(10, 2)
+print(result)  # 5.0
 
-safe_divide(10, 2)           # 5.0
-safe_divide(10, 0)           # 0.0
-safe_divide(10, 0, default=-1)  # -1
-safe_divide(10, 3)           # 3.333...
+result = safe_divide(10, 0)
+print(result)  # 0.0
 ```
 
 ---
 
-## 百分比转换
-
 ### percentage_change
 
-计算百分比变化。
+```python
+from FQBase.Util.converters import percentage_change
+
+result = percentage_change(current, previous)
+```
+
+**描述：** 计算百分比变化
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| current | float | 是 | 当前值 |
+| previous | float | 是 | 上一个值 |
+
+**返回：** `float` - 百分比变化 (如 5.0 表示 5%)
+
+**示例：**
 
 ```python
-from FQBase.Util import percentage_change
-
-# 上涨
-percentage_change(110, 100)   # 10.0 (10%)
-
-# 下跌
-percentage_change(90, 100)   # -10.0 (-10%)
-
-# 不变
-percentage_change(100, 100)  # 0.0 (0%)
-
-# 昨日价格为0
-percentage_change(100, 0)     # 0.0 (避免除零)
+change = percentage_change(105, 100)
+print(change)  # 5.0
 ```
 
 ---
 
 ### format_percentage
 
-格式化百分比。
+```python
+from FQBase.Util.converters import format_percentage
+
+result = format_percentage(value, decimals=2)
+```
+
+**描述：** 格式化百分比
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| value | float | 是 | 百分比值 (如 0.1 表示 10%) |
+| decimals | int | 否 | 小数位数，默认 2 |
+
+**返回：** `str` - 格式化后的字符串
+
+**示例：**
 
 ```python
-from FQBase.Util import format_percentage
-
-# 小数转百分比字符串
-format_percentage(0.1)        # '10.00%'
-format_percentage(0.1234)   # '12.34%'
-format_percentage(0.12345, decimals=3)  # '12.345%'
-
-# 负数百分比
-format_percentage(-0.1)     # '-10.00%'
+formatted = format_percentage(0.1)
+print(formatted)  # '10.00%'
 ```
 
 ---
 
-## 使用示例
+## 变更日志
 
-### 数据清洗
-
-```python
-from FQBase.Util import parse_number, normalize_code, safe_divide
-
-def clean_stock_data(raw_data):
-    """清洗股票数据"""
-    return {
-        'code': normalize_code(raw_data.get('stockCode', '')),
-        'price': parse_number(raw_data.get('price'), default=0.0),
-        'change': percentage_change(
-            parse_number(raw_data.get('current', 0)),
-            parse_number(raw_data.get('previous', 0))
-        ),
-        'volume_ratio': safe_divide(
-            parse_number(raw_data.get('volume', 0)),
-            parse_number(raw_data.get('avgVolume', 0)),
-            default=0.0
-        )
-    }
-
-raw = {
-    'stockCode': '  600000  ',
-    'price': '123.45',
-    'current': '124.00',
-    'previous': '120.00',
-    'volume': '1000000',
-    'avgVolume': '0'
-}
-
-cleaned = clean_stock_data(raw)
-print(cleaned)
-```
-
-### 格式化输出
-
-```python
-from FQBase.Util import format_percentage, date_to_str
-from datetime import datetime
-
-def format_stock_display(stock):
-    """格式化股票信息用于显示"""
-    change = percentage_change(stock['close'], stock['prev_close'])
-
-    return {
-        'code': stock['code'],
-        'date': date_to_str(stock['date'], '%Y-%m-%d'),
-        'price': f"¥{stock['close']:.2f}",
-        'change': f"{'+' if change >= 0 else ''}{format_percentage(change/100)}"
-    }
-```
-
-### 报表生成
-
-```python
-from FQBase.Util import date_to_str, parse_number, format_percentage
-
-def generate_report(data_list):
-    """生成简单报表"""
-    report_lines = []
-    report_lines.append(f"报表日期: {date_to_str(datetime.now())}")
-    report_lines.append("-" * 50)
-
-    for item in data_list:
-        name = item['name']
-        value = parse_number(item['value'])
-        pct = parse_number(item['pct'])
-
-        report_lines.append(
-            f"{name:20s} {value:>10.2f} {format_percentage(pct):>10s}"
-        )
-
-    return "\n".join(report_lines)
-```
-
----
-
-## 相关文档
-
-- [Util 模块](../README.md)
-- [格式转换](../transformer.md)
-- [日期工具](../date/README.md)
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v1.0.0 | 2024-01-01 | 初始版本 |

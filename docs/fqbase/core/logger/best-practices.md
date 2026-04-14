@@ -1,113 +1,51 @@
-# Logger 最佳实践
-
-**模块路径**: `FQBase.Core.logger`
-**源码**: [logger.py](file:///Users/A.D.189/FQuant/FQuant.Server/FQBase/FQBase/Core/logger.py)
-
+---
+title: 统一日志系统 - 最佳实践
+description: 统一日志系统最佳实践与建议
+tag:
+  - fqbase
+  - logger
 ---
 
-## 一、日志级别使用
+# 统一日志系统 - 最佳实践
+
+## 性能最佳实践
+
+### 技巧 1: 使用合适的日志级别
+
+**建议：** 根据环境选择合适的日志级别
 
 ```python
-logger.debug("调试信息")    # 仅调试时输出
-logger.info("普通信息")     # 正常运行时输出
-logger.warning("警告信息")  # 警告信息
-logger.error("错误信息")    # 错误已发生
-logger.exception("异常")    # 异常信息（包含堆栈）
+# 生产环境
+logger.setLevel(logging.WARNING)  # 只记录警告和错误
+
+# 开发环境
+logger.setLevel(logging.DEBUG)  # 记录所有信息
 ```
 
----
+### 技巧 2: 避免冗余日志
 
-## 二、日志消息格式
+**建议：** 不要在循环中记录大量日志
 
 ```python
-# 推荐：结构化消息
-logger.info(f"行情获取完成: code={code} count={len(data)} duration={elapsed:.2f}s")
+# 不好：每次迭代都记录
+for item in items:
+    logger.info(f'处理: {item}')
 
-# 不推荐：模糊消息
-logger.info("数据获取完成")
+# 好：批量记录或使用进度
+logger.info(f'开始处理 {len(items)} 个项目')
 ```
 
----
+## 配置最佳实践
 
-## 三、异常记录
-
-```python
-try:
-    data = fetch_data(code)
-except Exception:
-    logger.exception(f"获取 {code} 数据失败")
-    raise
-```
-
----
-
-## 四、配置化管理
-
-```python
-# logging.yaml
-version: 1
-disable_existing_loggers: false
-
-formatters:
-  default:
-    format: '[%(asctime)s] %(levelname)s [%(name)s:%(lineno)d] %(message)s'
-    datefmt: '%Y-%m-%d %H:%M:%S'
-
-handlers:
-  console:
-    class: logging.StreamHandler
-    formatter: default
-    stream: ext://sys.stdout
-
-  file:
-    class: logging.handlers.RotatingFileHandler
-    formatter: default
-    filename: /var/log/fquant/fquant.log
-    maxBytes: 10485760  # 10MB
-    backupCount: 5
-
-loggers:
-  MarketData:
-    level: DEBUG
-    handlers: [console, file]
-
-root:
-    level: INFO
-    handlers: [console, file]
-```
-
----
-
-## 五、多环境配置
+### 技巧 1: 使用环境变量
 
 ```python
 import os
-from FQBase.Core import init_logging
 
-env = os.getenv('ENV', 'development')
-
-config_map = {
-    'development': '/opt/fquant/config/dev-logging.yaml',
-    'staging': '/opt/fquant/config/staging-logging.yaml',
-    'production': '/etc/fquant/logging.yaml',
-}
-
-init_logging(config_map.get(env, '/opt/fquant/config/dev-logging.yaml'))
+log_dir = os.environ.get('FQ_LOG_DIR', '~/.fqdata/logs')
 ```
 
----
+## 相关文档
 
-## 六、动态日志级别
-
-```python
-import logging
-from FQBase.Core import get_logger
-
-logger = get_logger('MarketData')
-
-# 调试时临时设置 DEBUG 级别
-logger._logger.setLevel(logging.DEBUG)
-
-# 生产时恢复 INFO
-logger._logger.setLevel(logging.INFO)
-```
+- [API参考](./api.md)
+- [配置指南](./configuration.md)

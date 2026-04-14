@@ -2,6 +2,26 @@
 
 通达信数据适配器模块，提供股票、指数、期货、债券、港股、期权等数据的通达信接口。
 
+## 文档索引
+
+| 文档 | 说明 |
+|------|------|
+| [README](README.md) | 模块总览和快速开始 |
+| [框架文档](framework.md) | 框架集成、初始化、生命周期 |
+| [架构说明](architecture.md) | 技术架构、核心组件、数据流程 |
+| [设计文档](design.md) | 设计决策、模式应用、接口规范 |
+| [API 参考](api.md) | 完整 API 文档 |
+| [使用指南](usage.md) | 详细使用教程和示例 |
+| [最佳实践](best-practices.md) | 性能优化、错误处理、缓存策略 |
+| [开发指南](development.md) | 二次开发、扩展指南 |
+| [FAQ](faq.md) | 常见问题解答 |
+| [更新日志](changelog.md) | 版本历史和变更内容 |
+| [配置说明](config.md) | 环境变量和配置文件 |
+| [连接池与健康检查](connection_pool.md) | 连接管理、容错机制 |
+| [Base API](base.md) | TdxBaseAdapter 详细文档 |
+| [Base 开发指南](base_development.md) | TdxBaseAdapter 开发参考 |
+| [Base FAQ](base_faq.md) | TdxBaseAdapter 常见问题 |
+
 ## 模块结构
 
 ```
@@ -74,6 +94,14 @@ from FQData.DataSource.adapters.tdx import TdxIndexAdapter
 adapter = TdxIndexAdapter()
 ```
 
+| 方法 | 说明 |
+|------|------|
+| `get_index_list()` | 获取指数列表 |
+| `get_index_day(code, start, end, frequence)` | 获取指数日线 |
+| `get_index_min(code, start, end, frequence)` | 获取指数分钟线 |
+| `get_etf_list()` | 获取ETF/LOF基金列表 |
+| `get_index_latest(code, frequence)` | 获取指数最新K线 |
+
 ### TdxFutureAdapter
 
 期货数据适配器。
@@ -83,6 +111,14 @@ from FQData.DataSource.adapters.tdx import TdxFutureAdapter
 
 adapter = TdxFutureAdapter()
 ```
+
+| 方法 | 说明 |
+|------|------|
+| `get_extensionmarket_list()` | 获取扩展市场代码列表 |
+| `get_future_day(code, start, end, frequence)` | 获取期货日线 |
+| `get_future_min(code, start, end, frequence)` | 获取期货分钟线 |
+| `get_future_realtime(code)` | 获取期货实时行情 |
+| `get_future_transaction(code, start, end)` | 获取期货历史成交分笔 |
 
 ### TdxBondAdapter
 
@@ -94,121 +130,82 @@ from FQData.DataSource.adapters.tdx import TdxBondAdapter
 adapter = TdxBondAdapter()
 ```
 
-### TdxHKStockAdapter
+| 方法 | 说明 |
+|------|------|
+| `get_bond_list()` | 获取债券列表 |
+| `get_bond_day(code, start, end, frequence)` | 获取债券日线 |
+| `get_bond_min(code, start, end, frequence)` | 获取债券分钟线 |
+| `get_bond2stock_list()` | 获取可转债列表 |
+| `get_bond2stock_day(code, start, end, frequence)` | 获取可转债转股日线 |
 
-港股数据适配器。
+### TdxIPSelector
+
+IP 选择器（单例模式）。
 
 ```python
-from FQData.DataSource.adapters.tdx import TdxHKStockAdapter
+from FQData.DataSource.adapters.tdx import TdxIPSelector
 
-adapter = TdxHKStockAdapter()
+best_ip = TdxIPSelector.select_best_ip()
+print(f"股票最优 IP: {best_ip['stock']}")
+print(f"期货最优 IP: {best_ip['future']}")
 ```
 
-### TdxOptionAdapter
+| 方法 | 说明 |
+|------|------|
+| `select_best_ip()` | 选择最优 IP |
+| `get_mainmarket_ip()` | 获取主板市场 IP |
+| `get_extensionmarket_ip()` | 获取期货市场 IP |
+| `get_ip_list(type_, n)` | 获取排序后的 IP 列表 |
+| `reset()` | 重置 IP 缓存 |
 
-期权数据适配器。
+### TdxConnectionPool
 
-```python
-from FQData.DataSource.adapters.tdx import TdxOptionAdapter
-
-adapter = TdxOptionAdapter()
-```
-
-### TdxRealtimeAdapter
-
-实时行情适配器。
+连接池（单例模式）。
 
 ```python
-from FQData.DataSource.adapters.tdx import TdxRealtimeAdapter, get_today_all
+from FQData.DataSource.adapters.tdx.connection_pool import get_tdx_pool
 
-adapter = TdxRealtimeAdapter()
-data = get_today_all()
-```
+pool = get_tdx_pool()
+print(f"HQ 连接数: {pool.hq_count}")
+print(f"EX 连接数: {pool.ex_count}")
 
-### TdxTransactionAdapter
-
-成交明细适配器。
-
-```python
-from FQData.DataSource.adapters.tdx import TdxTransactionAdapter
-
-adapter = TdxTransactionAdapter()
-```
-
-### TdxExtensionAdapter
-
-扩展数据适配器。
-
-```python
-from FQData.DataSource.adapters.tdx import TdxExtensionAdapter
-
-adapter = TdxExtensionAdapter()
-```
-
-### TdxMacroAdapter
-
-宏观数据适配器。
-
-```python
-from FQData.DataSource.adapters.tdx import TdxMacroAdapter
-
-adapter = TdxMacroAdapter()
+pool.close_all()  # 关闭所有连接
 ```
 
 ### TdxDataManager
 
-板块数据管理器，提供板块数据的下载、解析功能。
+板块数据管理器。
 
 ```python
 from FQData.DataSource.adapters.tdx import TdxDataManager
 
 manager = TdxDataManager()
-manager.download_and_extract()  # 下载并解压缩
-manager.move_readable_files()  # 移动可读取文件
-df = manager.get_industry_block()  # 获取行业板块
-df = manager.get_block_data()  # 获取板块数据
+manager.download_and_extract()
+df = manager.get_industry_block()
 ```
 
-| 方法 | 说明 |
-|------|------|
-| `download_and_extract()` | 下载并解压板块数据文件 |
-| `move_readable_files()` | 移动可读取文件到 BASEDATAPATH |
-| `get_industry_block()` | 获取行业板块数据 |
-| `get_block_data()` | 获取板块数据文件内容 |
-| `get_stock_info()` | 获取股票基本信息 |
-
 ### 历史财务数据
-
-提供历史财务数据的下载和解析功能。
 
 ```python
 from FQData.DataSource.adapters.tdx import (
     TdxHistoryFinancialCrawler,
     TdxHistoryFinancialReader,
-    download_financialzip,
-    parse_filelist,
 )
 
-# 爬取财务数据
 crawler = TdxHistoryFinancialCrawler()
 crawler.download_and_parse()
 
-# 读取财务数据
 reader = TdxHistoryFinancialReader()
 df = reader.get_df('financial_data.zip')
 ```
 
-| 函数 | 说明 |
-|------|------|
-| `TdxHistoryFinancialCrawler` | 历史财务数据爬虫类 |
-| `TdxHistoryFinancialReader` | 历史财务数据读取器类 |
-| `download_financialzip()` | 下载财务数据包 |
-| `download_financialzip_fromtdx()` | 从通达信下载财务数据 |
-| `parse_filelist()` | 解析文件列表 |
-| `parse_all()` | 解析所有文件 |
-| `financialmeans()` | 财务指标计算 |
-
 ## 快速开始
+
+### 安装依赖
+
+```bash
+pip install pytdx>=1.88
+```
 
 ### 获取股票日线
 
@@ -245,11 +242,10 @@ from FQData.DataSource.adapters.tdx import TdxIndexAdapter
 
 adapter = TdxIndexAdapter()
 
-data = adapter.get_index_bars(
+data = adapter.get_index_day(
     code='000001',
-    category=9,
-    start=0,
-    count=100
+    start='2024-01-01',
+    end='2024-12-31'
 )
 ```
 
@@ -260,7 +256,7 @@ from FQData.DataSource.adapters.tdx import TdxFutureAdapter
 
 adapter = TdxFutureAdapter()
 
-data = adapter.get_future_daily(
+data = adapter.get_future_day(
     code='IF2401',
     start='2024-01-01',
     end='2024-12-31'
@@ -315,6 +311,14 @@ TdxBaseAdapter.set_default_timeout(1.0)
 export TDX_DEFAULT_TIMEOUT=0.7
 ```
 
+### 配置文件
+
+```ini
+[IPLIST]
+exclude = [{'ip': '1.2.3.4', 'port': 7709}]
+default = {'stock': {'ip': '106.14.201.200', 'port': 7709}, 'future': {'ip': '112.95.244.183', 'port': 7709}}
+```
+
 ## 错误处理
 
 ```python
@@ -334,20 +338,8 @@ except DataSourceAPIError:
     print("API 调用失败")
 ```
 
-## IP 选择器
-
-TdxIPSelector 自动选择最优服务器 IP：
-
-```python
-from FQData.DataSource.adapters.tdx import TdxIPSelector
-
-selector = TdxIPSelector()
-ip, port = selector.select_best_ip()
-```
-
 ## 相关文档
 
 - [DataSource 模块](../README.md)
 - [DataSource API](../api.md)
 - [适配器索引](../adapters/README.md)
-- [TDX 连接池与健康检查](connection_pool.md)

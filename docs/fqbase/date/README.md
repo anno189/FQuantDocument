@@ -1,108 +1,97 @@
-# Date 模块
+---
+title: Date - 日期时间工具
+description: FQBase 日期时间工具模块，提供时间戳转换、交易日计算等功能
+tag:
+  - fqbase
+  - date
 
-日期时间工具模块，提供时间戳转换、日期格式化和交易日计算等功能。
+summary:
+  type: utility
+  complexity: low
+  maturity: stable
+  size: xs
+  core_classes: []
+  key_functions:
+    - util_str_to_datetime
+    - util_if_trade
+    - util_get_trade_range
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqbase
 
-```
-FQBase/Date/
-├── __init__.py           # 模块导出
-├── timestamp.py           # 时间戳与日期时间转换
-├── trade.py              # 交易日相关算法
-└── trade_dates_data.py   # A股交易日历数据
-```
+concepts:
+  provides:
+    - name: 时间戳转换
+      definition: Unix 时间戳与日期时间字符串的相互转换
+    - name: 交易日计算
+      definition: 判断是否为交易日、获取前后交易日等
+    - name: 日期操作
+      definition: 日期加减、格式化、解析等
+---
 
-## 核心功能
+# Date - 日期时间工具
 
-| 子模块 | 功能 |
-|--------|------|
-| [timestamp](timestamp.md) | Unix时间戳与datetime互转、日期字符串格式化 |
-| [trade](trade.md) | 交易日判断、下一个/上一个交易日、交易日间隔计算 |
+## 阅读路径
 
-## 快速开始
+| 角色 | 阅读路径 |
+|------|---------|
+| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [速查表](./cheatsheet.md) → [使用指南](./usage.md) → [案例库](./examples.md) |
+| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → [API参考](./api.md) → [使用指南](./usage.md) → [最佳实践](./best-practices.md) |
 
-### 判断是否为交易日
 
-```python
-from FQBase.Date import util_if_trade
+## 一句话总览
 
-# 判断指定日期是否为交易日
-result = util_if_trade("2026-01-01")
-print(result)  # False (元旦假期)
+📌 **FQBase 日期时间工具模块，提供时间戳转换、交易日计算等功能**
 
-result = util_if_trade("2026-04-03")
-print(result)  # True (普通交易日)
-```
+**TL;DR**：
+- 解决什么问题：处理日期时间相关的常见操作
+- 核心能力：时间戳转换、交易日判断、日期操作
+- 入门难度：🟢 简单
 
-### 获取交易日
+**快速判断**：当您需要处理日期时间、计算交易日时，使用本模块。
 
-```python
-from FQBase.Date import util_get_next_trade_date, util_get_pre_trade_date
+## 适用场景
 
-# 获取下一个交易日
-next_day = util_get_next_trade_date("2026-04-03", n=1)
-print(next_day)  # 2026-04-07 (清明节后第一个交易日)
+✅ **推荐使用**：
+- 时间戳与日期字符串转换
+- 判断是否为交易日
+- 获取交易日列表
+- 日期加减计算
 
-# 获取前一个交易日
-prev_day = util_get_pre_trade_date("2026-04-03", n=1)
-print(prev_day)  # 2026-04-02
-```
+## 概述
 
-### 时间戳转换
+Date 是 FQBase 的日期时间工具模块，提供以下功能：
 
-```python
-from FQBase.Date import util_datetime_to_Unix_timestamp, util_timestamp_to_str
+- **时间戳转换**：Unix 时间戳与日期时间的相互转换
+- **交易日计算**：判断交易日、获取前后交易日
+- **日期操作**：日期加减、格式化、解析
 
-# datetime转Unix时间戳
-ts = util_datetime_to_Unix_timestamp(datetime.now())
-print(ts)  # 1743600000.0
-
-# 时间戳转字符串
-time_str = util_timestamp_to_str(1743600000)
-print(time_str)  # 2026-04-02 12:00:00
-```
-
-## API 索引
-
-### timestamp 子模块
-
-| 函数 | 说明 |
-|------|------|
-| `util_datetime_to_Unix_timestamp` | datetime 转 Unix 时间戳 |
-| `util_timestamp_to_str` | 时间戳转字符串 |
-| `util_str_to_Unix_timestamp` | 字符串转 Unix 时间戳 |
-| `util_str_to_datetime` | 字符串转 datetime |
-| `util_stamp2datetime` | 时间戳转 datetime（支持多精度） |
-| `util_today_str` | 获取今日日期字符串 |
-| `util_date_str2int` | 日期字符串转整数 |
-| `util_date_int2str` | 日期整数转字符串 |
-
-### trade 子模块
-
-| 函数 | 说明 |
-|------|------|
-| `util_if_trade` | 判断是否为交易日 |
-| `util_get_next_trade_date` | 获取下一个交易日 |
-| `util_get_pre_trade_date` | 获取前一个交易日 |
-| `util_date_gap` | 交易日偏移计算 |
-| `util_get_trade_gap` | 交易日间隔天数 |
-| `util_if_tradetime` | 判断是否在交易时间内 |
-| `util_get_real_date` | 获取最近的交易日（二分查找） |
-
-## 文档索引
+## 快速链接
 
 | 文档 | 说明 |
 |------|------|
-| [README](README.md) | 本文档，模块索引 |
-| [timestamp](timestamp.md) | 时间戳转换子模块 |
-| [trade](trade.md) | 交易日算法子模块 |
-| [框架](framework.md) | 模块架构与核心概念 |
-| [架构](architecture.md) | 设计与工作流程 |
-| [API](api.md) | 完整API参考 |
-| [使用](usage.md) | 使用指南与示例 |
-| [最佳实践](best-practices.md) | 开发建议与注意事项 |
-| [设计](design.md) | 设计决策文档 |
+| [快速入门](./quick-start.md) | 5分钟快速上手 |
+| [API参考](./api.md) | API参考文档 |
 
-## 迁移信息
+## 子模块
 
-本模块迁移自 `FQData.QAUtil.QADate`，保持了原有的函数接口。
+Date 容器包含以下单一文件模块（极简文档）：
+
+| 模块 | 说明 | 文档 |
+|------|------|------|
+| timestamp.py | 时间戳与日期时间转换工具 | [timestamp.md](./timestamp.md) |
+| trade.py | 交易日相关算法 | [trade.md](./trade.md) |
+| trade_dates_data.py | 沪深A股交易日历数据 | [trade_dates_data.md](./trade_dates_data.md) |
+
+## 安装
+
+```bash
+pip install fquant-fqbase
+```
+
+## 相关文档
+
+| 类型 | 文档 | 链接 |
+|------|------|------|
+| 项目首页 | FQBase首页 | [README](../README.md) |

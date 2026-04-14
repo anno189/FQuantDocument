@@ -1,85 +1,99 @@
-# network 子模块
+---
+title: Network
+description: 网络工具，提供URL检测和网络延迟测量功能
+tag:
+  - fqbase
+  - util
+  - utility
 
-网络工具模块，提供 URL 可访问性检查和延迟测量功能。
+summary:
+  type: utility
+  complexity: minimal
+  maturity: stable
+  functions:
+    - web_ping
+    - check_url_accessible
+---
 
-## 模块路径
+# Network
 
-`FQBase.Util.network`
+## 一句话总览
 
-## 函数列表
+📌 **网络工具，URL可访问性检测和网络延迟测量**
 
-| 函数 | 说明 |
-|------|------|
-| `web_ping` | ping URL 获取延迟（毫秒） |
-| `check_url_accessible` | 检查 URL 是否可访问 |
+**TL;DR**：
+- 核心能力：URL检测、网络延迟、ping测试
+- 入门难度：🟢 简单
 
 ## 快速开始
 
-### ping 检测
-
 ```python
-from FQBase.Util import web_ping
+from FQBase.Util.network import check_url_accessible, web_ping
 
-latency = web_ping("localhost", count=1)
-print(latency)  # 返回延迟毫秒数，失败返回 None
+if check_url_accessible('https://example.com'):
+    latency = web_ping('example.com')
 ```
 
-### URL 可访问性检查
-
-```python
-from FQBase.Util import check_url_accessible
-
-if check_url_accessible("http://localhost:8080"):
-    print("URL 可访问")
-else:
-    print("URL 不可访问")
-```
-
-## API 参考
+## 函数列表
 
 ### web_ping
 
 ```python
-def web_ping(url: str, count: int = 1) -> Optional[int]
+from FQBase.Util.network import web_ping
+
+result = web_ping(url, count=1)
 ```
 
-ping URL 获取延迟。
+**描述：** Ping URL获取延迟
 
-**参数**：
-- `url`: URL 地址（仅支持主机名或 IP，不支持 URL 路径）
-- `count`: ping 次数，默认 1
+**参数：**
 
-**返回**：延迟毫秒数，失败返回 None
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| url | str | 是 | URL地址（仅支持主机名或IP） |
+| count | int | 否 | ping次数，默认1 |
 
-**安全说明**：
-- 使用正则过滤移除危险字符
-- 使用 `shell=False` 防止命令注入
-- 仅接受有效的主机名或 IP 地址字符（字母、数字、点、连字符、冒号）
+**返回：** `Optional[int]` - 延迟毫秒数，失败返回 None
+
+**示例：**
+
+```python
+latency = web_ping('google.com')
+print(f'延迟: {latency}ms')
+```
+
+---
 
 ### check_url_accessible
 
 ```python
-def check_url_accessible(url: str, timeout: int = 5) -> bool
+from FQBase.Util.network import check_url_accessible
+
+result = check_url_accessible(url, timeout=5)
 ```
 
-检查 URL 是否可访问。
+**描述：** 检查URL是否可访问
 
-**参数**：
-- `url`: URL 地址
-- `timeout`: 超时秒数，默认 5
+**参数：**
 
-**返回**：是否可访问
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| url | str | 是 | URL地址 |
+| timeout | int | 否 | 超时秒数，默认5 |
 
-**说明**：使用 `urllib.request`，无命令注入风险
+**返回：** `bool` - URL是否可访问
 
-## 相关文档
+**示例：**
 
-| 文档 | 说明 |
-|------|------|
-| [README](../README.md) | 模块首页 |
-| [codec.md](codec.md) | 股票代码转换 |
-| [file.md](file.md) | 文件操作 |
-| [parallel.md](parallel.md) | 并行计算 |
-| [bar.md](bar.md) | 时间索引 |
-| [converters.md](converters.md) | 数据转换 |
-| [transformer.md](transformer.md) | 格式转换 |
+```python
+if check_url_accessible('https://api.example.com'):
+    print('API可访问!')
+```
+
+---
+
+## 变更日志
+
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v1.0.0 | 2024-01-01 | 初始版本 |

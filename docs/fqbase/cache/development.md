@@ -1,328 +1,266 @@
-# Cache 模块开发指南
-
-## 添加新的缓存适配器
-
-### 1. 实现 CacheInterface 接口
-
-创建新的适配器类，实现 `CacheInterface` 协议定义的所有方法：
-
-```python
-from FQBase.Cache._interface import CacheInterface
-from typing import Any, Optional, Dict, List
-
-class CustomCacheAdapter:
-    """自定义缓存适配器"""
-
-    def __init__(self, config):
-        self.config = config
-
-    def get(self, key: str, default: Any = None) -> Any:
-        """获取缓存值"""
-        raise NotImplementedError
-
-    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> bool:
-        """设置缓存值"""
-        raise NotImplementedError
-
-    def delete(self, key: str) -> bool:
-        """删除缓存"""
-        raise NotImplementedError
-
-    def exists(self, key: str) -> bool:
-        """检查键是否存在"""
-        raise NotImplementedError
-
-    def clear(self) -> bool:
-        """清空所有缓存"""
-        raise NotImplementedError
-
-    def ttl(self, key: str) -> int:
-        """获取剩余生存时间"""
-        raise NotImplementedError
-
-    def expire(self, key: str, ttl: int) -> bool:
-        """设置过期时间"""
-        raise NotImplementedError
-
-    def get_many(self, keys: List[str]) -> Dict[str, Any]:
-        """批量获取"""
-        raise NotImplementedError
-
-    def set_many(self, mapping: Dict[str, Any], ttl: Optional[int] = None) -> bool:
-        """批量设置"""
-        raise NotImplementedError
-
-    def delete_many(self, keys: List[str]) -> bool:
-        """批量删除"""
-        raise NotImplementedError
-```
-
-### 2. 在工厂函数中注册
-
-在 `FQBase.Cache.__init__.py` 的 `create_cache` 函数中添加新适配器的支持：
-
-```python
-def create_cache(config: CacheConfigProtocol = None) -> CacheInterface:
-    if config is None:
-        config = get_cache_config()
-
-    if config.cache_type == "redis":
-        return RedisCacheAdapter(config)
-    elif config.cache_type == "mongo":
-        return MongoCacheAdapter(config)
-    elif config.cache_type == "custom":
-        return CustomCacheAdapter(config)  # 添加新适配器
-    else:
-        return LocalCache(name="default", ttl=config.ttl_default)
-```
-
+---
+title: Cache - 开发指南
+description: Cache 模块开发指南与贡献指南
+tag:
+  - fqbase
+  - cache
 ---
 
-## 缓存键设计规范
+# Cache - 开发指南
 
-### 命名规范
+## 阅读路径
 
-1. **使用冒号分隔层级**：
-   ```
-   user:profile:123          # 用户 -> 个人资料 -> ID
-   stock:daily:600000        # 股票 -> 日线 -> 代码
-   order:filled:20240101     # 订单 -> 成交 -> 日期
-   ```
+| 角色 | 阅读路径 |
+|------|---------|
+| 🔵 开发者 | [README](./README.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) → [设计原则](./design.md) → [API参考](./api.md) → **[开发指南](./development.md)** → [最佳实践](./best-practices.md) |
 
-2. **添加前缀避免冲突**：
-   ```python
-   # 使用 prefix 参数
-   redis = RedisCacheAdapter(prefix='fqcache:')
-   # 实际键: fqcache:user:profile:123
-   ```
+## 概述
 
-3. **键名小写**：
-   ```python
-   # 推荐
-   cache.set('user:profile', data)
+本指南介绍如何开发和贡献 Cache 模块。
 
-   # 避免
-   cache.set('User:Profile', data)
-   ```
+## 开发环境设置
 
-### Prefix 使用场景
+### 前置要求
 
-详见 [Cache Prefix 使用场景](./Cache_Prefix_使用场景.md)
+- Python 3.8+
+- Git
+- Redis（用于测试）
+- MongoDB（用于测试）
 
----
+### 设置
 
-## 序列化策略
+```bash
+# 克隆仓库
+git clone https://github.com/fquant/fquant.git
+cd fquant
 
-### 支持的类型
+# 安装依赖
+pip install -e .
 
-| 类型 | 序列化方式 |
-|------|-----------|
-| str | 直接存储 |
-| int/float/bool | pickle |
-| list/tuple/dict/set | pickle |
-| pandas DataFrame/Series | pickle |
-| numpy ndarray | 自定义二进制格式 |
+# 安装开发依赖
+pip install -e ".[dev]"
+pip install pytest pytest-cov
 
-### 自定义序列化
-
-如需支持其他类型，在 `_serializers.py` 中添加：
-
-```python
-def serialize_value(value: Any) -> Union[str, bytes, None]:
-    if isinstance(value, CustomType):
-        return json.dumps(value.__dict__).encode()
-    # ... 其他类型
+# 安装 Redis 和 MongoDB（使用 Docker）
+docker run -d -p 6379:6379 redis:7
+docker run -d -p 27017:27017 mongo:6
 ```
 
----
+## 项目结构
 
-## 性能优化
-
-### 1. 批量操作优先
-
-```python
-# 推荐：批量操作
-cache.set_many({'key1': 'v1', 'key2': 'v2', 'key3': 'v3'})
-
-# 避免：循环单条操作
-for key, value in data.items():
-    cache.set(key, value)
+```
+FQBase/
+└── Cache/
+    ├── __init__.py          # 模块导出
+    ├── CacheAdapters.py     # 主要实现（LocalCache、RedisCacheAdapter、MongoCacheAdapter）
+    ├── _interface.py        # 缓存接口定义
+    ├── _serializers.py     # 序列化/反序列化
+    ├── config_protocol.py  # 配置协议
+    ├── metrics.py          # 指标收集
+    └── redis_conn.py       # Redis 连接管理
 ```
 
-### 2. 合理设置 TTL
+## 代码规范
+
+### 样式指南
+
+- 遵循 PEP 8
+- 使用类型提示
+- 编写文档字符串
+
+### 代码示例
 
 ```python
-# 实时数据：短 TTL
-quote_cache = LocalCache(name='quote', ttl=60)
+from typing import Optional, Dict, Any, Callable
+import threading
+from collections import OrderedDict
 
-# 日线数据：长 TTL
-daily_cache = LocalCache(name='daily', ttl=86400)
+class MyCache:
+    """本地缓存实现。
+
+    支持 LRU 驱逐策略和 TTL 过期。
+
+    参数:
+        name: 缓存实例名称
+        maxsize: 最大缓存条目数
+
+    示例:
+        >>> cache = MyCache(name='test', maxsize=10)
+        >>> cache.set('key', 'value')
+        >>> cache.get('key')
+        'value'
+    """
+
+    def __init__(self, name: str = 'default', maxsize: int = 128) -> None:
+        self.name = name
+        self.maxsize = maxsize
+        self._cache: OrderedDict = OrderedDict()
+        self._lock = threading.Lock()
+
+    def get(self, key: str, default: Optional[Any] = None) -> Optional[Any]:
+        """获取缓存值。
+
+        参数:
+            key: 缓存键
+            default: 默认返回值
+
+        返回:
+            缓存值或默认值
+        """
+        with self._lock:
+            if key in self._cache:
+                # 移动到末尾（LRU）
+                self._cache.move_to_end(key)
+                return self._cache[key]
+            return default
+
+    def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
+        """设置缓存值。
+
+        参数:
+            key: 缓存键
+            value: 缓存值
+            ttl: 过期时间（秒）
+        """
+        with self._lock:
+            if key in self._cache:
+                self._cache.move_to_end(key)
+            self._cache[key] = value
+            # 超过容量时驱逐
+            while len(self._cache) > self.maxsize:
+                self._cache.popitem(last=False)
 ```
 
-### 3. 使用连接池
+## 测试
 
-```python
-# RedisCacheAdapter 内部使用连接池
-# 确保配置合理的连接参数
-redis = RedisCacheAdapter(
-    host='localhost',
-    port=6379,
-    # 连接池参数由 redis-py 自动管理
-)
+### 运行测试
+
+```bash
+# 运行所有测试
+pytest tests/FQBase/Cache/ -v
+
+# 运行特定测试
+pytest tests/FQBase/Cache/test_cache.py -v
+
+# 带覆盖率运行
+pytest --cov=FQBase.Cache tests/FQBase/Cache/
 ```
 
----
-
-## 线程安全
-
-所有缓存适配器都是线程安全的：
-
-- `LocalCache`：使用 `threading.Lock`
-- `RedisCacheAdapter`：Redis 客户端本身线程安全
-- `MongoCacheAdapter`：MongoDB 客户端本身线程安全
-
----
-
-## 异常处理
-
-缓存操作失败时应优雅降级：
-
-```python
-def get_cached_data(key):
-    try:
-        return cache.get(key)
-    except Exception as e:
-        logger.warning(f"Cache get failed: {e}")
-        return None  # 降级处理
-
-def set_cached_data(key, value):
-    try:
-        cache.set(key, value)
-    except Exception as e:
-        logger.warning(f"Cache set failed: {e}")
-        # 不抛出异常，避免影响主流程
-```
-
----
-
-## 测试指南
-
-### 单元测试
+### 测试示例
 
 ```python
 import pytest
+import time
 from FQBase.Cache import LocalCache
 
 class TestLocalCache:
-    def setup_method(self):
-        self.cache = LocalCache(name='test', singleton=False)
+    """LocalCache 测试类"""
 
-    def test_set_and_get(self):
-        self.cache.set('key', 'value')
-        assert self.cache.get('key') == 'value'
+    def test_basic_operations(self):
+        """测试基本操作"""
+        cache = LocalCache(maxsize=10, ttl=60)
+        
+        # 测试 set/get
+        cache.set('key1', 'value1')
+        assert cache.get('key1') == 'value1'
+        
+        # 测试默认值
+        assert cache.get('nonexistent') is None
+        assert cache.get('nonexistent', 'default') == 'default'
 
     def test_ttl(self):
-        cache = LocalCache(name='test', ttl=1, singleton=False)
+        """测试 TTL 过期"""
+        cache = LocalCache(ttl=1)
         cache.set('key', 'value')
-        assert cache.ttl('key') <= 1
+        
+        # 未过期
+        assert cache.get('key') == 'value'
+        
+        # 等待过期
+        time.sleep(1.1)
+        
+        # 已过期
+        assert cache.get('key') is None
 
-    def test_not_exists(self):
-        assert self.cache.get('nonexistent') is None
+    def test_eviction(self):
+        """测试驱逐策略"""
+        cache = LocalCache(maxsize=2, ttl=0)
+        
+        cache.set('key1', 'value1')
+        cache.set('key2', 'value2')
+        cache.set('key3', 'value3')  # 应该驱逐 key1
+        
+        assert cache.get('key1') is None
+        assert cache.get('key2') == 'value2'
+        assert cache.get('key3') == 'value3'
 
-    def test_delete(self):
-        self.cache.set('key', 'value')
-        assert self.cache.delete('key') is True
-        assert self.cache.get('key') is None
-
-    def test_clear(self):
-        self.cache.set('key1', 'value1')
-        self.cache.set('key2', 'value2')
-        self.cache.clear()
-        assert len(self.cache) == 0
-
-    def test_stats(self):
-        self.cache.set('key', 'value')
-        self.cache.get('key')
-        self.cache.get('nonexistent')
-        stats = self.cache.stats
-        assert stats['hits'] == 1
-        assert stats['misses'] == 1
+    def test_thread_safety(self):
+        """测试线程安全"""
+        import threading
+        cache = LocalCache(maxsize=1000)
+        
+        def worker(keys):
+            for i in keys:
+                cache.set(f'key{i}', f'value{i}')
+                cache.get(f'key{i}')
+        
+        # 多线程并发
+        threads = []
+        for i in range(10):
+            t = threading.Thread(target=worker, args=(range(i*100, (i+1)*100),))
+            threads.append(t)
+        
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        
+        # 验证数据完整性
+        assert cache.stats['hits'] > 0
 ```
 
-### 集成测试
+## 调试
+
+### 启用调试日志
 
 ```python
-import pytest
-from FQBase.Cache import RedisCacheAdapter
+import logging
 
-class TestRedisCacheAdapter:
-    @pytest.fixture
-    def redis_cache(self):
-        cache = RedisCacheAdapter(host='localhost', port=6379)
-        yield cache
-        cache.clear()
-
-    def test_set_and_get(self, redis_cache):
-        redis_cache.set('key', 'value', ttl=3600)
-        assert redis_cache.get('key') == 'value'
-
-    def test_hash_operations(self, redis_cache):
-        redis_cache.hset('user:1', 'name', '张三')
-        assert redis_cache.hget('user:1', 'name') == '张三'
-
-    def test_list_operations(self, redis_cache):
-        redis_cache.lpush('queue', 'a', 'b', 'c')
-        assert redis_cache.lpop('queue') == 'c'
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("FQBase.Cache")
+logger.debug("调试信息")
 ```
 
----
-
-## 监控与调试
-
-### 查看缓存统计
+### 常用调试技巧
 
 ```python
-cache = LocalCache(name='my_cache')
-cache.set('key', 'value')
-cache.get('key')
-cache.get('nonexistent')
+# 查看缓存统计
+cache = LocalCache()
 print(cache.stats)
-# {'name': 'my_cache', 'hits': 1, 'misses': 1, 'hit_rate': '50.00%'}
-```
 
-### 健康检查
-
-```python
+# 查看 Redis 连接状态
 redis = RedisCacheAdapter(host='localhost', port=6379)
-if redis.ping():
-    print("Redis 连接正常")
-else:
-    print("Redis 连接失败")
+print(f"连接状态: {redis.ping()}")
 
-mongo = MongoCacheAdapter(host='localhost', port=27017)
-if mongo.ping():
-    print("MongoDB 连接正常")
+# 列出所有缓存键
+keys = redis.scan(match='*', count=100)
+print(f"缓存键: {keys}")
 ```
 
-### 键扫描
+## 贡献
 
-```python
-redis = RedisCacheAdapter(host='localhost', port=6379, prefix='fqcache:')
-
-# 获取所有键
-all_keys = redis.keys('*')
-
-# 获取匹配模式的键
-user_keys = redis.keys('user:*')
-
-# 限制返回数量
-first_100 = redis.keys('*', limit=100)
-```
+1. Fork 仓库
+2. 创建功能分支
+3. 进行更改
+4. 添加测试
+5. 确保测试通过
+6. 提交 Pull Request
 
 ---
 
 ## 相关文档
 
-- [Cache API](./api.md)
-- [Cache Prefix 使用场景](./Cache_Prefix_使用场景.md)
-- [cache_adapters](./cache_adapters.md)
+- [API参考](./api.md)
+- [设计原则](./design.md)
+- [最佳实践](./best-practices.md)
+- [故障排查](./troubleshooting.md)

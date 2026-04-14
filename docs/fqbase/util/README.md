@@ -1,91 +1,74 @@
-# Util 模块
+---
+title: Util - 跨模块工具层
+description: FQBase 跨模块工具层，提供数据转换、文件处理、网络工具、并行计算等功能
+tag:
+  - fqbase
+  - util
 
-跨模块工具层，提供编码转换、文件操作、网络工具、并行计算等工具函数。
+summary:
+  type: utility
+  complexity: low
+  maturity: stable
+  size: m
+  core_classes:
+    - ParallelProcess
+    - ParallelThread
+  key_functions:
+    - dict_to_df
+    - normalize_code
+    - file_md5
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqbase
+  used_by:
+    - fquant.fqdata
+    - fquant.fqfactor
 
-```
-FQBase/Util/
-├── __init__.py           # 模块导出
-├── codec.py              # 股票代码格式转换
-├── file.py               # 文件处理工具
-├── network.py            # 网络工具
-├── parallel.py           # 并行计算
-├── bar.py                # 时间索引工具
-├── converters.py          # 数据转换工具
-└── transformer.py        # 格式转换工具
-```
+concepts:
+  provides:
+    - name: 数据转换
+      definition: 数据类型转换、格式化工具
+    - name: 文件处理
+      definition: 文件 MD5、目录创建等工具
+    - name: 并行计算
+      definition: 多进程、多线程并行处理
+---
 
-## 子模块
+# Util - 跨模块工具层
 
-| 子模块 | 功能 |
+## 阅读路径
+
+| 角色 | 阅读路径 |
+|------|---------|
+| 🔵 开发者 | [README](./README.md) → [API参考](./api.md) → [使用指南](./usage.md) |
+
+## 一句话总览
+
+📌 **FQBase 跨模块工具层，提供数据转换、文件处理、网络工具、并行计算等功能**
+
+## 概述
+
+Util 是 FQBase 的工具容器模块，聚合了多个工具子模块：
+
+| 子模块 | 说明 |
 |--------|------|
-| [codec](codec.md) | 股票代码格式转换：6位代码、聚宽格式、CTP格式 |
-| [file](file.md) | 文件处理：MD5、SHA256、文件大小、目录操作 |
-| [network](network.md) | 网络工具：ping、URL 可访问性检查 |
-| [parallel](parallel.md) | 并行计算：多进程、多线程封装 |
-| [bar](bar.md) | 时间索引：股票/期货分钟线、小时线时间生成 |
-| [converters](converters.md) | 数据转换：日期、数字、安全除法、百分比 |
-| [transformer](transformer.md) | 格式转换：DataFrame、JSON、字典、列表互转 |
+| [codec](./codec/) | 股票代码格式转换 |
+| [file](./file/) | 文件处理工具 |
+| [network](./network/) | 网络工具 |
+| [parallel](./parallel/) | 并行计算 |
+| [bar](./bar/) | 时间索引工具 |
+| [converters](./converters/) | 数据转换工具 |
+| [transformer](./transformer/) | 格式转换工具 |
+| [crypto](./crypto.md) | 随机数生成工具 |
 
-## 快速开始
+## 安装
 
-### 股票代码转换
-
-```python
-from FQBase.Util import code_to_6digit, code_to_jqformat
-
-code = code_to_6digit(600000)       # '600000'
-jq_code = code_to_jqformat('000001')  # '000001.XSHG'
+```bash
+pip install fquant-fqbase
 ```
 
-### 文件操作
+## 相关文档
 
-```python
-from FQBase.Util import file_md5, file_exists, ensure_dir
-
-md5 = file_md5('/path/to/file')
-if file_exists('/path/to/file'):
-    print("File exists")
-
-ensure_dir('/path/to/dir')
-```
-
-### 并行计算
-
-```python
-from FQBase.Util import ParallelProcess
-
-process = ParallelProcess(max_workers=4)
-results = process.map(worker_function, data_list)
-```
-
-### 数据转换
-
-```python
-from FQBase.Util import date_to_str, safe_divide, percentage_change
-
-date_str = date_to_str(datetime.now())
-result = safe_divide(10, 0, default=0)  # 0
-change = percentage_change(110, 100)  # 10.0
-```
-
-## 设计原则
-
-1. **零依赖**：优先使用 Python 标准库
-2. **安全优先**：网络工具防止命令注入
-3. **异常友好**：文件操作不抛异常，返回 None/False
-4. **类型注解**：关键函数有类型注解
-
-## 文档索引
-
-| 文档 | 说明 |
-|------|------|
-| [README](README.md) | 本文档，模块索引 |
-| [codec](codec.md) | 股票代码转换 |
-| [file](file.md) | 文件操作 |
-| [network](network.md) | 网络工具 |
-| [parallel](parallel.md) | 并行计算 |
-| [bar](bar.md) | 时间索引 |
-| [converters](converters.md) | 数据转换 |
-| [transformer](transformer.md) | 格式转换 |
+- [API参考](./api.md)
+- [使用指南](./usage.md)
