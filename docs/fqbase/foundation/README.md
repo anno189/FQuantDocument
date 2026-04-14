@@ -4,6 +4,36 @@ description: FQBase 基础抽象层，提供设计模式、工具类和接口定
 tag:
   - fqbase
   - foundation
+
+summary:
+  type: foundation
+  complexity: medium
+  maturity: stable
+  size: m
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "需要单例模式时使用 singleton"
+    - "需要输入验证时使用 validators"
+    - "需要重试机制时使用 retry"
+    - "需要依赖注入时使用 container"
+    - "需要熔断保护时使用 circuit_breaker"
+  warnings:
+    - "循环依赖问题需注意"
+    - "container 和 singleton 不能混用"
+  limitations:
+    - "不支持循环依赖"
+    - "lifecycle 仅支持同步初始化"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase
+  used_by:
+    - fquant.fqdata
+    - fquant.fqmarket
+    - fquant.fqalgorithm
+  depends_on: []
+  import_path:
+    - from FQBase.Foundation import validators, exceptions, retry
 ---
 
 # Foundation 基础模块

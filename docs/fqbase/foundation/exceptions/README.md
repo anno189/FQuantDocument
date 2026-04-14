@@ -4,6 +4,26 @@ description: FQBase 统一异常处理系统，提供标准化的异常类和错
 tag:
   - fqbase
   - exceptions
+
+summary:
+  type: foundation
+  complexity: low
+  maturity: stable
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "统一项目中的异常处理"
+    - "需要层次化异常体系时"
+    - "需要错误码和详细信息时"
+  warnings:
+    - "异常需继承自基类FQException"
+    - "错误码不能重复"
+  limitations:
+    - "不支持自定义异常层次"
+
+relationships:
+  depends_on: []
+  import_path:
+    - from FQBase.Foundation.exceptions import FQException
 ---
 
 # 统一异常处理系统

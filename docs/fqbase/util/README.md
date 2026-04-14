@@ -17,6 +17,16 @@ summary:
     - dict_to_df
     - normalize_code
     - file_md5
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "任何需要数据格式转换的场景"
+    - "需要并行处理批量数据的场景"
+    - "需要文件或网络操作的场景"
+  warnings:
+    - "ParallelProcess 不能传 lambda 函数"
+    - "网络工具有超时限制"
+  limitations:
+    - "仅支持本地文件和 HTTP/HTTPS"
 
 relationships:
   belongs_to:
@@ -24,6 +34,11 @@ relationships:
   used_by:
     - fquant.fqdata
     - fquant.fqfactor
+  depends_on:
+    - pandas
+    - numpy
+  import_path:
+    - from FQBase.Util import bar, codec, file
 
 concepts:
   provides:

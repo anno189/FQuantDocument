@@ -25,6 +25,23 @@ summary:
     - df_to_dict
     - resample_ohlc
     - fill_missing_dates
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "DataFrame与JSON互转用于API数据传输"
+    - "K线数据重采样（如1分钟转5分钟）"
+    - "填充缺失日期用于完整时间序列"
+  warnings:
+    - "resample_ohlc需要OHLCV列"
+    - "fill_missing_dates默认不填充值，产生NaN"
+  limitations:
+    - "仅支持标准数据格式"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase.util
+  depends_on: []
+  import_path:
+    - from FQBase.Util.transformer import to_json_from_pandas, to_pandas_from_json
 ---
 
 # Transformer

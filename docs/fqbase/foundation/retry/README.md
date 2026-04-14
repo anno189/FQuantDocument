@@ -1,6 +1,38 @@
+---
+title: Retry 模块
+description: 重试装饰器，提供重试次数限制、重试延迟策略、异常类型过滤等功能
+tag:
+  - fqbase
+  - retry
+---
+
 # Retry 模块
 
 重试装饰器，提供重试次数限制、重试延迟策略、异常类型过滤等功能。支持同步和异步函数。
+
+```yaml
+summary:
+  type: utility
+  complexity: low
+  maturity: stable
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "网络请求失败时自动重试"
+    - "外部API调用需要容错"
+    - "需要指数退避策略"
+  warnings:
+    - "重试会延长执行时间"
+    - "需设置最大重试次数防止无限重试"
+    - "不是所有异常都需要重试"
+  limitations:
+    - "不支持异步重试（仅有装饰器）"
+    - "不能用于生成器"
+
+relationships:
+  depends_on: []
+  import_path:
+    - from FQBase.Foundation import retry
+```
 
 ## 快速开始
 

@@ -6,6 +6,28 @@
 
 `validators` 模块提供量化交易场景下的输入验证功能，包括股票代码、日期、市场、频率等常用数据的验证。支持函数式验证和规则式验证两种模式。
 
+```yaml
+summary:
+  type: utility
+  complexity: low
+  maturity: stable
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "验证股票代码格式是否正确"
+    - "验证日期格式是否有效"
+    - "验证市场代码是否支持"
+    - "验证频率参数是否合法"
+  warnings:
+    - "不同市场的代码规则不同，需注意"
+  limitations:
+    - "仅支持已知市场，不支持自定义市场"
+
+relationships:
+  depends_on: []
+  import_path:
+    - from FQBase.Foundation.validators import validate_code
+```
+
 ## 快速开始
 
 ```python

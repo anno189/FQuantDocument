@@ -12,6 +12,25 @@ summary:
   core_classes:
     - ParallelProcess
     - ParallelThread
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "CPU密集型任务使用多进程（如数据计算）"
+    - "I/O密集型任务使用多线程（如网络请求）"
+    - "批量处理数据时监控进度和错误"
+  warnings:
+    - "多进程不能传递lambda函数"
+    - "多线程有GIL限制，CPU密集型任务不适用"
+    - "进程池/线程池有资源限制，避免创建过多"
+  limitations:
+    - "Windows下多进程使用spawn，速度较慢"
+    - "不支持嵌套并行（进程内再开进程）"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase.util
+  depends_on: []
+  import_path:
+    - from FQBase.Util.parallel import ParallelProcess, ParallelThread
 ---
 
 # Parallel

@@ -17,6 +17,24 @@ summary:
     - file_exists
     - dir_exists
     - ensure_dir
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "检查文件是否存在再进行读取"
+    - "计算文件哈希用于缓存验证"
+    - "确保目录存在后再写入文件"
+  warnings:
+    - "hash 函数失败返回 None，需处理"
+    - "ensure_dir 创建失败返回 False"
+  limitations:
+    - "不支持大文件（>1GB）的哈希计算"
+    - "仅支持本地文件系统"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase.util
+  depends_on: []
+  import_path:
+    - from FQBase.Util.file import file_md5, file_exists
 ---
 
 # File

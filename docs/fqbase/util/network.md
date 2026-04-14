@@ -13,6 +13,24 @@ summary:
   functions:
     - web_ping
     - check_url_accessible
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "在调用外部 API 前检查网络连通性"
+    - "测量数据源的网络延迟用于选择最优节点"
+    - "健康检查数据源是否可用"
+  warnings:
+    - "web_ping 依赖系统 ping 命令，Windows/Linux 行为可能不同"
+    - "check_url_accessible 可能被防火墙拦截返回 False"
+  limitations:
+    - "仅支持 HTTP/HTTPS 协议"
+    - "内网环境可能无法访问外网"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase.util
+  depends_on: []
+  import_path:
+    - from FQBase.Util.network import check_url_accessible, web_ping
 ---
 
 # Network

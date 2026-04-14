@@ -630,9 +630,136 @@ clear_event_bus()
 
 ## 异常
 
-| 异常 | 描述 |
-|------|------|
-| 无特定异常 | EventBus 内部异常会被捕获并记录警告日志 |
+本模块定义的异常类型：
+
+| 异常 | 描述 | 触发条件 | 解决方案 |
+|------|------|---------|---------|
+| **SubscriptionError** | 订阅错误 | 订阅已存在的处理器或无效的主题 | 使用 `replace=True` 参数或检查主题名称 |
+| **PublishError** | 发布错误 | 事件发布失败 | 检查订阅者是否抛出异常 |
+
+### 处理建议
+
+```python
+from FQBase.Core.event_bus import EventBus, Event
+
+bus = EventBus()
+
+try:
+    bus.subscribe('topic', handler)
+except SubscriptionError as e:
+    # 订阅失败处理
+    print(f"订阅失败: {e}")
+
+try:
+    bus.publish(Event('topic', data))
+except PublishError as e:
+    # 发布失败处理
+    print(f"发布失败: {e}")
+```
+
+## API 示例
+
+EventBus 核心方法的示例代码：
+
+### subscribe - 订阅事件
+
+```python
+# 订阅事件
+bus = get_event_bus()
+
+# 定义处理函数
+def on_trade_signal(event):
+    print(f"收到交易信号: {event.data}")
+
+# 订阅（带优先级）
+sub_id = bus.subscribe('trade_signal', on_trade_signal, priority=10)
+print(f"订阅ID: {sub_id}")
+
+# 带弱引用的订阅（防止内存泄漏）
+sub_id_weak = bus.subscribe('data_update', on_data, weak_ref=True)
+```
+
+### publish - 发布事件
+
+```python
+# 同步发布
+bus = get_event_bus()
+bus.publish(Event('trade_signal', {
+    'code': '000001',
+    'signal': 'BUY',
+    'price': 12.50
+}))
+```
+
+### publish_async - 异步发布
+
+```python
+# 异步发布（推荐用于高频场景）
+import asyncio
+
+async def main():
+    bus = get_event_bus()
+    future = await bus.publish_async(Event('async_event', {'data': 'test'}))
+    result = await future
+    print(f"异步发布完成: {result}")
+
+asyncio.run(main())
+```
+
+### publishAwait - 异步等待发布
+
+```python
+# 异步等待发布（支持 await）
+async def main():
+    bus = get_event_bus()
+    await bus.publishAwait(Event('await_event', {'data': 'value'}))
+    print("发布完成")
+
+asyncio.run(main())
+```
+
+### subscribe_global - 全局订阅
+
+```python
+# 全局订阅（接收所有事件）
+bus = get_event_bus()
+
+def on_any_event(event):
+    print(f"收到事件: {event.event_type}, data: {event.data}")
+
+bus.subscribe_global(on_any_event)
+
+# 之后任何事件都会触发
+bus.publish(Event('test', 'hello'))  # 触发 on_any_event
+```
+
+### 完整示例
+
+```python
+from FQBase.Core import get_event_bus, Event
+
+# 获取事件总线
+bus = get_event_bus()
+
+# 定义多个处理器
+def on_buy(event):
+    print(f"买入信号: {event.data}")
+
+def on_sell(event):
+    print(f"卖出信号: {event.data}")
+
+# 订阅不同事件
+bus.subscribe('BUY', on_buy, priority=10)
+bus.subscribe('SELL', on_sell, priority=10)
+
+# 发布事件
+bus.publish(Event('BUY', {'code': '000001', 'price': 12.50}))
+bus.publish(Event('SELL', {'code': '000001', 'price': 13.00}))
+```
+
+### 更多示例
+
+请参考 [快速入门](./quick-start.md) 和 [最佳实践](./best-practices.md)。
 
 ---
 

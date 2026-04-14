@@ -37,6 +37,24 @@ summary:
     - util_time_delay
     - util_calc_time
     - month_data
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "Unix时间戳与datetime互转"
+    - "日期字符串与datetime互转"
+    - "获取当前时间戳或日期"
+    - "通达信时间戳格式转换"
+  warnings:
+    - "注意秒级 timestamp 和毫秒级 timestamp 的区别"
+    - "通达信使用特殊时间戳格式"
+  limitations:
+    - "仅支持标准时间格式"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase.date
+  depends_on: []
+  import_path:
+    - from FQBase.Date.timestamp import util_datetime_to_Unix_timestamp, util_timestamp_to_str
 ---
 
 # Timestamp

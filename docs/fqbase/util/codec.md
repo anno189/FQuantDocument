@@ -15,6 +15,23 @@ summary:
     - code_to_jqformat
     - code_adjust_ctp
     - code_to_list
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "统一不同数据源的股票代码格式"
+    - "将代码转换为聚宽格式用于数据查询"
+    - "期货CTP和通达信格式互转"
+  warnings:
+    - "港股代码转换可能有特殊处理"
+    - "期货代码字母大小写需注意"
+  limitations:
+    - "仅支持沪深股票和期货，不支持基金、期权等"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase.util
+  depends_on: []
+  import_path:
+    - from FQBase.Util.codec import code_to_6digit
 ---
 
 # Codec

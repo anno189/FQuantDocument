@@ -15,6 +15,26 @@ summary:
     - util_make_min_index
     - util_make_hour_index
     - util_time_gap
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "生成股票分钟线时间索引用于数据处理"
+    - "生成期货分钟线时间索引（包含夜盘）"
+    - "计算回测中往前或往后推算时间点"
+  warnings:
+    - "期货交易有夜盘，时间范围与股票不同"
+    - "util_time_gap 返回 None 时需处理"
+  limitations:
+    - "仅支持分钟和小时周期，不支持日线及以上"
+    - "期货夜盘日期归属需注意（夜盘属于前一交易日）"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase.util
+  depends_on:
+    - pandas
+    - numpy
+  import_path:
+    - from FQBase.Util.bar import util_make_min_index
 ---
 
 # Bar

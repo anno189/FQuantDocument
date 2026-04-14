@@ -12,6 +12,23 @@ summary:
   maturity: stable
   constants:
     - TRADE_DATE_SSE
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "直接查询某日期是否为交易日"
+    - "作为其他日期工具的数据源"
+  warnings:
+    - "这是静态数据，不包含未来日期"
+    - "每年需更新以包含新数据"
+  limitations:
+    - "仅包含A股交易日"
+    - "不包含期货、港股等其他市场交易日"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase.date
+  depends_on: []
+  import_path:
+    - from FQBase.Date.trade_dates_data import TRADE_DATE_SSE
 ---
 
 # TradeDatesData

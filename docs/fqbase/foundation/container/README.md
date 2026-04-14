@@ -1,6 +1,37 @@
+---
+title: Container 模块
+description: 轻量级依赖注入容器
+tag:
+  - fqbase
+  - container
+---
+
 # Container 模块
 
 轻量级依赖注入容器，提供服务注册、解析和生命周期管理。支持单例、瞬态、工厂函数模式，内置循环依赖检测。
+
+```yaml
+summary:
+  type: framework
+  complexity: medium
+  maturity: stable
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "需要依赖注入解耦代码"
+    - "需要统一管理服务实例"
+    - "需要单例/瞬态模式"
+  warnings:
+    - "不能与 singleton 装饰器混用"
+    - "循环依赖会检测失败"
+  limitations:
+    - "不支持属性注入"
+    - "不支持装饰器注入"
+
+relationships:
+  depends_on: []
+  import_path:
+    - from FQBase.Foundation.container import ServiceContainer
+```
 
 ## 快速开始
 

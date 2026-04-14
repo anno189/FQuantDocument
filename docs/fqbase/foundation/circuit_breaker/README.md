@@ -1,6 +1,38 @@
+---
+title: Circuit Breaker 模块
+description: 熔断器模式实现
+tag:
+  - fqbase
+  - circuit_breaker
+---
+
 # Circuit Breaker 模块
 
 熔断器模式实现，用于防止级联故障。当服务连续失败达到阈值时打开熔断器，后续请求直接拒绝而非继续尝试，一段时间后进入半开状态尝试恢复。
+
+```yaml
+summary:
+  type: design_pattern
+  complexity: medium
+  maturity: stable
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "防止外部服务故障导致系统崩溃"
+    - "需要故障隔离时"
+    - "需要自动恢复机制"
+  warnings:
+    - "熔断打开时会直接失败"
+    - "failure_threshold 设置需合理"
+    - "recovery_timeout 决定恢复时间"
+  limitations:
+    - "不支持分布式熔断"
+    - "仅支持函数级别"
+
+relationships:
+  depends_on: []
+  import_path:
+    - from FQBase.Foundation.circuit_breaker import circuit_breaker
+```
 
 ## 快速开始
 

@@ -15,6 +15,15 @@ summary:
   key_functions:
     - get_datasource_priority
     - get_health_check_config
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "获取数据源优先级配置"
+    - "健康检查配置"
+    - "业务常量管理"
+  warnings:
+    - "业务配置通常不需要修改"
+  limitations:
+    - "仅支持预定义配置"
 
 relationships:
   belongs_to:

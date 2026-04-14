@@ -1,6 +1,37 @@
+---
+title: Dotty 模块
+description: 嵌套字典点号访问工具
+tag:
+  - fqbase
+  - dotty
+---
+
 # Dotty 模块
 
 嵌套字典点号访问工具，提供对嵌套字典的深度键值访问，使用点号(`.`)连接链式访问。
+
+```yaml
+summary:
+  type: utility
+  complexity: low
+  maturity: stable
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "简化嵌套字典的访问"
+    - "处理复杂的配置结构"
+    - "动态访问深层嵌套数据"
+  warnings:
+    - "键名不能包含点号"
+    - "访问不存在的键会抛异常"
+  limitations:
+    - "不支持列表索引访问"
+    - "仅支持字典类型"
+
+relationships:
+  depends_on: []
+  import_path:
+    - from FQBase.Foundation import dotty
+```
 
 ## 快速开始
 

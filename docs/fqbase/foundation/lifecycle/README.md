@@ -1,6 +1,37 @@
+---
+title: Lifecycle 模块
+description: 生命周期管理接口，提供健康检查、初始化和关闭协议
+tag:
+  - fqbase
+  - lifecycle
+---
+
 # Lifecycle 模块
 
 生命周期管理接口，提供健康检查、初始化和关闭协议。
+
+```yaml
+summary:
+  type: interface
+  complexity: medium
+  maturity: stable
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "服务启动前的健康检查"
+    - "需要统一的初始化/关闭流程"
+    - "需要监控服务状态"
+  warnings:
+    - "健康检查可能有副作用"
+    - "初始化失败需正确处理"
+  limitations:
+    - "仅支持同步初始化"
+    - "不支持依赖顺序"
+
+relationships:
+  depends_on: []
+  import_path:
+    - from FQBase.Foundation.lifecycle import HealthCheckable, HealthStatus
+```
 
 ## 快速开始
 

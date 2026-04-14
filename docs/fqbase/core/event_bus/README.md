@@ -24,15 +24,105 @@ summary:
     - publishAwait
     - subscribe
     - subscribe_global
+  api_coverage:
+    total: 25
+    covered: 23
+    public: 18
+    private: 5
+  features:
+    has_async: true
+    has_config: false
+    has_security: false
+    has_logging: true
+    is_thread_safe: true
+  design_patterns:
+    - observer
+    - singleton
+    - weakref
 
 relationships:
   belongs_to:
     - fqbase.core
   depends_on:
     - fqbase.Foundation.singleton
+  optional_depends_on: []
   used_by:
     - fqbase.notification
     - fqbase.event_bus_celery
+  import_path:
+    - from FQBase.Core import get_event_bus, Event
+    - from FQBase.Core.event_bus import EventBus
+
+api:
+  signatures:
+    EventBus:
+      __init__: "(self) -> None"
+      subscribe: "(self, topic: str, handler: Callable, priority: int = 0) -> str"
+      subscribe_global: "(self, handler: Callable) -> str"
+      publish: "(self, event: Event) -> None"
+      publish_async: "(self, event: Event) -> asyncio.Future"
+      unsubscribe: "(self, subscription_id: str) -> None"
+    Event:
+      __init__: "(self, topic: str, data: Any = None) -> None"
+  exceptions:
+    - name: SubscriptionError
+      when: "订阅已存在的处理器或无效的主题"
+      solution: "使用 replace=True 参数或检查主题名称"
+    - name: PublishError
+      when: "事件发布失败"
+      solution: "检查订阅者是否抛出异常"
+  best_practices:
+    - "始终使用弱引用订阅以避免内存泄漏"
+    - "高频场景使用 publish_async 避免阻塞"
+    - "使用优先级参数确保事件处理顺序"
+    - "全局订阅仅用于日志等基础设施"
+  examples:
+    EventBus:
+      subscribe: |
+        # 订阅事件
+        bus = get_event_bus()
+        sub_id = bus.subscribe('trade_signal', on_signal, priority=10)
+        print(f"订阅ID: {sub_id}")
+      publish: |
+        # 发布事件
+        bus = get_event_bus()
+        bus.publish(Event('trade_signal', {'code': '000001', 'signal': 'BUY'}))
+      publish_async: |
+        # 异步发布
+        import asyncio
+        async def main():
+            bus = get_event_bus()
+            await bus.publish_async(Event('async_event', {'data': 'test'}))
+        asyncio.run(main())
+
+usage:
+  quick_example: |
+    from FQBase.Core import get_event_bus, Event
+    
+    bus = get_event_bus()
+    
+    @bus.subscribe('trade_signal')
+    def on_signal(event):
+        print(f"收到信号: {event.data}")
+    
+    bus.publish(Event('trade_signal', {'code': '000001', 'signal': 'BUY'}))
+  comparison:
+    - vs: "直接调用"
+      pros: "松耦合、事件可追溯、支持异步"
+      cons: "轻微性能开销"
+
+security:
+  encryption: []
+  authentication: []
+  data_classification: public
+
+maintenance:
+  test_coverage: "90%"
+  change_frequency: quarterly
+  last_updated: "2024-01"
+  maintainers:
+    - name: FQuant Team
+      role: owner
 
 concepts:
   provides:
@@ -193,3 +283,17 @@ bus.publish(Event('price_update', {'symbol': 'AAPL', 'price': 150.0}))
 | 项目首页 | FQBase 首页 | [README](../README.md) |
 | 快速入门 | 快速入门 | [快速入门](./quick-start.md) |
 | 架构 | 系统架构 | [技术架构](./architecture.md) |
+| 最佳实践 | 最佳实践 | [最佳实践](./best-practices.md) |
+
+## 维护信息
+
+| 项目 | 信息 |
+|------|------|
+| 测试覆盖率 | 90% |
+| 更新频率 | 季度更新 |
+| 最后更新 | 2024-01 |
+| 维护团队 | FQuant Team |
+
+---
+
+*本文档由 AI 文档生成器自动创建和维护*

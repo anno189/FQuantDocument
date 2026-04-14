@@ -17,6 +17,15 @@ summary:
     - get_mongo_db
     - get_mongo_client_manager
     - reset_mongo_db
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "MongoDB 数据库连接管理"
+    - "需要通用数据存储接口"
+  warnings:
+    - "连接池配置需合理"
+    - "需注意 MongoDB 连接数限制"
+  limitations:
+    - "仅支持 MongoDB"
 
 relationships:
   belongs_to:

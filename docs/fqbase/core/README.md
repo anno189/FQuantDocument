@@ -16,6 +16,16 @@ summary:
     - logger
     - notification
     - notification_template
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "需要事件驱动架构时使用 event_bus"
+    - "需要统一日志记录时使用 logger"
+    - "需要发送通知时使用 notification"
+  warnings:
+    - "event_bus 是同步的，Celery版本是异步"
+    - "日志级别配置需注意"
+  limitations:
+    - "event_bus 不支持异步"
 
 relationships:
   belongs_to:

@@ -15,10 +15,23 @@ summary:
     - util_str_to_datetime
     - util_if_trade
     - util_get_trade_range
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "任何与日期时间相关的处理"
+    - "交易日判断和计算"
+    - "时间戳转换"
+  warnings:
+    - "仅支持A股交易日历"
+    - "期货夜盘日期归属特殊处理"
+  limitations:
+    - "不支持港股、美股等其他市场"
 
 relationships:
   belongs_to:
     - fquant.fqbase
+  depends_on: []
+  import_path:
+    - from FQBase.Date import trade, timestamp
 
 concepts:
   provides:

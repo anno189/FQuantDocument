@@ -18,6 +18,23 @@ summary:
     - safe_divide
     - percentage_change
     - format_percentage
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "日期格式统一转换（不同数据源日期格式不同）"
+    - "数字安全除法（避免除零错误）"
+    - "百分比变化计算"
+  warnings:
+    - "safe_divide 分母为0时返回0或默认值，需注意"
+    - "date_to_str 默认格式可能不符合需求"
+  limitations:
+    - "仅支持常见的日期格式"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase.util
+  depends_on: []
+  import_path:
+    - from FQBase.Util.converters import date_to_str, parse_number
 ---
 
 # Converters

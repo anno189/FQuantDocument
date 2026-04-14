@@ -18,6 +18,16 @@ summary:
     - get_env
     - load_env
     - reload_env
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "读取环境变量"
+    - "配置热重载"
+    - "监听配置变化"
+  warnings:
+    - "reload 会重新加载所有配置"
+    - "ConfigWatcher 依赖文件系统"
+  limitations:
+    - "不支持远程配置"
 
 relationships:
   belongs_to:

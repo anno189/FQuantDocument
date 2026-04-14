@@ -20,6 +20,17 @@ summary:
     - init_cache_adapter
     - get_cache_adapter
     - set_cache_adapter
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "频繁访问的数据需要缓存"
+    - "需要分布式缓存时用 Redis"
+    - "需要进程内缓存时用 LocalCache"
+  warnings:
+    - "缓存一致性问题需注意"
+    - "Redis 连接失败会导致异常"
+  limitations:
+    - "不支持缓存穿透"
+    - "不支持缓存失效策略"
 
 relationships:
   belongs_to:

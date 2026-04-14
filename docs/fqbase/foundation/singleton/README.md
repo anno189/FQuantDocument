@@ -1,6 +1,37 @@
+---
+title: Singleton 模块
+description: 单例模式实现 - 线程安全版本
+tag:
+  - fqbase
+  - singleton
+---
+
 # Singleton 模块
 
 单例模式实现 - 线程安全版本。
+
+```yaml
+summary:
+  type: design_pattern
+  complexity: low
+  maturity: stable
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "需要全局唯一实例时（如配置、连接池）"
+    - "需要线程安全的单例"
+    - "需要测试时能重置实例"
+  warnings:
+    - "单例会降低代码可测试性"
+    - "多线程环境下需注意初始化顺序"
+  limitations:
+    - "不支持多进程"
+    - "不能继承多个单例类"
+
+relationships:
+  depends_on: []
+  import_path:
+    - from FQBase.Foundation.singleton import singleton
+```
 
 ## 概述
 

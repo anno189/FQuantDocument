@@ -19,6 +19,17 @@ summary:
     - get_env
     - load_env
     - get_datasource_priority
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "读取环境变量配置"
+    - "管理多数据源配置"
+    - "监听配置文件变化"
+  warnings:
+    - "配置变更后需重启服务"
+    - "敏感信息不能写在配置文件中"
+  limitations:
+    - "不支持热重载"
+    - "仅支持本地文件配置"
 
 relationships:
   belongs_to:

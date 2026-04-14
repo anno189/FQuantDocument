@@ -14,6 +14,23 @@ summary:
     - random_stock_code
     - random_string
     - random_with_topic
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "生成随机股票代码用于测试"
+    - "生成随机账号或Token用于测试"
+    - "模拟数据时随机采样"
+  warnings:
+    - "生成的股票代码可能是真实存在的，需注意"
+    - "不是加密安全的随机数"
+  limitations:
+    - "仅用于测试和模拟，不是真正的加密工具"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase.util
+  depends_on: []
+  import_path:
+    - from FQBase.Foundation.crypto import random_stock_code, random_string
 ---
 
 # 随机数生成工具

@@ -35,6 +35,27 @@ summary:
     - util_add_months
     - util_get_1st_of_next_month
     - util_getBetweenQuarter
+  # ⚠️ AI 开发必需信息
+  usage_scenarios:
+    - "判断某日期是否为交易日"
+    - "获取前后N个交易日"
+    - "获取日期范围内的交易日列表"
+    - "判断当前时间是否在交易时间内"
+    - "期货日期与交易日期转换"
+  warnings:
+    - "期货夜盘日期归属需注意（夜盘属于前一交易日）"
+    - "util_date_gap 的 methods 参数有多种写法"
+    - "A股交易时间为 09:30-11:30, 13:00-15:00"
+  limitations:
+    - "仅支持A股交易日历"
+    - "不支持港股、美股等其他市场"
+
+relationships:
+  belongs_to:
+    - fquant.fqbase.date
+  depends_on: []
+  import_path:
+    - from FQBase.Date.trade import util_if_trade, util_get_next_trade_date
 ---
 
 # Trade
