@@ -1,110 +1,203 @@
-# DataStruct API 参考
+---
+title: DataStruct - API参考
+description: DataStruct 数据结构模块 API 参考文档
+tag:
+  - fqdata
+  - datastruct
 
-## 核心基类
+summary:
+  purpose: api-reference
+  core_classes:
+    - QuotationDataStructBase
+    - StockDayData
+    - StockMinData
+    - IndexDayData
+    - FutureDayData
+---
+
+# DataStruct - API参考
+
+## 阅读路径
+
+| 角色 | 阅读路径 |
+|------|---------|
+| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → **[API参考](./api.md)** |
+
+
+## 概述
+
+DataStruct 模块 API 参考文档。
+
+## 类
 
 ### QuotationDataStructBase
 
-行情数据结构抽象基类，定义统一的行情数据接口。
+**位置：** `FQData/DataStruct/_base.py`
+
+**描述：** 行情数据结构基类，所有具体数据类的父类
 
 ```python
-from FQData.DataStruct import QuotationDataStructBase
+from FQData.DataStruct import StockDayData
 
-class MyDataStruct(QuotationDataStructBase):
-    def resample(self, level):
-        pass
+stock = StockDayData(data)
 ```
 
-#### 初始化参数
+#### 参数
 
-| 参数 | 类型 | 说明 |
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| data | pd.DataFrame | 是 | - | 行情数据，必须包含 open/high/low/close/volume 列 |
+| dtype | str | 否 | None | 数据类型 |
+| if_fq | str | 否 | 'qfq' | 复权类型：'qfq'/'hfq'/'none' |
+| market_type | str | 否 | None | 市场类型 |
+| frequence | str | 否 | None | 数据频率：'day'/'min1'/'min5' 等 |
+
+#### 属性
+
+| 属性 | 类型 | 描述 |
 |------|------|------|
-| `data` | pd.DataFrame | DataFrame 格式的行情数据 |
-| `dtype` | str | 数据类型标识 (如 'stock_day', 'index_min') |
-| `if_fq` | str | 复权类型 ('bfq', 'qfq', 'hfq') |
-| `market_type` | str | 市场类型 |
-| `frequence` | str | 数据频率 |
+| data | pd.DataFrame | 原始数据 |
+| index | pd.Index | 数据索引 |
+| open | pd.Series | 开盘价 |
+| high | pd.Series | 最高价 |
+| low | pd.Series | 最低价 |
+| close | pd.Series | 收盘价 |
+| volume | pd.Series | 成交量 |
+| amount | pd.Series | 成交额 |
 
-#### 基本属性
+#### 方法
 
-| 属性 | 类型 | 说明 |
+##### select_code
+
+```python
+result = stock.select_code('000001')
+```
+
+**描述：** 按股票代码筛选数据
+
+**参数：**
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| code | str | 是 | 股票代码 |
+
+**返回：** `QuotationDataStructBase`
+
+##### select_time
+
+```python
+result = stock.select_time('2024-01-01', '2024-01-31')
+```
+
+**描述：** 按时间范围筛选数据
+
+**参数：**
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| start_date | str | 是 | 开始日期 (YYYY-MM-DD) |
+| end_date | str | 是 | 结束日期 (YYYY-MM-DD) |
+
+**返回：** `QuotationDataStructBase`
+
+##### to_df
+
+```python
+df = stock.to_df()
+```
+
+**描述：** 转换为 Pandas DataFrame
+
+**返回：** `pd.DataFrame`
+
+##### resample
+
+```python
+result = stock.resample('W')
+```
+
+**描述：** 重采样，转换为不同周期
+
+**参数：**
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| freq | str | 是 | 目标频率：'D'/'W'/'M' 等 |
+
+**返回：** 重采样后的数据对象
+
+---
+
+### StockDayData
+
+**位置：** `FQData/DataStruct/stock.py`
+
+**描述：** 股票日线数据类
+
+```python
+from FQData.DataStruct import StockDayData
+
+stock = StockDayData(data)
+```
+
+#### 特有属性
+
+| 属性 | 类型 | 描述 |
 |------|------|------|
-| `data` | pd.DataFrame | 原始 DataFrame |
-| `dtype` | str | 数据类型 |
-| `if_fq` | str | 复权类型 |
-| `market_type` | str | 市场类型 |
-| `frequence` | str | 数据频率 |
-| `index` | pd.MultiIndex | 数据索引 |
-| `code` | pd.Index | 证券代码列表 |
-| `open` | pd.Series | 开盘价 |
-| `high` | pd.Series | 最高价 |
-| `low` | pd.Series | 最低价 |
-| `close` | pd.Series | 收盘价 |
-| `volume` | pd.Series | 成交量 |
-| `amount` | pd.Series | 成交额 |
-| `price` | pd.Series | 均价 (OHLC 平均) |
-| `date` | pd.DatetimeIndex | 交易日期 |
-| `datetime` | pd.DatetimeIndex | 交易时间 |
-| `len` | int | 数据长度 |
+| preclose | pd.Series | 昨收价 |
+| change | pd.Series | 涨跌额 |
+| pct_change | pd.Series | 涨跌幅 |
+| amplitude | pd.Series | 振幅 |
+| high_limit | pd.Series | 涨停价 |
+| low_limit | pd.Series | 跌停价 |
 
-#### 核心方法
+---
 
-| 方法 | 返回值 | 说明 |
-|------|--------|------|
-| `new(data, dtype, if_fq)` | QuotationDataStructBase | 创建新实例 |
-| `reverse()` | QuotationDataStructBase | 反转数据 |
-| `to_df()` | pd.DataFrame | 转换为 DataFrame |
-| `to_list()` | list | 转换为列表 |
-| `to_numpy()` | np.ndarray | 转换为 numpy 数组 |
-| `to_dict(orient)` | dict | 转换为字典 |
-| `validate()` | bool | 验证数据有效性 |
-| `is_same(other)` | bool | 判断是否相同类型 |
+### StockMinData
 
-#### 运算方法
+**位置：** `FQData/DataStruct/stock.py`
 
-| 方法 | 说明 |
-|------|------|
-| `__add__(other)` | 合并数据，去重 |
-| `__sub__(other)` | 移除 other 中的数据 |
-| `__getitem__(key)` | 支持切片访问 |
-| `__iter__()` | 行迭代器 |
-| `__len__()` | 数据长度 |
+**描述：** 股票分钟线数据类
 
-#### 分组与聚合
+```python
+from FQData.DataStruct import StockMinData
 
-| 方法 | 说明 |
-|------|------|
-| `groupby(by, level)` | 分组操作 |
-| `apply(func, *args)` | 应用函数 |
-| `add_func(func, *args)` | 按证券分组应用函数 |
-| `agg(func)` | 聚合函数 |
-| `rolling(N)` | 滚动计算 |
+stock_min = StockMinData(data)
+```
 
-#### 数据访问
+#### 特有属性
 
-| 方法 | 说明 |
-|------|------|
-| `iterrows()` | 行迭代器 |
-| `items()` | 列迭代器 |
-| `itertuples()` | 元组迭代器 |
-| `query(context)` | 查询数据 |
-| `find_bar(code, time)` | 查找指定时间和代码的 bar |
-| `get_dict(time, code)` | 获取指定时间和代码的字典数据 |
-
-#### 生成器属性
-
-| 属性 | 类型 | 说明 |
+| 属性 | 类型 | 描述 |
 |------|------|------|
-| `panel_gen` | Generator | 面板数据迭代器 |
-| `bar_gen` | Generator | K 线迭代器 |
-| `security_gen` | Generator | 证券代码迭代器 |
-| `splits` | List | 按证券代码拆分列表 |
-| `split_dicts` | dict | 拆分为 code:datastruct 字典 |
+| min5 | StockMinData | 5分钟线 |
+| min15 | StockMinData | 15分钟线 |
+| min30 | StockMinData | 30分钟线 |
+| min60 | StockMinData | 60分钟线 |
 
-#### 数据变换
+---
 
-| 方法 | 返回值 | 说明 |
-|------|--------|------|
-| `abs()` | QuotationDataStructBase | 返回绝对值 |
+### IndexDayData
+
+**位置：** `FQData/DataStruct/index.py`
+
+**描述：** 指数日线数据类
+
+```python
+from FQData.DataStruct import IndexDayData
+
+index = IndexDayData(data)
+```
+
+---
+
+### FutureDayData
+
+**位置：** `FQData/DataStruct/future.py`
+
+**描述：** 期货日线数据类
+
+```python
+from FQData.DataStruct import FutureDayData
+
+future = FutureDayData(data)
+```
 
 ---
 
@@ -112,475 +205,110 @@ class MyDataStruct(QuotationDataStructBase):
 
 ### QuotationIndicatorsMixin
 
-统计指标混入类，提供指标计算功能。
+**描述：** 指标计算 Mixin，提供技术指标计算功能
 
 ```python
-from FQData.DataStruct import QuotationIndicatorsMixin
-
-class MyStruct(QuotationIndicatorsMixin):
+# 通过继承使用
+class StockDayData(QuotationDataStructBase, QuotationIndicatorsMixin):
     pass
 ```
 
+#### 方法
+
+| 方法 | 返回类型 | 描述 |
+|------|----------|------|
+| max() | pd.Series | 最大值 |
+| min() | pd.Series | 最小值 |
+| mean() | pd.Series | 平均值 |
+| stdev() | pd.Series | 标准差 |
+| variance() | pd.Series | 方差 |
+| pct_change() | pd.Series | 百分比变化 |
+| amplitude() | pd.Series | 振幅 |
+
+---
+
 ### QuotationOperationsMixin
 
-数据操作混入类，提供数据操作功能。
+**描述：** 数据操作 Mixin，提供数据筛选、切片等功能
 
-```python
-from FQData.DataStruct import QuotationOperationsMixin
-```
+#### 方法
+
+| 方法 | 返回类型 | 描述 |
+|------|----------|------|
+| select_code() | QuotationDataStructBase | 按代码筛选 |
+| select_time() | QuotationDataStructBase | 按时间筛选 |
+| selects() | QuotationDataStructBase | 组合筛选 |
+| head() | QuotationDataStructBase | 获取前 N 条 |
+| tail() | QuotationDataStructBase | 获取后 N 条 |
+
+---
 
 ### QuotationIOSMixin
 
-序列化 IO 混入类，提供序列化功能。
+**描述：** 序列化 IO Mixin，提供数据导入导出功能
 
-```python
-from FQData.DataStruct import QuotationIOSMixin
-```
+#### 方法
+
+| 方法 | 返回类型 | 描述 |
+|------|----------|------|
+| to_df() | pd.DataFrame | 转换为 DataFrame |
+| to_csv() | str | 导出为 CSV |
+| to_json() | str | 导出为 JSON |
+| to_excel() | bytes | 导出为 Excel |
+| to_pickle() | bytes | 导出为 Pickle |
 
 ---
 
-## 数据结构类
+## 异常
 
-### 股票数据
+本模块定义的异常类型：
 
-#### StockDayData
+| 异常 | 描述 | 触发条件 | 解决方案 |
+|------|------|---------|---------|
+| ValueError | 值错误 | 代码或时间筛选无效 | 检查代码格式和时间范围 |
+| KeyError | 键错误 | 列名不存在 | 检查数据列名 |
+| RuntimeError | 运行时错误 | 格式不支持 | 检查数据格式 |
 
-股票日线数据结构。
+---
+
+## API 示例
+
+### 基本用法
 
 ```python
+import pandas as pd
 from FQData.DataStruct import StockDayData
 
-stock_day = StockDayData(df)
-stock_day = StockDayData(df, if_fq='qfq')
+# 创建数据
+data = pd.DataFrame({
+    'code': ['000001', '000001'],
+    'date': ['2024-01-01', '2024-01-02'],
+    'open': [10.0, 10.5],
+    'high': [10.5, 11.0],
+    'low': [9.5, 10.0],
+    'close': [10.2, 10.8],
+    'volume': [1000000, 1200000],
+})
+data['date'] = pd.to_datetime(data['date'])
+data = data.set_index(['code', 'date'])
+
+# 创建对象
+stock = StockDayData(data)
+
+# 筛选数据
+result = stock.select_code('000001').select_time('2024-01-01', '2024-01-31')
+
+# 获取统计
+stats = result.mean()
+print(stats)
 ```
 
-#### StockMinData
+### 更多示例
 
-股票分钟数据结构。
-
-```python
-from FQData.DataStruct import StockMinData
-
-stock_min = StockMinData(df)
-stock_min = StockMinData(df, frequence='5min')
-```
-
----
-
-### 指数数据
-
-#### IndexDayData
-
-指数日线数据结构。
-
-```python
-from FQData.DataStruct import IndexDayData
-
-index_day = IndexDayData(df)
-```
-
-#### IndexMinData
-
-指数分钟数据结构。
-
-```python
-from FQData.DataStruct import IndexMinData
-
-index_min = IndexMinData(df)
-```
-
----
-
-### 期货数据
-
-#### FutureDayData
-
-期货日线数据结构。
-
-```python
-from FQData.DataStruct import FutureDayData
-
-future_day = FutureDayData(df)
-```
-
-#### FutureMinData
-
-期货分钟数据结构。
-
-```python
-from FQData.DataStruct import FutureMinData
-
-future_min = FutureMinData(df)
-```
-
----
-
-### 债券数据
-
-#### Bond2StockDayData
-
-可转债日线数据结构。
-
-```python
-from FQData.DataStruct import Bond2StockDayData
-
-bond_day = Bond2StockDayData(df)
-```
-
-#### Bond2StockMinData
-
-可转债分钟数据结构。
-
-```python
-from FQData.DataStruct import Bond2StockMinData
-
-bond_min = Bond2StockMinData(df)
-```
-
----
-
-### 成交明细
-
-#### StockTransactionData
-
-股票成交明细结构。
-
-```python
-from FQData.DataStruct import StockTransactionData
-
-tx_data = StockTransactionData(df)
-```
-
-#### IndexTransactionData
-
-指数成交明细结构。
-
-```python
-from FQData.DataStruct import IndexTransactionData
-
-index_tx = IndexTransactionData(df)
-```
-
----
-
-### 板块数据
-
-#### StockBlockData
-
-股票板块数据结构。
-
-```python
-from FQData.DataStruct import StockBlockData
-
-block_data = StockBlockData(df)
-```
-
----
-
-### 财务数据
-
-#### FinancialData
-
-财务数据结构。
-
-```python
-from FQData.DataStruct import FinancialData
-
-financial = FinancialData(df)
-```
-
----
-
-### 实时数据
-
-#### StockRealtimeData
-
-股票实时数据结构。
-
-```python
-from FQData.DataStruct import StockRealtimeData
-
-realtime = StockRealtimeData(code='600000')
-```
-
-#### FutureRealtimeData
-
-期货实时数据结构。
-
-```python
-from FQData.DataStruct import FutureRealtimeData
-
-future_realtime = FutureRealtimeData(code='IF2401')
-```
-
-#### RealtimeSeries
-
-实时序列数据。
-
-```python
-from FQData.DataStruct import RealtimeSeries
-
-series = RealtimeSeries(codes=['600000', '000001'])
-```
-
-#### FutureTickData
-
-期货 Tick 数据。
-
-```python
-from FQData.DataStruct import FutureTickData
-
-tick = FutureTickData(code='IF2401')
-```
-
----
-
-### 其他数据结构
-
-#### SecurityListData
-
-证券列表数据。
-
-```python
-from FQData.DataStruct import SecurityListData
-
-sec_list = SecurityListData(df)
-```
-
-#### IndicatorData
-
-指标数据。
-
-```python
-from FQData.DataStruct import IndicatorData
-
-indicator = IndicatorData(df)
-```
-
-#### SeriesData
-
-序列数据。
-
-```python
-from FQData.DataStruct import SeriesData
-
-series = SeriesData(data=[1, 2, 3, 4, 5])
-```
-
----
-
-## 重采样函数
-
-### tick_resample_1min
-
-Tick 数据转 1 分钟线。
-
-```python
-from FQData.DataStruct import tick_resample_1min
-
-min_data = tick_resample_1min(tick_data)
-```
-
-### tick_resample
-
-Tick 数据重采样。
-
-```python
-from FQData.DataStruct import tick_resample
-
-resampled = tick_resample(tick_data, freq='5min')
-```
-
-### ctptick_resample
-
-CTP Tick 数据重采样。
-
-```python
-from FQData.DataStruct import ctptick_resample
-
-resampled = ctptick_resample(ctp_tick, freq='1min')
-```
-
-### min_resample
-
-分钟线重采样。
-
-```python
-from FQData.DataStruct import min_resample
-
-data_5min = min_resample(min_data, freq='5min')
-data_15min = min_resample(min_data, freq='15min')
-data_30min = min_resample(min_data, freq='30min')
-data_60min = min_resample(min_data, freq='60min')
-```
-
-### stockmin_resample
-
-股票分钟线重采样。
-
-```python
-from FQData.DataStruct import stockmin_resample
-
-resampled = stockmin_resample(stock_min, target_freq='5min')
-```
-
-### min_to_day
-
-分钟线转日线。
-
-```python
-from FQData.DataStruct import min_to_day
-
-daily = min_to_day(min_data)
-```
-
-### futuremin_resample
-
-期货分钟线重采样。
-
-```python
-from FQData.DataStruct import futuremin_resample
-
-resampled = futuremin_resample(future_min, freq='5min')
-```
-
-### futuremin_resample_tb_kq
-
-期货分钟线重采样（通达信格式）。
-
-```python
-from FQData.DataStruct import futuremin_resample_tb_kq
-
-resampled = futuremin_resample_tb_kq(future_min)
-```
-
-### futuremin_resample_tb_kq2
-
-期货分钟线重采样（通达信格式2）。
-
-```python
-from FQData.DataStruct import futuremin_resample_tb_kq2
-
-resampled = futuremin_resample_tb_kq2(future_min)
-```
-
-### futuremin_resample_today
-
-期货分钟线重采样（当日数据）。
-
-```python
-from FQData.DataStruct import futuremin_resample_today
-
-resampled = futuremin_resample_today(future_min)
-```
-
-### futuremin_resample_series
-
-期货分钟线重采样（序列格式）。
-
-```python
-from FQData.DataStruct import futuremin_resample_series
-
-resampled = futuremin_resample_series(future_min, freq='5min')
-```
-
-### day_resample
-
-日线重采样。
-
-```python
-from FQData.DataStruct import day_resample
-
-weekly = day_resample(daily, freq='W')
-monthly = day_resample(daily, freq='M')
-quarterly = day_resample(daily, freq='Q')
-yearly = day_resample(daily, freq='Y')
-```
-
-### futureday_resample
-
-期货日线重采样。
-
-```python
-from FQData.DataStruct import futureday_resample
-
-resampled = futureday_resample(future_day, freq='W')
-```
-
----
-
-## 复权函数
-
-### fetch_stock_adj
-
-获取复权因子。
-
-```python
-from FQData.DataStruct import fetch_stock_adj
-
-adj_data = fetch_stock_adj(code='600000', start='2024-01-01')
-```
-
-### fetch_stock_xdxr
-
-获取除权除息数据。
-
-```python
-from FQData.DataStruct import fetch_stock_xdxr
-
-xdxr_data = fetch_stock_xdxr(code='600000')
-```
-
-### data_stock_to_fq
-
-前复权转换。
-
-```python
-from FQData.DataStruct import data_stock_to_fq
-
-fq_data = data_stock_to_fq(original_data, adj_data)
-```
-
-### data_stock_fq_adj
-
-后复权转换。
-
-```python
-from FQData.DataStruct import data_stock_fq_adj
-
-hfq_data = data_stock_fq_adj(original_data, adj_data)
-```
-
----
-
-## 流通市值
-
-### calc_marketvalue
-
-计算流通市值。
-
-```python
-from FQData.DataStruct import calc_marketvalue
-
-mv = calc_marketvalue(data, adj_data)
-```
-
-### data_marketvalue
-
-获取流通市值数据。
-
-```python
-from FQData.DataStruct import data_marketvalue
-
-mv_data = data_marketvalue(code='600000', start='2024-01-01')
-```
-
----
+请参考 [快速入门](./quick-start.md) 和 [最佳实践](./best-practices.md)。
 
 ## 相关文档
 
-- [README](README.md)
-- [使用指南](usage.md)
-- [最佳实践](best-practices.md)
-- [开发指南](development.md)
-- [FAQ](faq.md)
+- [使用指南](./usage.md)
+- [开发指南](./development.md)
+- [最佳实践](./best-practices.md)

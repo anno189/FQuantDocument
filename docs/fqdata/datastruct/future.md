@@ -1,186 +1,156 @@
-# DataStruct future 模块
+---
+title: future - 期货数据
+description: 期货行情数据类
+tag:
+  - fqdata
+  - datastruct
+  - future
 
-期货数据结构模块，提供期货日线和分钟线数据结构的实现。
+summary:
+  type: data-processing
+  complexity: medium
+  maturity: stable
+  core_classes:
+    - FutureDayData
+    - FutureMinData
+  features:
+    is_thread_safe: true
+  usage_scenarios:
+    - "场景1：获取期货日线数据"
+    - "场景2：获取期货分钟数据"
+  warnings: []
+  limitations:
+    - "仅支持国内期货市场"
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqdata.datastruct
+  depends_on:
+    - fquant.fqbase
+    - pandas
 
-```
-future.py
-```
-
+api:
+  signatures:
+    FutureDayData:
+      __init__: "(self, data: pd.DataFrame, dtype: str = 'future_day', if_fq: str = 'bfq', market_type: str = None, frequence: str = None) -> None"
+      position: "self -> pd.Series"
+      tradedate: "self -> pd.Series"
+      tradetime: "self -> pd.Series"
+      week: "self -> pd.Series"
+      month: "self -> pd.Series"
+      quarter: "self -> pd.Series"
+      year: "self -> pd.Series"
+      resample: "(self, level: str) -> FutureDayData"
+    FutureMinData:
+      __init__: "(self, data: pd.DataFrame, dtype: str = 'future_min', if_fq: str = 'bfq', market_type: str = None, frequence: str = None) -> None"
+      tradedate: "self -> pd.Series"
+      tradetime: "self -> pd.Series"
+      position: "self -> pd.Series"
+      min5: "self -> pd.Series"
+      min15: "self -> pd.Series"
+      min30: "self -> pd.Series"
+      min60: "self -> pd.Series"
+      resample: "(self, level: str) -> FutureMinData"
+  examples:
+    basic: |
+      from FQData.DataStruct import FutureDayData
+      future = FutureDayData(data, dtype='future_day', if_fq='bfq')
+      print(future.close)
+      print(future.position)
 ---
 
-## FutureDayData
+# future - 期货数据
 
-期货日线数据结构。
+## 一句话总览
 
-```python
-from FQData.DataStruct import FutureDayData
+📌 **期货行情数据类，支持日线和分钟数据**
 
-future_day = FutureDayData(df, dtype='future_day')
-```
+## ⚠️ AI 开发必读
 
-**继承自：** `QuotationDataStructBase`, `QuotationIndicatorsMixin`, `QuotationOperationsMixin`, `QuotationIOSMixin`
+### 使用场景
 
-### 初始化参数
+✅ **应该使用**：
+- 场景1：获取期货日线数据
+- 场景2：获取期货分钟数据
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `data` | pd.DataFrame | - | DataFrame 数据 |
-| `dtype` | str | 'future_day' | 数据类型 |
-| `if_fq` | str | '' | 复权类型 |
+❌ **不应该使用**：
+- 不应该用于股票、债券等非期货数据
 
-### 数据预处理
+### 依赖
 
-自动筛选列：`open`, `high`, `low`, `close`, `volume`, `position`, `price`, `amount`
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | fquant.fqbase | 基础工具 |
+| 必须 | pandas | 数据处理 |
 
----
+**TL;DR**：
+- 核心能力：期货日线、分钟线、持仓数据处理
 
-## 属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `position` | pd.Series | 持仓量 |
-| `tradedate` | pd.DatetimeIndex | 交易日期 |
-| `tradetime` | pd.DatetimeIndex | 交易时间 |
-
-### 周期属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `week` | FutureDayData | 周线数据 |
-| `month` | FutureDayData | 月线数据 |
-| `quarter` | FutureDayData | 季线数据 |
-| `year` | FutureDayData | 年线数据 |
-
----
-
-## 方法
-
-### resample
-
-重采样为其他周期。
-
-```python
-weekly = future_day.resample('W')
-monthly = future_day.resample('M')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `level` | str | 目标周期 ('W', 'M', 'Q', 'Y') |
-
-**返回：** FutureDayData
-
----
-
-## FutureMinData
-
-期货分钟线数据结构。
-
-```python
-from FQData.DataStruct import FutureMinData
-
-future_min = FutureMinData(df, dtype='future_min')
-```
-
-**继承自：** `QuotationDataStructBase`, `QuotationIndicatorsMixin`, `QuotationOperationsMixin`, `QuotationIOSMixin`
-
-### 初始化参数
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `data` | pd.DataFrame | - | DataFrame 数据 |
-| `dtype` | str | 'future_min' | 数据类型 |
-| `if_fq` | str | '' | 复权类型 |
-
-### 数据预处理
-
-自动筛选列：`open`, `high`, `low`, `close`, `volume`, `position`, `price`, `tradetime`, `type`
-
----
-
-## 属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `tradedate` | pd.Series | 交易日期 |
-| `tradetime` | pd.Series | 交易时间 |
-| `position` | pd.Series | 持仓量 |
-
-### 分钟周期属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `min5` | FutureMinData | 5 分钟线 |
-| `min15` | FutureMinData | 15 分钟线 |
-| `min30` | FutureMinData | 30 分钟线 |
-| `min60` | FutureMinData | 60 分钟线 |
-
----
-
-## 方法
-
-### resample
-
-重采样为其他周期。
-
-```python
-min_5 = future_min.resample('5min')
-min_15 = future_min.resample('15min')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `level` | str | 目标周期 ('5min', '15min', '30min', '60min') |
-
-**返回：** FutureMinData
-
----
-
-## 使用示例
-
-### 基本使用
+## 快速开始
 
 ```python
 from FQData.DataStruct import FutureDayData, FutureMinData
 
-future_day = FutureDayData(df)
-print(future_day)
+# 日线数据
+future_day = FutureDayData(data, dtype='future_day', if_fq='bfq')
+print(future_day.close)
+print(future_day.position)  # 持仓量
+print(future_day.resample('w'))  # 周线
 
-future_min = FutureMinData(min_df)
-print(future_min)
+# 分钟数据
+future_min = FutureMinData(data, dtype='future_min', if_fq='bfq')
+print(future_min.min5)
+print(future_min.resample('5min'))
 ```
 
-### 获取持仓量
+## 核心类
 
-```python
-print(f"持仓量: {future_day.position}")
-```
+### FutureDayData
 
-### 周线/月线
+期货日线数据类。
 
-```python
-weekly = future_day.week
-monthly = future_day.month
-```
+#### 属性
 
-### 分钟重采样
+| 属性 | 类型 | 描述 |
+|------|------|------|
+| position | pd.Series | 持仓量 |
+| tradedate | pd.Series | 交易日期 |
+| tradetime | pd.Series | 交易时间 |
+| week | pd.Series | 周数据 |
+| month | pd.Series | 月数据 |
+| quarter | pd.Series | 季度数据 |
+| year | pd.Series | 年数据 |
 
-```python
-min_5 = future_min.min5
-min_15 = future_min.min15
-```
+#### 方法
 
----
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| resample | FutureDayData | 重采样 |
 
-## 相关文档
+### FutureMinData
 
-- [DataStruct README](README.md)
-- [DataStruct API](api.md)
-- [DataStruct stock](stock.md)
-- [DataStruct resample](resample.md)
+期货分钟数据类。
+
+#### 属性
+
+| 属性 | 类型 | 描述 |
+|------|------|------|
+| tradedate | pd.Series | 交易日期 |
+| tradetime | pd.Series | 交易时间 |
+| position | pd.Series | 持仓量 |
+| min5 | pd.Series | 5分钟数据 |
+| min15 | pd.Series | 15分钟数据 |
+| min30 | pd.Series | 30分钟数据 |
+| min60 | pd.Series | 60分钟数据 |
+
+#### 方法
+
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| resample | FutureMinData | 重采样 |
+
+## 变更日志
+
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v1.0.0 | 2024-01 | 初始版本 |

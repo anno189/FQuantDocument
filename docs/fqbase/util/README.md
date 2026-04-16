@@ -38,7 +38,16 @@ relationships:
     - pandas
     - numpy
   import_path:
-    - from FQBase.Util import bar, codec, file
+    - from FQBase.Util import file, network, crypto
+
+migrations:
+  moved:
+    - module: codec
+      moved_to: FQData.normalizer
+      functions: [code_to_6digit, code_to_jqformat, code_adjust_ctp, code_to_list]
+    - module: bar
+      moved_to: FQData.DataStruct
+      functions: [make_min_index, make_hour_index, make_future_min_index, time_gap]
 
 concepts:
   provides:
@@ -58,6 +67,17 @@ concepts:
 |------|---------|
 | 🔵 开发者 | [README](./README.md) → [API参考](./api.md) → [使用指南](./usage.md) |
 
+## ⚠️ 重要变更
+
+> **注意**: 部分子模块已迁移到 FQData 模块
+
+| 原模块 | 新位置 | 状态 |
+|--------|--------|------|
+| codec | FQData.normalizer | 已迁移 |
+| bar | FQData.DataStruct | 已迁移 |
+
+---
+
 ## 一句话总览
 
 📌 **FQBase 跨模块工具层，提供数据转换、文件处理、网络工具、并行计算等功能**
@@ -66,16 +86,16 @@ concepts:
 
 Util 是 FQBase 的工具容器模块，聚合了多个工具子模块：
 
-| 子模块 | 说明 |
-|--------|------|
-| [codec](./codec/) | 股票代码格式转换 |
-| [file](./file/) | 文件处理工具 |
-| [network](./network/) | 网络工具 |
-| [parallel](./parallel/) | 并行计算 |
-| [bar](./bar/) | 时间索引工具 |
-| [converters](./converters/) | 数据转换工具 |
-| [transformer](./transformer/) | 格式转换工具 |
-| [crypto](./crypto.md) | 随机数生成工具 |
+| 子模块 | 说明 | 状态 |
+|--------|------|------|
+| [file](./file/) | 文件处理工具 | ✅ 活跃 |
+| [network](./network/) | 网络工具 | ✅ 活跃 |
+| [parallel](./parallel/) | 并行计算 | ✅ 活跃 |
+| [converters](./converters/) | 数据转换工具 | ✅ 活跃 |
+| [transformer](./transformer/) | 格式转换工具 | ✅ 活跃 |
+| [crypto](./crypto.md) | 随机数生成工具 | ✅ 活跃 |
+| [codec](./codec/) | 股票代码格式转换 | 🔄 已迁移 |
+| [bar](./bar/) | 时间索引工具 | 🔄 已迁移 |
 
 ## 安装
 

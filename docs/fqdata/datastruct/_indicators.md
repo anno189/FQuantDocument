@@ -1,135 +1,140 @@
-# DataStruct _indicators 模块
+---
+title: _indicators - 行情数据统计指标 Mixin
+description: 提供各类技术指标和统计量计算的 Mixin 类
+tag:
+  - fqdata
+  - datastruct
+  - indicators
 
-行情数据统计指标 Mixin 模块，提供各类技术指标和统计量计算。
+summary:
+  type: data-processing
+  complexity: medium
+  maturity: stable
+  core_classes:
+    - QuotationIndicatorsMixin
+  features:
+    is_pure_function: true
+    is_thread_safe: true
+  usage_scenarios:
+    - "场景1：计算行情数据的统计指标"
+    - "场景2：技术分析中的指标计算"
+  warnings:
+    - "Mixin 类不能直接实例化"
+  limitations:
+    - "需要与 QuotationDataStructBase 配合使用"
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqdata.datastruct
+  depends_on:
+    - pandas
 
-```
-_indicators.py
-```
-
-## QuotationIndicatorsMixin
-
-行情数据统计指标 Mixin，通过多重继承为数据结构提供指标计算功能。
-
-**使用约束：**
-- 此类仅用于多重继承，不能直接实例化
-- 必须放在继承顺序中的 QuotationDataStructBase 之后
-- 不应定义 __init__ 方法
-
+api:
+  signatures:
+    QuotationIndicatorsMixin:
+      max: "self -> pd.Series"
+      min: "self -> pd.Series"
+      mean: "self -> pd.Series"
+      variance: "self -> pd.Series"
+      stdev: "self -> pd.Series"
+      amplitude: "self -> pd.Series"
+      pct_change: "self -> pd.Series"
+      close_pct_change: "self -> pd.Series"
+      bar_pct_change: "self -> pd.Series"
+      bar_amplitude: "self -> pd.Series"
+  examples:
+    basic: |
+      from FQData.DataStruct import StockDayData
+      stock = StockDayData(data, dtype='stock_day', if_fq='bfq')
+      print(stock.max)
+      print(stock.amplitude)
 ---
 
-## 统计指标
+# _indicators - 行情数据统计指标 Mixin
 
-### 基础统计
+## 一句话总览
 
-| 属性 | 返回类型 | 说明 |
-|------|----------|------|
-| `max` | pd.Series | 最大值 |
-| `min` | pd.Series | 最小值 |
-| `mean` | pd.Series | 均值 |
-| `variance` | pd.Series | 方差 |
-| `stdev` | pd.Series | 样本标准差 |
-| `pstdev` | pd.Series | 总体标准差 |
+📌 **行情数据统计指标 Mixin，提供技术分析所需的各类指标计算**
 
-### 价格相关
+## ⚠️ AI 开发必读
 
-| 属性 | 返回类型 | 说明 |
-|------|----------|------|
-| `price_diff` | pd.Series | 价格一阶差分 |
-| `amplitude` | pd.Series | 振幅 (百分比) |
+### 使用场景
 
-### K 线形态
+✅ **应该使用**：
+- 场景1：计算行情数据的统计指标
+- 场景2：技术分析中的指标计算
 
-| 属性 | 返回类型 | 说明 |
-|------|----------|------|
-| `bar_pct_change` | pd.Series | 单根 K 线涨跌幅 |
-| `bar_amplitude` | pd.Series | 单根 K 线振幅 |
+❌ **不应该使用**：
+- 不应该直接实例化 Mixin 类
+- 不应该单独使用，需要与基类配合
 
-### 高级统计
+### 注意事项
 
-| 属性 | 返回类型 | 说明 |
-|------|----------|------|
-| `mean_harmonic` | pd.Series | 调和平均数 |
-| `mode` | pd.Series | 众数 |
-| `skew` | pd.Series | 偏度 |
-| `kurt` | pd.Series | 峰度 |
+1. **Mixin 类不能直接实例化**
+   - 说明：此类仅用于多重继承，必须放在 QuotationDataStructBase 之后
 
----
+### 依赖
 
-## 使用示例
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | pandas | 数据处理 |
 
-### 基本使用
+**TL;DR**：
+- 核心能力：max, min, mean, variance, amplitude, pct_change 等统计指标
+
+## 快速开始
 
 ```python
 from FQData.DataStruct import StockDayData
 
-# 假设 stock 是 StockDayData 实例
-print(f"最大值: {stock.max}")
-print(f"最小值: {stock.min}")
-print(f"均值: {stock.mean}")
+stock = StockDayData(data, dtype='stock_day', if_fq='bfq')
+print(stock.max)        # 最大值
+print(stock.amplitude)  # 振幅
+print(stock.pct_change) # 涨跌幅
 ```
 
-### 价格分析
+## 指标列表
 
-```python
-# 价格差分
-print(f"价格差分: {stock.price_diff}")
+### 统计类指标
 
-# 振幅
-print(f"振幅: {stock.amplitude}")
-```
+| 指标 | 返回类型 | 描述 |
+|------|---------|------|
+| max | pd.Series | 最大值 |
+| min | pd.Series | 最小值 |
+| mean | pd.Series | 均值 |
+| variance | pd.Series | 方差 |
+| stdev | pd.Series | 标准差 |
+| pstdev | pd.Series | 总体标准差 |
+| mad | pd.Series | 平均绝对偏差 |
 
-### K 线分析
+### 技术分析指标
 
-```python
-# 单根 K 线涨跌幅
-print(f"涨跌幅: {stock.bar_pct_change}")
+| 指标 | 返回类型 | 描述 |
+|------|---------|------|
+| amplitude | pd.Series | 振幅（百分比） |
+| pct_change | pd.Series | 涨跌幅 |
+| close_pct_change | pd.Series | 收盘价涨跌幅 |
+| bar_pct_change | pd.Series | 单根K线涨跌幅 |
+| bar_amplitude | pd.Series | 单根K线振幅 |
+| price_diff | pd.Series | 价格一阶差分 |
 
-# 单根 K 线振幅
-print(f"振幅: {stock.bar_amplitude}")
-```
+### 高级指标
 
-### 高级统计
+| 指标 | 返回类型 | 描述 |
+|------|---------|------|
+| skew | pd.Series | 偏度 |
+| kurt | pd.Series | 峰度 |
+| mode | pd.Series | 众数 |
+| normalized | pd.DataFrame | 归一化数据 |
 
-```python
-# 偏度 (衡量分布偏斜程度)
-print(f"偏度: {stock.skew}")
+## 常见错误
 
-# 峰度 (衡量分布尖峭程度)
-print(f"峰度: {stock.kurt}")
-```
+| 错误 | 原因 | 解决方案 |
+|------|------|---------|
+| AttributeError | Mixin 未正确继承 | 确保继承顺序正确 |
 
----
+## 变更日志
 
-## 与基类结合使用
-
-```python
-from FQData.DataStruct._base import QuotationDataStructBase
-from FQData.DataStruct._indicators import QuotationIndicatorsMixin
-from FQData.DataStruct._operations import QuotationOperationsMixin
-from FQData.DataStruct._io import QuotationIOSMixin
-
-class MyDataStruct(
-    QuotationDataStructBase,
-    QuotationIndicatorsMixin,
-    QuotationOperationsMixin,
-    QuotationIOSMixin
-):
-    def resample(self, level):
-        pass
-
-# MyDataStruct 实例同时具有基类和 Mixin 的所有方法
-data = MyDataStruct(df, dtype='stock_day')
-print(f"最大值: {data.max}")
-print(f"均值: {data.mean}")
-print(f"偏度: {data.skew}")
-```
-
----
-
-## 相关文档
-
-- [DataStruct README](README.md)
-- [DataStruct API](api.md)
-- [DataStruct _base](_base.md)
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v1.0.0 | 2024-01 | 初始版本 |

@@ -1,164 +1,115 @@
-# DataStruct financial 模块
+---
+title: financial - 财务数据
+description: 上市公司财务数据类
+tag:
+  - fqdata
+  - datastruct
+  - financial
 
-财务数据结构模块，提供财务报表数据结构的实现。
+summary:
+  type: data-processing
+  complexity: low
+  maturity: stable
+  core_classes:
+    - FinancialData
+  features:
+    is_thread_safe: true
+  usage_scenarios:
+    - "场景1：获取财务指标数据"
+    - "场景2：按日期获取财报数据"
+  warnings: []
+  limitations:
+    - "仅支持 A 股财务数据"
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqdata.datastruct
+  depends_on:
+    - pandas
 
-```
-financial.py
-```
-
+api:
+  signatures:
+    FinancialData:
+      __init__: "(self, data: pd.DataFrame) -> None"
+      data: "self -> pd.DataFrame"
+      code: "self -> List[str]"
+      date: "self -> List[pd.Timestamp]"
+      get_report_by_date: "(self, code: str, date: Union[str, pd.Timestamp]) -> pd.Series"
+      get_key: "(self, code: str, key: str, start: str = None, end: str = None) -> pd.Series"
+      get_financial: "(self, code: str, key: str = None) -> pd.DataFrame"
+  examples:
+    basic: |
+      from FQData.DataStruct import FinancialData
+      financial = FinancialData(data)
+      print(financial.code)
+      print(financial.get_key('000001', 'ROE'))
 ---
 
-## FinancialData
+# financial - 财务数据
 
-财务指标数据结构。
+## 一句话总览
+
+📌 **上市公司财务数据管理**
+
+## ⚠️ AI 开发必读
+
+### 使用场景
+
+✅ **应该使用**：
+- 场景1：获取财务指标数据
+- 场景2：按日期获取财报数据
+
+❌ **不应该使用**：
+- 不应该用于非 A 股财务数据
+
+### 依赖
+
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | pandas | 数据处理 |
+
+**TL;DR**：
+- 核心能力：财务指标查询、财报数据获取
+
+## 快速开始
 
 ```python
 from FQData.DataStruct import FinancialData
 
-financial = FinancialData(df)
+financial = FinancialData(data)
+
+# 获取所有股票代码
+print(financial.code)
+
+# 获取指定 key 的数据
+roa = financial.get_key('000001', 'ROE')
+
+# 获取财务数据
+fin_data = financial.get_financial('000001')
 ```
 
-### 初始化参数
+## 核心类
 
-| 参数 | 类型 | 说明 |
+### FinancialData
+
+#### 属性
+
+| 属性 | 类型 | 描述 |
 |------|------|------|
-| `data` | pd.DataFrame | 财务指标数据 |
+| data | pd.DataFrame | 原始数据 |
+| code | List[str] | 股票代码列表 |
+| date | List[pd.Timestamp] | 报告日期列表 |
 
-### 数据预处理
+#### 方法
 
-- 自动初始化中英文列名映射
-- 如果无法导入映射，使用原始列名
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| get_report_by_date | pd.Series | 按日期获取财报 |
+| get_key | pd.Series | 按 key 获取财务指标 |
+| get_financial | pd.DataFrame | 获取财务数据 |
 
----
+## 变更日志
 
-## 属性
-
-| 属性 | 类型 | 说明 |
+| 版本 | 日期 | 变更 |
 |------|------|------|
-| `data` | pd.DataFrame | 原始 DataFrame |
-| `code` | List[str] | 股票代码列表 |
-| `date` | List[pd.Timestamp] | 报告日期列表 |
-
----
-
-## 方法
-
-### get_report_by_date
-
-获取某只股票在特定日期的报告。
-
-```python
-report = financial.get_report_by_date('600000', '2024-03-31')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `code` | str | 股票代码 |
-| `date` | str/pd.Timestamp | 报告日期 |
-
-**返回：** pd.Series
-
----
-
-### get_key
-
-获取某只股票在特定日期范围的某个指标。
-
-```python
-pe_data = financial.get_key(
-    code='600000',
-    reportdate=['2024-03-31', '2024-06-30', '2024-09-30'],
-    key='pe'
-)
-
-single_value = financial.get_key(
-    code='600000',
-    reportdate='2024-03-31',
-    key='pe'
-)
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `code` | str | 股票代码 |
-| `reportdate` | str/pd.Timestamp/List | 报告日期 |
-| `key` | str | 指标名称 |
-
-**返回：** pd.Series 或单一值
-
----
-
-### get_financial
-
-获取某只股票的财务数据。
-
-```python
-all_data = financial.get_financial('600000')
-
-year_data = financial.get_financial(
-    '600000',
-    start='2023-01-01',
-    end='2024-12-31'
-)
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `code` | str | 股票代码 |
-| `start` | str | 开始日期（可选） |
-| `end` | str | 结束日期（可选） |
-
-**返回：** pd.DataFrame
-
----
-
-## 使用示例
-
-### 基本使用
-
-```python
-from FQData.DataStruct import FinancialData
-
-financial = FinancialData(df)
-
-print(f"股票数量: {len(financial.code)}")
-print(f"日期范围: {financial.date}")
-```
-
-### 查询财务指标
-
-```python
-pe = financial.get_key('600000', '2024-03-31', 'pe')
-roe = financial.get_key('600000', '2024-03-31', 'roe')
-```
-
-### 获取时间序列
-
-```python
-pe_series = financial.get_key(
-    '600000',
-    ['2023-03-31', '2023-06-30', '2023-09-30', '2023-12-31', '2024-03-31'],
-    'pe'
-)
-```
-
-### 获取完整财务数据
-
-```python
-financial_data = financial.get_financial('600000')
-```
-
----
-
-## 相关文档
-
-- [DataStruct README](README.md)
-- [DataStruct API](api.md)
+| v1.0.0 | 2024-01 | 初始版本 |

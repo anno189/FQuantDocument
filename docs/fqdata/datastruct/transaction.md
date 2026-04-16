@@ -1,253 +1,148 @@
-# DataStruct transaction 模块
+---
+title: transaction - 逐笔成交数据
+description: 逐笔成交数据类
+tag:
+  - fqdata
+  - datastruct
+  - transaction
 
-交易数据结构模块，提供股票和指数分时成交数据结构的实现。
+summary:
+  type: data-processing
+  complexity: medium
+  maturity: stable
+  core_classes:
+    - StockTransactionData
+    - IndexTransactionData
+  features:
+    is_thread_safe: true
+  usage_scenarios:
+    - "场景1：获取股票逐笔成交"
+    - "场景2：分析大单交易"
+  warnings: []
+  limitations:
+    - "仅支持 A 股逐笔数据"
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqdata.datastruct
+  depends_on:
+    - pandas
 
-```
-transaction.py
-```
-
+api:
+  signatures:
+    StockTransactionData:
+      __init__: "(self, data: pd.DataFrame) -> None"
+      data: "self -> pd.DataFrame"
+      buyorsell: "self -> pd.Series"
+      price: "self -> pd.Series"
+      volume: "self -> pd.Series"
+      amount: "self -> pd.Series"
+      to_df: "(self) -> pd.DataFrame"
+      get_code: "(self, code: str) -> StockTransactionData"
+      get_date: "(self, date: str) -> StockTransactionData"
+      get_big_orders: "(self, bigamount: int = 1000000) -> StockTransactionData"
+      resample: "(self, type_: str = '1min') -> StockTransactionData"
+    IndexTransactionData:
+      __init__: "(self, data: pd.DataFrame) -> None"
+      data: "self -> pd.DataFrame"
+      get_code: "(self, code: str) -> IndexTransactionData"
+      get_big_orders: "(self, bigamount: int = 1000000) -> IndexTransactionData"
+      resample: "(self, type_: str = '1min') -> IndexTransactionData"
+  examples:
+    basic: |
+      from FQData.DataStruct import StockTransactionData
+      trans = StockTransactionData(data)
+      print(trans.get_big_orders())
 ---
 
-## StockTransactionData
+# transaction - 逐笔成交数据
 
-股票交易数据结构。
+## 一句话总览
+
+📌 **逐笔成交数据管理**
+
+## ⚠️ AI 开发必读
+
+### 使用场景
+
+✅ **应该使用**：
+- 场景1：获取股票逐笔成交
+- 场景2：分析大单交易
+
+❌ **不应该使用**：
+- 不应该用于非逐笔数据
+
+### 依赖
+
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | pandas | 数据处理 |
+
+**TL;DR**：
+- 核心能力：逐笔数据查询、大单分析
+
+## 快速开始
 
 ```python
 from FQData.DataStruct import StockTransactionData
 
-tx_data = StockTransactionData(df)
+trans = StockTransactionData(data)
+
+# 按股票代码筛选
+code_data = trans.get_code('000001')
+
+# 按日期筛选
+date_data = trans.get_date('2024-01-01')
+
+# 获取大单（默认100万）
+big = trans.get_big_orders(1000000)
+
+# 获取中单
+medium = trans.get_medium_order(500000)
+
+# 获取小单
+small = trans.get_small_order(200000)
 ```
 
-### 初始化参数
+## 核心类
 
-| 参数 | 类型 | 说明 |
+### StockTransactionData
+
+股票逐笔成交数据类。
+
+#### 属性
+
+| 属性 | 类型 | 描述 |
 |------|------|------|
-| `data` | pd.DataFrame | 分时成交数据 |
+| data | pd.DataFrame | 原始数据 |
+| buyorsell | pd.Series | 买卖方向 |
+| price | pd.Series | 价格 |
+| volume | pd.Series | 成交量 |
+| amount | pd.Series | 成交额 |
+| date | pd.Series | 日期 |
+| code | pd.Series | 股票代码 |
 
-### 数据预处理
+#### 方法
 
-- 自动计算 `amount`（如果不存在）：`volume * price * 100`
-- 自动删除 `_id` 列（如果存在）
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| to_df | pd.DataFrame | 转换为 DataFrame |
+| get_code | StockTransactionData | 按代码筛选 |
+| get_date | StockTransactionData | 按日期筛选 |
+| get_time_range | StockTransactionData | 按时间范围筛选 |
+| get_big_orders | StockTransactionData | 获取大单 |
+| get_medium_order | StockTransactionData | 获取中单 |
+| get_small_order | StockTransactionData | 获取小单 |
+| resample | StockTransactionData | 重采样 |
 
----
+### IndexTransactionData
 
-## 属性
+指数逐笔成交数据类。
 
-| 属性 | 类型 | 说明 |
+属性和方法与 StockTransactionData 类似。
+
+## 变更日志
+
+| 版本 | 日期 | 变更 |
 |------|------|------|
-| `buyorsell` | pd.Series | 买卖方向 (0-买入, 1-卖出, 2-中性) |
-| `price` | pd.Series | 成交价格 |
-| `volume` / `vol` | pd.Series | 成交量 |
-| `amount` | pd.Series | 成交额 |
-| `date` | pd.Series | 成交日期 |
-| `datetime` | pd.Series | 成交时间 |
-| `code` | pd.Series | 股票代码 |
-| `time` | pd.Series | 成交时间（分钟级） |
-| `order` | pd.Series | 委托订单号 |
-| `index` | pd.Index | 交易索引 |
-
----
-
-## 方法
-
-### get_code
-
-获取某只股票的交易数据。
-
-```python
-stock_tx = tx_data.get_code('600000')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `code` | str | 股票代码 |
-
-**返回：** StockTransactionData
-
----
-
-### get_date
-
-获取某一天的交易数据。
-
-```python
-day_tx = tx_data.get_date('2024-01-01')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `date` | str | 日期字符串 |
-
-**返回：** StockTransactionData
-
----
-
-### get_time_range
-
-获取时间范围内的交易数据。
-
-```python
-range_tx = tx_data.get_time_range(
-    start='2024-01-01 09:30:00',
-    end='2024-01-01 15:00:00'
-)
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `start` | str | 开始时间 |
-| `end` | str | 结束时间 |
-
-**返回：** StockTransactionData
-
----
-
-### get_big_orders
-
-获取大单（成交额大于等于阈值）。
-
-```python
-big_tx = tx_data.get_big_orders(bigamount=1000000)
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `bigamount` | int | 1000000 | 大单阈值 |
-
-**返回：** StockTransactionData
-
----
-
-### get_medium_order
-
-获取中等单（成交额在范围内）。
-
-```python
-medium_tx = tx_data.get_medium_order(lower=200000, higher=1000000)
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `lower` | int | 200000 | 下限 |
-| `higher` | int | 1000000 | 上限 |
-
-**返回：** StockTransactionData
-
----
-
-### get_small_order
-
-获取小单（成交额小于等于阈值）。
-
-```python
-small_tx = tx_data.get_small_order(smallamount=200000)
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `smallamount` | int | 200000 | 小单阈值 |
-
-**返回：** StockTransactionData
-
----
-
-### resample
-
-重采样为分钟线。
-
-```python
-min_tx = tx_data.resample('1min')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `type_` | str | '1min' | 分钟周期 |
-
-**返回：** StockTransactionData
-
----
-
-### to_df
-
-转换为 DataFrame。
-
-```python
-df = tx_data.to_df()
-```
-
-**返回：** pd.DataFrame
-
----
-
-## IndexTransactionData
-
-指数交易数据结构。
-
-```python
-from FQData.DataStruct import IndexTransactionData
-
-index_tx = IndexTransactionData(df)
-```
-
-**与 StockTransactionData 接口相同**
-
----
-
-## 使用示例
-
-### 基本使用
-
-```python
-from FQData.DataStruct import StockTransactionData
-
-tx_data = StockTransactionData(df)
-
-print(f"成交数量: {len(tx_data)}")
-print(f"买卖方向: {tx_data.buyorsell.value_counts()}")
-```
-
-### 筛选大单
-
-```python
-big_orders = tx_data.get_big_orders(bigamount=5000000)
-print(f"大单数量: {len(big_orders)}")
-```
-
-### 时间范围查询
-
-```python
-morning_tx = tx_data.get_time_range(
-    start='2024-01-01 09:30:00',
-    end='2024-01-01 11:30:00'
-)
-```
-
-### 重采样为分钟线
-
-```python
-min_tx = tx_data.resample('1min')
-```
-
----
-
-## 相关文档
-
-- [DataStruct README](README.md)
-- [DataStruct API](api.md)
-- [DataStruct realtime](realtime.md)
+| v1.0.0 | 2024-01 | 初始版本 |

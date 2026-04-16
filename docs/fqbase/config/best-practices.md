@@ -1,6 +1,6 @@
 ---
 title: Config - 最佳实践
-description: Config 配置中心最佳实践与建议
+description: FQBase 配置中心最佳实践与建议
 tag:
   - fqbase
   - config
@@ -12,147 +12,171 @@ tag:
 
 | 角色 | 阅读路径 |
 |------|---------|
-| 🔵 开发者 | [README](./README.md) → [API参考](./api.md) → [使用指南](./usage.md) → **[最佳实践](./best-practices.md)** |
-| 🟡 运维/安全 | [README](./README.md) → [配置指南](./configuration.md) → [故障排查](./troubleshooting.md) → **[最佳实践](./best-practices.md)** |
+| 🔵 开发者 | [README](./README.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) → [设计原则](./design.md) → [API参考](./api.md) → [开发指南](./development.md) → [使用指南](./usage.md) → **[最佳实践](./best-practices.md)** |
+| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [配置指南](./configuration.md) → [安全指南](./security.md) → [故障排查](./troubleshooting.md) → [常见问题](./faq.md) → **[最佳实践](./best-practices.md)** |
+
+## 子模块最佳实践
+
+| 子模块 | 最佳实践 | 说明 |
+|--------|----------|------|
+| base | [最佳实践](./base/best-practices.md) | 基础配置最佳实践 |
+| business | [最佳实践](./business/best-practices.md) | 业务配置最佳实践 |
 
 
 ## 概述
 
-有效使用 Config 配置中心的最佳实践。
+有效使用配置中心的最佳实践，提升配置管理的安全性和可维护性。
 
 ## 配置管理最佳实践
 
-### 技巧 1: 使用默认值
+### 技巧 1: 始终使用 get_env 获取配置
 
-**建议：** 始终为环境变量提供默认值
+**建议：** 使用统一的 get_env 接口获取环境变量，而不是直接访问 os.environ
 
 **代码 - 好：**
 
 ```python
 from FQBase.Config import get_env
 
-host = get_env('MONGODB_HOST', 'localhost')
-port = int(get_env('MONGODB_PORT', 27017))
+# 统一获取方式
+db_url = get_env('MONGODB_URL', 'mongodb://localhost:27017')
+debug = get_env('DEBUG', False)
 ```
 
 **代码 - 差：**
 
 ```python
-# 没有默认值可能导致运行时错误
-host = os.environ['MONGODB_HOST']
+import os
+
+# 直接访问 os.environ
+db_url = os.environ.get('MONGODB_URL')
+debug = os.environ.get('DEBUG', 'false')  # 类型不一致
 ```
 
-### 技巧 2: 敏感配置检测
+### 技巧 2: 敏感配置使用 get_secure_env
 
-**建议：** 检测敏感配置是否为占位符
+**建议：** API 密钥、密码等敏感信息使用 get_secure_env 获取
 
 **代码 - 好：**
 
 ```python
 from FQBase.Config import get_secure_env
 
+# 敏感信息不会被记录到日志
 api_key = get_secure_env('API_KEY')
-if api_key is None:
-    raise ValueError("API_KEY 未配置")
+password = get_secure_env('DB_PASSWORD')
 ```
 
 **代码 - 差：**
 
 ```python
-# 不检查占位符，可能使用无效值
-api_key = os.environ.get('API_KEY')
+from FQBase.Config import get_env
+
+# 敏感信息可能被记录到日志
+api_key = get_env('API_KEY')  # 不安全
+```
+
+### 技巧 3: 在应用启动时初始化
+
+**建议：** 在应用启动时调用 load_env() 加载配置
+
+**代码 - 好：**
+
+```python
+# app.py
+from FQBase.Config import load_env
+
+# 应用入口处加载配置
+load_env()
+
+# 后续代码可以安全使用 get_env
+from FQBase.Config import get_env
+debug = get_env('DEBUG', False)
+```
+
+### 技巧 4: 使用单例配置
+
+**建议：** 避免重复创建 SETTING 等单例配置
+
+**代码 - 好：**
+
+```python
+from FQBase.Config import SETTING
+
+# 直接使用单例
+mongo_uri = SETTING.get_mongo()
+```
+
+**代码 - 差：**
+
+```python
+# 错误：每次导入可能创建新实例
+from FQBase.Config.core.setting import Setting
+setting = Setting()  # 不应该这样做
 ```
 
 ## 安全最佳实践
 
-### 技巧 1: 使用环境变量存储密钥
+### 技巧 1: 敏感配置不提交到代码库
 
-**建议：** 永远不要硬编码密钥
-
-**代码 - 好：**
-
-```python
-from FQBase.Config import get_secure_env
-
-api_key = get_secure_env('API_KEY')
-```
-
-**代码 - 差：**
-
-```python
-# 永远不要这样做！
-api_key = "my_secret_key_123"
-```
-
-### 技巧 2: 分离配置
-
-**建议：** 开发/生产环境使用不同的 .env 文件
+**建议：** 使用 .env 文件存储敏感配置，并添加到 .gitignore
 
 ```bash
-# 开发环境
-cp .env.development .env
-
-# 生产环境
-cp .env.production .env
+# .gitignore
+.env
+.env.local
+*.pem
+*.key
 ```
 
-## 交易常量最佳实践
+### 技巧 2: 生产环境使用环境变量覆盖
 
-### 技巧 1: 使用枚举而非字符串
-
-**建议：** 使用交易常量枚举而非字符串比较
-
-**代码 - 好：**
+**建议：** 生产环境使用系统环境变量覆盖文件配置
 
 ```python
-from FQBase.Config import ORDER_DIRECTION
+from FQBase.Config import load_env, get_env
 
-if order['direction'] == ORDER_DIRECTION.BUY:
-    print("买入订单")
+# 加载 .env 文件
+load_env()
+
+# 生产环境通过环境变量覆盖
+# export MONGODB_URL=mongodb://prod-server
 ```
 
-**代码 - 差：**
+## 缓存最佳实践
+
+### 技巧 1: 缓存配置在启动时设置
+
+**建议：** 缓存配置在应用启动时设置，避免运行时频繁更改
 
 ```python
-# 容易出错
-if order['direction'] == 'BUY':
-    print("买入订单")
+from FQBase.Config import CacheConfig
+
+# 应用启动时设置
+cache_config = CacheConfig(
+    cache_type=get_env('CACHE_TYPE', 'redis'),
+    ttl=int(get_env('CACHE_TTL', 3600))
+)
 ```
 
-## 错误处理最佳实践
-
-### 技巧 1: 必需配置检查
+### 技巧 2: 根据环境选择缓存类型
 
 ```python
-from FQBase.Config import get_env
+import os
+from FQBase.Config import CacheConfig
 
-REQUIRED_KEYS = ['MONGODB_HOST', 'MONGODB_DATABASE']
+env = os.getenv('APP_ENV', 'development')
 
-def validate_config():
-    """验证必需配置"""
-    for key in REQUIRED_KEYS:
-        value = get_env(key)
-        if value is None:
-            raise ValueError(f"必需的配置项未设置: {key}")
-```
+if env == 'production':
+    cache_type = 'redis'  # 生产环境使用 Redis
+else:
+    cache_type = 'mongo'  # 开发环境使用 MongoDB
 
-## 配置最佳实践
-
-### 技巧 1: 使用分层配置
-
-```python
-# 从环境变量读取关键配置
-from FQBase.Config import get_env, DATABASE
-
-config = {
-    'env': get_env('RUNNING_ENVIRONMENT', 'development'),
-    'database': DATABASE,
-    # 其他配置
-}
+config = CacheConfig(cache_type=cache_type)
 ```
 
 ## 相关文档
 
 - [API参考](./api.md)
 - [使用指南](./usage.md)
-- [配置指南](./configuration.md)
+- [开发指南](./development.md)

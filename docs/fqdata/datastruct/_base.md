@@ -1,271 +1,229 @@
-# DataStruct _base 模块
+---
+title: _base - 行情数据结构核心基类
+description: 提供基础属性和核心接口的抽象基类
+tag:
+  - fqdata
+  - datastruct
+  - base
 
-行情数据结构核心基类，提供统一的数据结构和操作接口。
+summary:
+  type: data-processing
+  complexity: high
+  maturity: stable
+  core_classes:
+    - QuotationDataStructBase
+  features:
+    is_thread_safe: true
+    has_mixin_pattern: true
+  usage_scenarios:
+    - "场景1：创建自定义行情数据类"
+    - "场景2：实现多市场统一数据接口"
+  warnings:
+    - "Mixin 类不能直接实例化"
+    - "pickle 反序列化后需要调用 _init_subclass()"
+  limitations:
+    - "仅支持 A 股、期货、债券等国内金融市场"
+    - "不支持实时数据推送"
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqdata.datastruct
+  depends_on:
+    - fquant.fqbase
+    - pandas
+    - numpy
 
-```
-_base.py
-```
+api:
+  signatures:
+    QuotationDataStructBase:
+      __init__: "(self, data: pd.DataFrame, dtype: str, if_fq: str = 'bfq', market_type: str = None, frequence: str = None) -> None"
+      data: "self -> pd.DataFrame"
+      dtype: "self -> str"
+      if_fq: "self -> str"
+      market_type: "self -> str"
+      frequence: "self -> str"
+      open: "self -> pd.Series"
+      high: "self -> pd.Series"
+      low: "self -> pd.Series"
+      close: "self -> pd.Series"
+      volume: "self -> pd.Series"
+      price: "self -> pd.Series"
+      to_df: "self -> pd.DataFrame"
+      select_code: "(self, code: str) -> QuotationDataStructBase"
+      select_time: "(self, start_date: str, end_date: str) -> QuotationDataStructBase"
+      fillna: "(self, value: Any = None, method: str = None, inplace: bool = False) -> QuotationDataStructBase"
+      dropna: "(self, axis: int = 0, how: str = 'any', inplace: bool = False) -> QuotationDataStructBase"
+      resample: "(self, level: str) -> QuotationDataStructBase"
+  examples:
+    __init__: |
+      import pandas as pd
+      from FQData.DataStruct import StockDayData
 
-## QuotationDataStructBase
+      data = pd.DataFrame({
+          'open': [10.0, 11.0],
+          'high': [10.5, 11.5],
+          'low': [9.5, 10.5],
+          'close': [10.2, 11.2],
+          'volume': [1000, 2000]
+      }, index=pd.MultiIndex.from_tuples([
+          ('000001', '2024-01-01'),
+          ('000001', '2024-01-02')
+      ], names=['code', 'date']))
 
-行情数据结构抽象基类，定义统一的行情数据接口。
+      stock = StockDayData(data, dtype='stock_day', if_fq='bfq')
+      print(stock.close)
 
-### 继承关系
+    select_code: |
+      stock = StockDayData(data, dtype='stock_day', if_fq='bfq')
+      selected = stock.select_code('000001')
+      print(selected.to_df())
+---
 
-```
-QuotationDataStructBase (ABC)
-    ├── QuotationIndicatorsMixin (统计指标)
-    ├── QuotationOperationsMixin (数据操作)
-    └── QuotationIOSMixin (序列化 IO)
-```
+# _base - 行情数据结构核心基类
 
-**MRO (Method Resolution Order):**
-1. 子类 (如 StockDayData)
-2. Mixin 类
-3. 基类 (QuotationDataStructBase)
+## 一句话总览
 
-### 初始化参数
+📌 **行情数据抽象基类，提供统一的数据操作接口**
+
+## ⚠️ AI 开发必读
+
+### 使用场景
+
+✅ **应该使用**：
+- 场景1：创建自定义行情数据类
+- 场景2：实现多市场统一数据接口
+
+❌ **不应该使用**：
+- 不应该直接实例化 Mixin 类
+- 不应该用于实时数据推送场景
+
+### 注意事项
+
+1. **Mixin 类不能直接实例化**
+   - 说明：Mixin 类是功能组合层，需要与基类一起使用
+
+2. **pickle 反序列化后需要调用 _init_subclass()**
+   - 说明：序列化后缓存状态可能失效
+
+### 已知限制
+
+- 限制1：仅支持 A 股、期货、债券等国内金融市场
+- 限制2：不支持实时数据推送，仅支持批量查询
+
+### 依赖
+
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | fquant.fqbase | 基础工具 |
+| 必须 | pandas | 数据处理 |
+| 必须 | numpy | 数值计算 |
+
+**TL;DR**：
+- 核心能力：数据筛选、指标计算、周期转换、序列化导出
+- 入门难度：🔵 中等
+
+## 快速开始
 
 ```python
-from FQData.DataStruct import QuotationDataStructBase
-
-class MyDataStruct(QuotationDataStructBase):
-    def resample(self, level):
-        pass
-```
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `data` | pd.DataFrame | - | DataFrame 格式的行情数据 |
-| `dtype` | str | - | 数据类型标识 (如 'stock_day', 'index_min') |
-| `if_fq` | str | 'bfq' | 复权类型 ('bfq'-不复权, 'qfq'-前复权, 'hfq'-后复权) |
-| `market_type` | str | None | 市场类型 |
-| `frequence` | str | None | 数据频率 |
-
----
-
-## 属性
-
-### 基本属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `data` | pd.DataFrame | 原始 DataFrame |
-| `dtype` | str | 数据类型 |
-| `if_fq` | str | 复权类型 |
-| `market_type` | str | 市场类型 |
-| `frequence` | str | 数据频率 |
-
-### 价格属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `open` | pd.Series | 开盘价 |
-| `high` | pd.Series | 最高价 |
-| `low` | pd.Series | 最低价 |
-| `close` | pd.Series | 收盘价 |
-| `volume` / `vol` | pd.Series | 成交量 |
-| `amount` | pd.Series | 成交额 |
-| `price` | pd.Series | 均价 (OHLC 平均) |
-
-### 索引属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `index` | pd.MultiIndex | 数据索引 (date, code) |
-| `code` | pd.Index | 证券代码列表 |
-| `date` | pd.DatetimeIndex | 交易日期 |
-| `datetime` | pd.DatetimeIndex | 交易时间 |
-| `dicts` | dict | 字典格式数据 |
-
-### 便捷属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `len` | int | 数据长度 |
-| `splits` | List | 按证券代码拆分列表 |
-| `split_dicts` | dict | 拆分为 code:datastruct 字典 |
-
----
-
-## 方法
-
-### 创建与转换
-
-| 方法 | 返回值 | 说明 |
-|------|--------|------|
-| `new(data, dtype, if_fq)` | QuotationDataStructBase | 创建新实例 |
-| `reverse()` | QuotationDataStructBase | 反转数据 |
-| `to_df()` | pd.DataFrame | 转换为 DataFrame |
-| `to_list()` | list | 转换为列表 |
-| `to_numpy()` | np.ndarray | 转换为 numpy 数组 |
-| `to_dict(orient)` | dict | 转换为字典 |
-
-### 数据操作
-
-| 方法 | 说明 |
-|------|------|
-| `__add__(other)` | 合并数据，去重 |
-| `__sub__(other)` | 移除 other 中的数据 |
-| `__getitem__(key)` | 支持切片访问 |
-| `__iter__()` | 行迭代器 |
-| `__len__()` | 数据长度 |
-| `validate()` | 验证数据有效性 |
-
-### 分组与聚合
-
-| 方法 | 说明 |
-|------|------|
-| `groupby(by, level)` | 分组操作 |
-| `apply(func, *args)` | 应用函数 |
-| `add_func(func, *args)` | 按证券分组应用函数 |
-| `agg(func)` | 聚合函数 |
-| `aggregate(func)` | 聚合函数 (别名) |
-
-### 查询
-
-| 方法 | 说明 |
-|------|------|
-| `query(context)` | 查询数据表达式 |
-| `find_bar(code, time)` | 查找指定时间和代码的 bar |
-| `get_dict(time, code)` | 获取指定时间和代码的字典数据 |
-
-### 迭代器
-
-| 方法 | 返回值 | 说明 |
-|------|--------|------|
-| `iterrows()` | Iterator | 行迭代器 |
-| `items()` | Iterator | 列迭代器 |
-| `itertuples()` | Iterator | 元组迭代器 |
-
-### 生成器属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `panel_gen` | Generator | 面板数据迭代器 |
-| `bar_gen` | Generator | K 线迭代器 |
-| `security_gen` | Generator | 证券代码迭代器 |
-
-### 抽象方法
-
-| 方法 | 返回值 | 说明 |
-|------|--------|------|
-| `resample(level)` | QuotationDataStructBase | 重采样 (子类必须实现) |
-
----
-
-## 使用示例
-
-### 创建数据结构
-
-```python
+from FQData.DataStruct import StockDayData
 import pandas as pd
-from FQData.DataStruct import QuotationDataStructBase
 
-df = pd.DataFrame({
-    'open': [10.0, 10.5, 10.3],
-    'high': [10.8, 10.9, 10.7],
-    'low': [9.8, 10.2, 10.1],
-    'close': [10.5, 10.6, 10.4],
-    'volume': [1000000, 1200000, 1100000]
+data = pd.DataFrame({
+    'open': [10.0],
+    'high': [10.5],
+    'low': [9.5],
+    'close': [10.2],
+    'volume': [1000]
 }, index=pd.MultiIndex.from_tuples([
-    ('2024-01-01', '600000'),
-    ('2024-01-02', '600000'),
-    ('2024-01-03', '600000'),
-], names=['date', 'code']))
+    ('000001', '2024-01-01')
+], names=['code', 'date']))
 
-class StockDayData(QuotationDataStructBase):
-    def resample(self, level):
-        pass
-
-stock = StockDayData(df, dtype='stock_day', if_fq='qfq')
-print(stock)
-# < StockDayData with 1 securities >
-```
-
-### 数据操作
-
-```python
-# 切片
-subset = stock[:2]
-
-# 合并
-combined = stock1 + stock2
-
-# 移除
-result = stock_all - stock_subset
-
-# 反转
-reversed_data = stock.reverse()
-```
-
-### 属性访问
-
-```python
-print(stock.open)
-print(stock.high)
-print(stock.low)
+stock = StockDayData(data, dtype='stock_day', if_fq='bfq')
 print(stock.close)
-print(stock.volume)
-print(stock.code)
-print(stock.date)
 ```
 
-### 查询
+## 核心类
+
+### QuotationDataStructBase
+
+行情数据抽象基类，定义统一的行情数据接口。
+
+#### 属性
+
+| 属性 | 类型 | 描述 |
+|------|------|------|
+| data | pd.DataFrame | 原始 DataFrame |
+| dtype | str | 数据类型标识 |
+| if_fq | str | 复权类型 |
+| open | pd.Series | 开盘价 |
+| high | pd.Series | 最高价 |
+| low | pd.Series | 最低价 |
+| close | pd.Series | 收盘价 |
+| volume | pd.Series | 成交量 |
+| price | pd.Series | 价格 |
+
+#### 方法
+
+##### __init__
 
 ```python
-# 表达式查询
-result = stock.query('close > 10.5')
-
-# 查找 bar
-bar = stock.find_bar('600000', '2024-01-01')
-
-# 获取字典
-data = stock.get_dict('2024-01-01', '600000')
+def __init__(
+    self,
+    data: pd.DataFrame,
+    dtype: str,
+    if_fq: str = 'bfq',
+    market_type: str = None,
+    frequence: str = None
+) -> None
 ```
 
----
+**参数：**
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| data | pd.DataFrame | 是 | 行情数据 |
+| dtype | str | 是 | 数据类型 |
+| if_fq | str | 否 | 复权类型 |
+| market_type | str | 否 | 市场类型 |
+| frequence | str | 否 | 数据频率 |
 
-## Mixin 类
-
-### QuotationIndicatorsMixin
-
-统计指标混入类，提供指标计算功能。
-
-### QuotationOperationsMixin
-
-数据操作混入类，提供数据操作功能。
-
-### QuotationIOSMixin
-
-序列化 IO 混入类，提供序列化功能。
-
----
-
-## 序列化
-
-### Pickle 支持
+##### select_code
 
 ```python
-import pickle
-
-# 序列化
-with open('stock.pkl', 'wb') as f:
-    pickle.dump(stock, f)
-
-# 反序列化
-with open('stock.pkl', 'rb') as f:
-    stock = pickle.load(f)
+def select_code(self, code: str) -> 'QuotationDataStructBase'
 ```
 
-**注意：** `@lru_cache` 装饰的属性在序列化后缓存会失效，反序列化后需要调用 `_init_subclass()` 重新初始化。
+**描述：** 按股票代码筛选数据
 
----
+##### fillna
 
-## 相关文档
+```python
+def fillna(
+    self,
+    value: Any = None,
+    method: str = None,
+    inplace: bool = False
+) -> 'QuotationDataStructBase'
+```
 
-- [DataStruct README](README.md)
-- [DataStruct API](api.md)
-- [DataStruct 使用指南](usage.md)
+**描述：** 填充缺失值
+
+##### resample
+
+```python
+def resample(self, level: str) -> Optional['QuotationDataStructBase']
+```
+
+**描述：** 数据重采样（周期转换）
+
+## 常见错误
+
+| 错误 | 原因 | 解决方案 |
+|------|------|---------|
+| KeyError | 列名不存在 | 检查数据列名 |
+| ValueError | 代码或时间筛选无效 | 检查筛选参数 |
+
+## 变更日志
+
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v1.0.0 | 2024-01 | 初始版本 |

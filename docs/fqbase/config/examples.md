@@ -1,6 +1,6 @@
 ---
 title: Config - 案例库
-description: Config 配置中心实际应用场景与示例
+description: FQBase 配置中心实际应用场景与示例
 tag:
   - fqbase
   - config
@@ -12,164 +12,135 @@ tag:
 
 | 角色 | 阅读路径 |
 |------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [速查表](./cheatsheet.md) → [使用指南](./usage.md) → **[案例库](./examples.md)** |
+| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → **[案例库](./examples.md)** |
+
+## 子模块案例库
+
+| 子模块 | 案例库 | 说明 |
+|--------|--------|------|
+| base | [案例库](./base/examples.md) | 基础配置案例 |
+| business | [案例库](./business/examples.md) | 业务配置案例 |
 
 
-## 概述
+## 场景 1: 应用启动配置加载
 
-本文档展示 Config 配置中心的实际应用场景，重点介绍跨模块组合使用的最佳实践。
-
-## 基础示例
-
-### 示例 1：环境变量基本使用
-
-**场景描述：** 应用程序启动时加载配置
-
-**代码实现：**
+**业务需求：** 应用启动时自动加载配置
 
 ```python
+# config_loader.py
+from FQBase.Config import load_env, get_env, SETTING, CacheConfig
+
+def init_app():
+    # 加载环境变量
+    load_env()
+    
+    # 获取配置
+    debug = get_env('DEBUG', False)
+    db_uri = SETTING.get_mongo()
+    
+    # 配置缓存
+    cache_type = get_env('CACHE_TYPE', 'redis')
+    cache_config = CacheConfig(cache_type=cache_type)
+    
+    print(f"应用初始化完成，调试模式: {debug}")
+
+if __name__ == '__main__':
+    init_app()
+```
+
+---
+
+## 场景 2: 多环境配置管理
+
+**业务需求：** 开发、测试、生产环境使用不同配置
+
+```python
+# .env.development
+DEBUG=true
+MONGODB_URL=mongodb://localhost:27017/fquant_dev
+
+# .env.production
+DEBUG=false
+MONGODB_URL=mongodb://production-server/fquant_prod
+
+# config.py
+import os
 from FQBase.Config import load_env, get_env
 
-# 加载环境变量
-load_env()
-
-# 获取数据库配置
-db_config = {
-    'host': get_env('MONGODB_HOST', 'localhost'),
-    'port': int(get_env('MONGODB_PORT', 27017)),
-    'database': get_env('MONGODB_DATABASE', 'fquant'),
-}
-
-print(f"数据库配置: {db_config}")
+def load_config():
+    env = os.getenv('APP_ENV', 'development')
+    load_env(f'.env.{env}')
+    
+    return {
+        'debug': get_env('DEBUG', False),
+        'mongo_url': get_env('MONGODB_URL'),
+    }
 ```
 
-### 示例 2：使用交易常量
+---
 
-**场景描述：** 下单时使用交易常量
+## 场景 3: 敏感配置安全存储
 
-**代码实现：**
-
-```python
-from FQBase.Config import (
-    ORDER_DIRECTION,
-    EXCHANGE_ID,
-    ORDER_MODEL,
-    ORDER_STATUS,
-)
-
-# 创建订单
-order = {
-    'direction': ORDER_DIRECTION.BUY,
-    'exchange': EXCHANGE_ID.SH,
-    'code': '600000',
-    'model': ORDER_MODEL.LIMIT,
-    'price': 10.5,
-    'volume': 100,
-}
-
-# 模拟订单状态检查
-current_status = ORDER_STATUS.FILLED
-if current_status == ORDER_STATUS.FILLED:
-    print("订单已成交")
-```
-
-### 示例 3：多环境配置管理
-
-**场景描述：** 开发/生产环境使用不同配置
-
-**代码实现：**
-
-```python
-from FQBase.Config import get_env, DATABASE
-
-# 根据环境选择配置
-env = get_env('RUNNING_ENVIRONMENT', 'development')
-
-if env == 'production':
-    # 生产环境配置
-    db_config = DATABASE['production']
-else:
-    # 开发环境配置
-    db_config = DATABASE['development']
-
-print(f"当前环境: {env}")
-print(f"数据库配置: {db_config}")
-```
-
-## 常见应用模式
-
-### 模式 1：配置优先读取
-
-**描述：** 优先从环境变量读取， fallback 到默认值
-
-```python
-from FQBase.Config import get_env
-
-# 优雅的配置读取方式
-config = {
-    'host': get_env('HOST', 'localhost'),
-    'port': get_env('PORT', 8080),
-    'debug': get_env('DEBUG', 'false').lower() == 'true',
-}
-```
-
-### 模式 2：敏感配置检测
-
-**描述：** 检测敏感配置是否正确配置
+**业务需求：** API 密钥等敏感配置安全获取
 
 ```python
 from FQBase.Config import get_secure_env
 
-def validate_secrets():
-    """验证必需的敏感配置"""
-    required = ['API_KEY', 'SECRET_KEY', 'TOKEN']
-    missing = []
-
-    for key in required:
-        value = get_secure_env(key)
-        if value is None:
-            missing.append(key)
-
-    if missing:
-        print(f"警告: 以下敏感配置未设置: {missing}")
-        return False
-    return True
+def init_api_client():
+    # 敏感配置不会被记录到日志
+    api_key = get_secure_env('API_KEY')
+    api_secret = get_secure_env('API_SECRET')
+    
+    return APIClient(api_key, api_secret)
 ```
 
-### 模式 3：交易常量组合
+---
 
-**描述：** 使用交易常量构建完整订单
+## 场景 4: 动态配置监听
+
+**业务需求：** 配置文件变更时自动重载
 
 ```python
-from FQBase.Config import (
-    ORDER_DIRECTION,
-    EXCHANGE_ID,
-    ORDER_MODEL,
-    ORDER_STATUS,
-    TIME_CONDITION,
-    VOLUME_CONDITION,
-)
+from FQBase.Config import ConfigWatcher, reload_env
 
-def create_order(code, direction, price, volume):
-    """创建订单"""
-    return {
-        'code': code,
-        'direction': direction,  # ORDER_DIRECTION.BUY/SELL
-        'exchange': EXCHANGE_ID.SH,
-        'model': ORDER_MODEL.LIMIT,
-        'time_condition': TIME_CONDITION.GFD,
-        'volume_condition': VOLUME_CONDITION.ANY,
-        'price': price,
-        'volume': volume,
-    }
-
-# 创建买单
-order = create_order('600000', ORDER_DIRECTION.BUY, 10.5, 100)
+def setup_config_watcher():
+    watcher = ConfigWatcher()
+    
+    def reload_callback():
+        print("配置已变更，重新加载...")
+        reload_env()
+    
+    # 监听配置变化
+    watcher.watch('database', callback=reload_callback)
+    watcher.watch('cache', callback=reload_callback)
+    
+    return watcher
 ```
 
-## 相关文档
+---
 
-- [API参考](./api.md)
-- [使用指南](./usage.md)
-- [最佳实践](./best-practices.md)
-- [故障排查](./troubleshooting.md)
+## 场景 5: 缓存策略配置
+
+**业务需求：** 根据环境选择缓存策略
+
+```python
+from FQBase.Config import CacheConfig, get_cache_config, get_cache_kwargs
+
+def init_cache():
+    # 创建缓存配置
+    cache_type = 'redis'  # 可根据环境变量切换
+    
+    config = CacheConfig(
+        cache_type=cache_type,
+        ttl=3600,
+        prefix='fquant:'
+    )
+    
+    # 获取全局配置
+    global_config = get_cache_config()
+    
+    # 获取缓存参数字典
+    kwargs = get_cache_kwargs()
+    
+    return kwargs
+```

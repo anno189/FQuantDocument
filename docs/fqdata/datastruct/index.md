@@ -1,185 +1,143 @@
-# DataStruct index 模块
+---
+title: index - 指数数据
+description: 指数行情数据类
+tag:
+  - fqdata
+  - datastruct
+  - index
 
-指数数据结构模块，提供指数日线和分钟线数据结构的实现。
+summary:
+  type: data-processing
+  complexity: medium
+  maturity: stable
+  core_classes:
+    - IndexDayData
+    - IndexMinData
+  features:
+    is_thread_safe: true
+  usage_scenarios:
+    - "场景1：获取指数日线数据"
+    - "场景2：获取指数分钟数据"
+  warnings: []
+  limitations:
+    - "仅支持国内指数数据"
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqdata.datastruct
+  depends_on:
+    - fquant.fqbase
+    - pandas
 
-```
-index.py
-```
-
+api:
+  signatures:
+    IndexDayData:
+      __init__: "(self, data: pd.DataFrame, dtype: str = 'index_day', if_fq: str = 'bfq', market_type: str = None, frequence: str = None) -> None"
+      week: "self -> pd.Series"
+      month: "self -> pd.Series"
+      quarter: "self -> pd.Series"
+      year: "self -> pd.Series"
+      resample: "(self, level: str) -> IndexDayData"
+    IndexMinData:
+      __init__: "(self, data: pd.DataFrame, dtype: str = 'index_min', if_fq: str = 'bfq', market_type: str = None, frequence: str = None) -> None"
+      min5: "self -> pd.Series"
+      min15: "self -> pd.Series"
+      min30: "self -> pd.Series"
+      min60: "self -> pd.Series"
+      resample: "(self, level: str) -> IndexMinData"
+  examples:
+    basic: |
+      from FQData.DataStruct import IndexDayData
+      index = IndexDayData(data, dtype='index_day', if_fq='bfq')
+      print(index.close)
 ---
 
-## IndexDayData
+# index - 指数数据
 
-指数日线数据结构。
+## 一句话总览
 
-```python
-from FQData.DataStruct import IndexDayData
+📌 **指数行情数据类，支持日线和分钟数据**
 
-index_day = IndexDayData(df, dtype='index_day')
-```
+## ⚠️ AI 开发必读
 
-**继承自：** `QuotationDataStructBase`, `QuotationIndicatorsMixin`, `QuotationOperationsMixin`, `QuotationIOSMixin`
+### 使用场景
 
-### 初始化参数
+✅ **应该使用**：
+- 场景1：获取指数日线数据
+- 场景2：获取指数分钟数据
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `data` | pd.DataFrame | - | DataFrame 数据 |
-| `dtype` | str | 'index_day' | 数据类型 |
-| `if_fq` | str | '' | 复权类型 |
+❌ **不应该使用**：
+- 不应该用于股票、期货等非指数数据
 
----
+### 依赖
 
-## 属性
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | fquant.fqbase | 基础工具 |
+| 必须 | pandas | 数据处理 |
 
-### 周期属性
+**TL;DR**：
+- 核心能力：指数日线、分钟线数据处理
 
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `week` | IndexDayData | 周线数据 |
-| `month` | IndexDayData | 月线数据 |
-| `quarter` | IndexDayData | 季线数据 |
-| `year` | IndexDayData | 年线数据 |
-
----
-
-## 方法
-
-### resample
-
-重采样为其他周期。
-
-```python
-weekly = index_day.resample('W')
-monthly = index_day.resample('M')
-quarterly = index_day.resample('Q')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `level` | str | 目标周期 ('W', 'M', 'Q', 'Y') |
-
-**返回：** IndexDayData
-
----
-
-## IndexMinData
-
-指数分钟线数据结构。
-
-```python
-from FQData.DataStruct import IndexMinData
-
-index_min = IndexMinData(df, dtype='index_min')
-```
-
-**继承自：** `QuotationDataStructBase`, `QuotationIndicatorsMixin`, `QuotationOperationsMixin`, `QuotationIOSMixin`
-
-### 初始化参数
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `data` | pd.DataFrame | - | DataFrame 数据 |
-| `dtype` | str | 'index_min' | 数据类型 |
-| `if_fq` | str | '' | 复权类型 |
-
-### 数据预处理
-
-自动筛选列：`open`, `high`, `low`, `close`, `volume`, `amount`, `preclose`, `type`
-
----
-
-## 属性
-
-### 分钟周期属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `min5` | IndexMinData | 5 分钟线 |
-| `min15` | IndexMinData | 15 分钟线 |
-| `min30` | IndexMinData | 30 分钟线 |
-| `min60` | IndexMinData | 60 分钟线 |
-
----
-
-## 方法
-
-### resample
-
-重采样为其他周期。
-
-```python
-min_5 = index_min.resample('5min')
-min_15 = index_min.resample('15min')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `level` | str | 目标周期 ('5min', '15min', '30min', '60min') |
-
-**返回：** IndexMinData
-
----
-
-### add_funcx
-
-按证券分组应用函数（单索引）。
-
-```python
-result = index_min.add_funcx(custom_func, arg1)
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `func` | function | 函数 |
-
-**返回：** 函数执行结果
-
----
-
-## 使用示例
-
-### 基本使用
+## 快速开始
 
 ```python
 from FQData.DataStruct import IndexDayData, IndexMinData
 
-index_day = IndexDayData(df)
-print(index_day)
+# 日线数据
+index_day = IndexDayData(data, dtype='index_day', if_fq='bfq')
+print(index_day.close)
+print(index_day.resample('w'))  # 周线
 
-index_min = IndexMinData(min_df)
-print(index_min)
+# 分钟数据
+index_min = IndexMinData(data, dtype='index_min', if_fq='bfq')
+print(index_min.min5)
+print(index_min.resample('5min'))
 ```
 
-### 周线/月线
+## 核心类
 
-```python
-weekly = index_day.week
-monthly = index_day.month
-quarterly = index_day.quarter
-```
+### IndexDayData
 
-### 分钟重采样
+指数日线数据类。
 
-```python
-min_5 = index_min.min5
-min_15 = index_min.min15
-min_30 = index_min.min30
-min_60 = index_min.min60
-```
+#### 属性
 
----
+| 属性 | 类型 | 描述 |
+|------|------|------|
+| week | pd.Series | 周数据 |
+| month | pd.Series | 月数据 |
+| quarter | pd.Series | 季度数据 |
+| year | pd.Series | 年数据 |
 
-## 相关文档
+#### 方法
 
-- [DataStruct README](README.md)
-- [DataStruct API](api.md)
-- [DataStruct stock](stock.md)
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| resample | IndexDayData | 重采样 |
+
+### IndexMinData
+
+指数分钟数据类。
+
+#### 属性
+
+| 属性 | 类型 | 描述 |
+|------|------|------|
+| min5 | pd.Series | 5分钟数据 |
+| min15 | pd.Series | 15分钟数据 |
+| min30 | pd.Series | 30分钟数据 |
+| min60 | pd.Series | 60分钟数据 |
+
+#### 方法
+
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| resample | IndexMinData | 重采样 |
+| add_funcx | - | 添加自定义函数 |
+
+## 变更日志
+
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v1.0.0 | 2024-01 | 初始版本 |

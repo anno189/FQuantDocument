@@ -1,173 +1,122 @@
-# DataStruct security_list 模块
+---
+title: security_list - 证券列表数据
+description: 证券列表数据管理类
+tag:
+  - fqdata
+  - datastruct
+  - security_list
 
-证券列表数据结构模块，提供证券列表查询功能。
+summary:
+  type: data-processing
+  complexity: low
+  maturity: stable
+  core_classes:
+    - SecurityListData
+  features:
+    is_thread_safe: true
+  usage_scenarios:
+    - "场景1：获取股票列表"
+    - "场景2：筛选特定类型证券"
+  warnings: []
+  limitations:
+    - "仅支持 A 股证券列表"
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqdata.datastruct
+  depends_on:
+    - pandas
 
-```
-security_list.py
-```
-
+api:
+  signatures:
+    SecurityListData:
+      __init__: "(self, data: pd.DataFrame) -> None"
+      data: "self -> pd.DataFrame"
+      code: "self -> List[str]"
+      name: "self -> List[str]"
+      get_stock: "(self, option: str = None) -> pd.DataFrame"
+      get_index: "(self) -> pd.DataFrame"
+      get_etf: "(self) -> pd.DataFrame"
+      filter_by_name: "(self, keyword: str) -> pd.DataFrame"
+      filter_by_code: "(self, prefix: str) -> pd.DataFrame"
+  examples:
+    basic: |
+      from FQData.DataStruct import SecurityListData
+      security = SecurityListData(data)
+      print(security.get_stock())
+      print(security.get_etf())
 ---
 
-## SecurityListData
+# security_list - 证券列表数据
 
-证券列表数据结构。
+## 一句话总览
+
+📌 **证券列表数据管理**
+
+## ⚠️ AI 开发必读
+
+### 使用场景
+
+✅ **应该使用**：
+- 场景1：获取股票列表
+- 场景2：筛选特定类型证券
+
+❌ **不应该使用**：
+- 不应该用于非 A 股证券列表
+
+### 依赖
+
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | pandas | 数据处理 |
+
+**TL;DR**：
+- 核心能力：证券列表查询、筛选
+
+## 快速开始
 
 ```python
 from FQData.DataStruct import SecurityListData
 
-sec_list = SecurityListData(df)
+security = SecurityListData(data)
+
+# 获取所有股票
+stocks = security.get_stock()
+
+# 获取 ETF
+etfs = security.get_etf()
+
+# 获取指数
+indices = security.get_index()
+
+# 按名称筛选
+filtered = security.filter_by_name('银行')
 ```
 
-### 初始化参数
+## 核心类
 
-| 参数 | 类型 | 说明 |
+### SecurityListData
+
+#### 属性
+
+| 属性 | 类型 | 描述 |
 |------|------|------|
-| `data` | pd.DataFrame | 证券信息，需包含 sse, code, name 列 |
+| data | pd.DataFrame | 原始数据 |
+| code | List[str] | 证券代码列表 |
+| name | List[str] | 证券名称列表 |
 
-### 数据预处理
+#### 方法
 
-- 自动筛选 `sse`, `code`, `name` 列
-- 自动设置 `code` 为索引
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| get_stock | pd.DataFrame | 获取股票列表 |
+| get_index | pd.DataFrame | 获取指数列表 |
+| get_etf | pd.DataFrame | 获取 ETF 列表 |
+| filter_by_name | pd.DataFrame | 按名称筛选 |
+| filter_by_code | pd.DataFrame | 按代码前缀筛选 |
 
----
+## 变更日志
 
-## 属性
-
-| 属性 | 类型 | 说明 |
+| 版本 | 日期 | 变更 |
 |------|------|------|
-| `data` | pd.DataFrame | 原始 DataFrame |
-| `code` | List[str] | 所有证券代码 |
-| `name` | List[str] | 所有证券名称 |
-
----
-
-## 方法
-
-### get_stock
-
-获取股票列表。
-
-```python
-stocks = sec_list.get_stock()
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `option` | str | 筛选选项（保留接口兼容性） |
-
-**返回：** pd.DataFrame
-
----
-
-### get_index
-
-获取指数列表。
-
-```python
-indices = sec_list.get_index()
-```
-
-**返回：** pd.DataFrame
-
----
-
-### get_etf
-
-获取 ETF 列表。
-
-```python
-etfs = sec_list.get_etf()
-```
-
-**返回：** pd.DataFrame
-
----
-
-### filter_by_name
-
-按名称关键词筛选。
-
-```python
-bank_stocks = sec_list.filter_by_name('银行')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `keyword` | str | 关键词 |
-
-**返回：** pd.DataFrame - 匹配的证券列表
-
----
-
-### filter_by_code
-
-按代码前缀筛选。
-
-```python
-sh_stocks = sec_list.filter_by_code('60')
-sz_stocks = sec_list.filter_by_code('00')
-cy_stocks = sec_list.filter_by_code('30')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `prefix` | str | 代码前缀 |
-
-**返回：** pd.DataFrame - 匹配的证券列表
-
----
-
-## 使用示例
-
-### 基本使用
-
-```python
-from FQData.DataStruct import SecurityListData
-
-sec_list = SecurityListData(df)
-
-print(f"证券数量: {len(sec_list)}")
-print(f"代码列表: {sec_list.code[:10]}")
-print(f"名称列表: {sec_list.name[:10]}")
-```
-
-### 名称搜索
-
-```python
-# 搜索包含"银行"的股票
-bank_stocks = sec_list.filter_by_name('银行')
-
-# 搜索包含"科技"的股票
-tech_stocks = sec_list.filter_by_name('科技')
-```
-
-### 代码前缀筛选
-
-```python
-# 沪市A股
-sh_stocks = sec_list.filter_by_code('60')
-
-# 深市主板
-sz_stocks = sec_list.filter_by_code('00')
-
-# 创业板
-cy_stocks = sec_list.filter_by_code('30')
-
-# 北交所
-bj_stocks = sec_list.filter_by_code('83')
-```
-
----
-
-## 相关文档
-
-- [DataStruct README](README.md)
-- [DataStruct API](api.md)
+| v1.0.0 | 2024-01 | 初始版本 |

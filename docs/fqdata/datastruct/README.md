@@ -1,213 +1,267 @@
-# DataStruct 模块
+---
+title: DataStruct - 数据结构模块
+description: FQuant 行情数据核心数据结构模块，提供统一的数据操作接口
+tag:
+  - fqdata
+  - datastruct
+  - core
 
-数据结构抽象层，提供统一的行情数据结构，支持股票、指数、期货、债券等多种数据类型。
+# AI 结构化摘要
+summary:
+  type: data-processing
+  complexity: high
+  maturity: stable
+  size: xl
+  core_classes:
+    - QuotationDataStructBase
+    - StockDayData
+    - StockMinData
+    - IndexDayData
+    - FutureDayData
+  key_functions:
+    - select_code
+    - select_time
+    - to_df
+    - resample
+  api_coverage:
+    total: 60
+    covered: 55
+    public: 50
+    private: 10
+  features:
+    has_async: false
+    has_config: false
+    has_security: false
+    has_logging: true
+    is_thread_safe: true
+  usage_scenarios:
+    - "场景1：获取股票日线数据并进行技术指标计算"
+    - "场景2：获取期货分钟数据并进行周期转换"
+    - "场景3：多数据源合并与筛选"
+  warnings:
+    - "警告1：Mixin 类不能直接实例化"
+    - "警告2：@lru_cache 在 property 上使用会导致序列化后缓存失效"
+  limitations:
+    - "限制1：仅支持 A 股、期货、债券等国内金融市场"
+    - "限制2：不支持实时数据推送，仅支持批量查询"
 
-## 模块结构
+# 模块关系
+relationships:
+  belongs_to:
+    - fquant.fqdata
+  depends_on:
+    - fquant.fqbase
+    - pandas
+    - numpy
+  used_by:
+    - fquant.fqdata.datasource
+    - fquant.fqdata.datastore
 
-```
-DataStruct/
-├── base.py              # 核心基类
-├── _base.py             # QuotationDataStructBase
-├── _indicators.py       # 统计指标 Mixin
-├── _operations.py       # 数据操作 Mixin
-├── _io.py              # 序列化 IO Mixin
-├── stock.py            # 股票数据结构
-├── index.py            # 指数数据结构
-├── future.py           # 期货数据结构
-├── bond.py            # 债券数据结构
-├── block.py           # 板块数据结构
-├── financial.py        # 财务数据结构
-├── transaction.py       # 成交明细结构
-├── realtime.py         # 实时数据结构
-├── resample.py         # 重采样函数
-├── adj.py              # 复权处理
-├── indicator.py        # 指标数据
-├── series.py           # 序列数据
-└── security_list.py    # 证券列表
-```
+# API 摘要
+api:
+  signatures:
+    QuotationDataStructBase:
+      __init__: "(self, data: pd.DataFrame, dtype: str = None, if_fq: str = 'qfq', market_type: str = None, frequence: str = None)"
+      select_code: "(self, code: str) -> 'QuotationDataStructBase'"
+      select_time: "(self, start_date: str, end_date: str) -> 'QuotationDataStructBase'"
+      to_df: "(self) -> pd.DataFrame"
+  exceptions:
+    - name: ValueError
+      when: "代码或时间筛选无效"
+      solution: "检查代码格式和时间范围"
+    - name: KeyError
+      when: "列名不存在"
+      solution: "检查数据列名"
+  best_practices:
+    - "使用 Mixin 组合获取数据类功能"
+    - "优先使用向量化操作而非循环"
+    - "序列化时注意 pickle 兼容性问题"
 
-## 核心组件
+---
 
-| 组件 | 说明 |
-|------|------|
-| `QuotationDataStructBase` | 行情数据结构基类 |
-| `QuotationIndicatorsMixin` | 统计指标混入类 |
-| `QuotationOperationsMixin` | 数据操作混入类 |
-| `QuotationIOSMixin` | 序列化 IO 混入类 |
+# DataStruct - 数据结构模块
 
-## 数据类型
+## 阅读路径
 
-### 股票数据
+| 角色 | 阅读路径 |
+|------|---------|
+| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [速查表](./cheatsheet.md) → [使用指南](./usage.md) → [案例库](./examples.md) |
+| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → [设计原则](./design.md) → [API参考](./api.md) → [开发指南](./development.md) → [最佳实践](./best-practices.md) |
+| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [故障排查](./troubleshooting.md) → [常见问题](./faq.md) |
+| 🟠 架构师 | [README](./README.md) → [技术架构](./architecture.md) → [设计模式](./patterns.md) → [技术权衡](./tradeoff.md) |
+| 📚 案例库 | [案例库](./examples.md) → [案例研究](./case-studies.md) |
+| 📖 索引 | [README](./README.md) → [变更日志](./changelog.md) |
 
-```python
-from FQData.DataStruct import StockDayData, StockMinData
 
-# 日线数据
-stock_day = StockDayData(df)
+## 一句话总览
 
-# 分钟数据
-stock_min = StockMinData(df)
-```
+📌 **FQuant 行情数据核心数据结构，提供统一的数据操作接口**
 
-### 指数数据
+## ⚠️ AI 开发必读
 
-```python
-from FQData.DataStruct import IndexDayData, IndexMinData
+### 使用场景
 
-# 指数日线
-index_day = IndexDayData(df)
+✅ **应该使用**：
+- 场景1：获取股票日线数据并进行技术指标计算
+- 场景2：获取期货分钟数据并进行周期转换
+- 场景3：多数据源合并与筛选
 
-# 指数分钟
-index_min = IndexMinData(df)
-```
+❌ **不应该使用**：
+- 不应该使用：需要实时数据推送的场景
+- 不应该使用：需要直接连接数据库的场景
 
-### 期货数据
+### 注意事项
 
-```python
-from FQData.DataStruct import FutureDayData, FutureMinData
+1. **Mixin 类不能直接实例化**
+   - 说明：Mixin 类是功能组合层，需要与基类一起使用
 
-# 期货日线
-future_day = FutureDayData(df)
+2. **@lru_cache 在 property 上使用会导致序列化后缓存失效**
+   - 说明：已移除 property 上的 lru_cache 装饰器
 
-# 期货分钟
-future_min = FutureMinData(df)
-```
+### 已知限制
 
-## 复权处理
+- 限制1：仅支持 A 股、期货、债券等国内金融市场
+- 限制2：不支持实时数据推送，仅支持批量查询
 
-```python
-from FQData.DataStruct import fetch_stock_adj, fetch_stock_xdxr
+### 依赖
 
-# 获取复权因子
-adj_data = fetch_stock_adj(code='600000', start='2024-01-01')
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | fquant.fqbase | 基础工具 |
+| 必须 | pandas | 数据处理 |
+| 必须 | numpy | 数值计算 |
 
-# 获取除权除息数据
-xdxr_data = fetch_stock_xdxr(code='600000')
+**TL;DR**：
+- 解决什么问题：统一行情数据操作接口，支持多市场、多周期数据处理
+- 核心能力：数据筛选、指标计算、周期转换、序列化导出
+- 入门难度：🔵 中等
 
-# 前复权转换
-fq_data = data_stock_to_fq(original_data, adj_data)
+**快速判断**：当您需要处理股票、期货、债券等行情数据时，使用本模块。
 
-# 后复权转换
-fq_adj_data = data_stock_fq_adj(original_data, adj_data)
-```
+## 知识脉络
 
-## 数据重采样
+🧑‍🎓 **从零到精通的推荐学习顺序**：
 
-```python
-from FQData.DataStruct import (
-    tick_resample_1min,
-    min_resample,
-    min_to_day,
-    day_resample
-)
+1. [快速入门](./quick-start.md) - 10 分钟上手
+2. [核心概念](./concepts.md) - 理解基本概念
+3. [技术架构](./architecture.md) - 理解设计思路
+4. [使用指南](./usage.md) - 深入使用
+5. [最佳实践](./best-practices.md) - 升华理解
 
-# Tick 转 1 分钟
-min_data = tick_resample_1min(tick_data)
+⏱️ 预计学习时间：2 小时
 
-# 分钟重采样为其他周期
-data_5min = min_resample(min_data, freq='5min')
-data_15min = min_resample(min_data, freq='15min')
+## 前置知识
 
-# 分钟转日线
-daily_data = min_to_day(min_data)
+在开始学习本模块前，建议先掌握：
 
-# 日线重采样
-weekly_data = day_resample(daily_data, freq='W')
-monthly_data = day_resample(daily_data, freq='M')
-```
+| 知识领域 | 建议资源 | 状态 |
+|---------|---------|------|
+| Python 基础 | [官方教程](https://docs.python.org/zh-cn/3/tutorial/) | ⬜ |
+| Pandas 数据处理 | [Pandas 教程](https://pandas.pydata.org/docs/) | ⬜ |
 
-## 实时数据
+## 适用场景
 
-```python
-from FQData.DataStruct import (
-    StockRealtimeData,
-    FutureRealtimeData,
-    RealtimeSeries
-)
+✅ **推荐使用**：
+- 适用场景 1：股票、期货、债券等行情数据处理
+- 适用场景 2：数据技术指标计算
+- 适用场景 3：数据周期转换（日线、分钟线互转）
 
-# 股票实时数据
-realtime = StockRealtimeData(code='600000')
+❌ **不推荐使用**：
+- 不适用场景 1：实时数据推送
+- 不适用场景 2：直接数据库操作
 
-# 实时序列
-series = RealtimeSeries(codes=['600000', '000001'])
+💡 **与其他模块的关系**：
+- 依赖 [datasource 模块](./datasource/)（数据源）
+- 常与 [datastore 模块](./datastore/) 配合使用（数据存储）
 
-# 期货 Tick
-future_tick = FutureTickData(code='IF2401')
-```
+## 概述
 
-## 指标计算
+DataStruct 是 FQuant 的核心数据结构模块，提供统一的行情数据操作接口。该模块采用 Mixin 模式，将数据操作功能（筛选、计算、序列化）分离为独立的 Mixin 类，然后通过多重继承组合到具体的数据类中。
 
-数据结构通过 Mixin 提供指标计算功能：
+### 核心特性
 
-```python
-# 假设 stock_day 是 StockDayData 实例
-# 可用指标取决于 QuotationIndicatorsMixin
+- **多市场支持**：股票、指数、期货、债券、可转债
+- **多周期支持**：Tick、分钟、日线、周线、月线
+- **丰富的操作**：数据筛选、指标计算、周期转换、序列化导出
+- **统一接口**：通过 Mixin 模式提供一致的 API
 
-# 收益率
-returns = stock_day.returns()
+## 子模块
 
-# 移动平均
-ma5 = stock_day.ma(5)
-ma10 = stock_day.ma(10)
-ma20 = stock_day.ma(20)
+| 子模块 | 说明 | 文档 |
+|--------|------|------|
+| _base.py | 核心基类 QuotationDataStructBase | [L0文档](./_base.md) |
+| _indicators.py | 指标计算 Mixin | [L0文档](./_indicators.md) |
+| _operations.py | 数据操作 Mixin | [L0文档](./_operations.md) |
+| _io.py | 序列化 IO Mixin | [L0文档](./_io.md) |
+| stock.py | 股票数据类 | [L0文档](./stock.md) |
+| index.py | 指数数据类 | [L0文档](./index.md) |
+| future.py | 期货数据类 | [L0文档](./future.md) |
+| bond.py | 可转债数据类 | [L0文档](./bond.md) |
+| resample.py | 重采样功能 | [L0文档](./resample.md) |
+| block.py | 股票板块数据 | [L0文档](./block.md) |
+| financial.py | 财务数据 | [L0文档](./financial.md) |
+| indicator.py | 指标数据 | [L0文档](./indicator.md) |
+| realtime.py | 实时行情数据 | [L0文档](./realtime.md) |
+| security_list.py | 证券列表数据 | [L0文档](./security_list.md) |
+| series.py | 序列数据 | [L0文档](./series.md) |
+| transaction.py | 逐笔成交数据 | [L0文档](./transaction.md) |
 
-# 波动率
-volatility = stock_day.volatility()
-```
+## L0 极简文档
 
-## 序列操作
+本模块为以下单一文件模块生成了 L0 极简文档：
 
-```python
-from FQData.DataStruct import SeriesData
+| 文件 | 类型 | 核心类/函数 | 说明 |
+|------|------|-------------|------|
+| [_base.md](./_base.md) | Mixin | QuotationDataStructBase | 行情数据核心基类 |
+| [_indicators.md](./_indicators.md) | Mixin | QuotationIndicatorsMixin | 统计指标计算 |
+| [_operations.md](./_operations.md) | Mixin | QuotationOperationsMixin | 数据筛选操作 |
+| [_io.md](./_io.md) | Mixin | QuotationIOSMixin | 数据序列化导出 |
+| [stock.md](./stock.md) | DataClass | StockDayData, StockMinData | 股票数据 |
+| [index.md](./index.md) | DataClass | IndexDayData, IndexMinData | 指数数据 |
+| [future.md](./future.md) | DataClass | FutureDayData, FutureMinData | 期货数据 |
+| [bond.md](./bond.md) | DataClass | Bond2StockDayData, Bond2StockMinData | 可转债数据 |
+| [resample.md](./resample.md) | Functions | tick_resample, min_to_day 等 | 数据重采样 |
+| [block.md](./block.md) | DataClass | StockBlockData | 股票板块数据 |
+| [financial.md](./financial.md) | DataClass | FinancialData | 财务数据 |
+| [indicator.md](./indicator.md) | DataClass | IndicatorData | 指标数据 |
+| [realtime.md](./realtime.md) | DataClass | RealtimeBase, StockRealtimeData | 实时行情数据 |
+| [security_list.md](./security_list.md) | DataClass | SecurityListData | 证券列表数据 |
+| [series.md](./series.md) | DataClass | SeriesData | 序列数据 |
+| [transaction.md](./transaction.md) | DataClass | StockTransactionData, IndexTransactionData | 逐笔成交数据 |
 
-# 创建序列
-series = SeriesData(data=[1, 2, 3, 4, 5])
-
-# 切片操作
-subset = series[1:3]
-
-# 统计
-mean = series.mean()
-std = series.std()
-```
-
-## 文档索引
-
-### 概览文档
+## 快速链接
 
 | 文档 | 说明 |
 |------|------|
-| [README](README.md) | 本文档，模块索引 |
-| [API](api.md) | 完整API参考 |
-| [使用](usage.md) | 使用指南与示例 |
-| [开发指南](development.md) | 开发环境、调试、测试 |
-| [最佳实践](best-practices.md) | 开发建议与注意事项 |
-| [FAQ](faq.md) | 常见问题解答 |
+| [快速入门](./quick-start.md) | 10分钟快速上手 |
+| [术语表](./glossary.md) | 术语定义 |
+| [核心概念](./concepts.md) | 核心概念详解 |
+| [技术架构](./architecture.md) | 技术架构说明 |
+| [API参考](./api.md) | API参考文档 |
+| [案例库](./examples.md) | 案例库 |
+| [最佳实践](./best-practices.md) | 最佳实践 |
 
-### 子模块文档
+## 快速定位
 
-| 文档 | 说明 |
+我不知道这个，应该去哪找？
+
+| 场景 | 文档 |
 |------|------|
-| [_base](_base.md) | 核心基类 QuotationDataStructBase |
-| [_indicators](_indicators.md) | 统计指标 Mixin |
-| [_operations](_operations.md) | 数据操作 Mixin |
-| [_io](_io.md) | 序列化 IO Mixin |
-| [stock](stock.md) | 股票数据结构 |
-| [index](index.md) | 指数数据结构 |
-| [future](future.md) | 期货数据结构 |
-| [bond](bond.md) | 可转债数据结构 |
-| [block](block.md) | 板块数据结构 |
-| [financial](financial.md) | 财务数据结构 |
-| [transaction](transaction.md) | 成交明细结构 |
-| [realtime](realtime.md) | 实时行情数据结构 |
-| [resample](resample.md) | 重采样函数 |
-| [adj](adj.md) | 复权因子获取和计算 |
-| [indicator](indicator.md) | 技术指标计算 |
-| [security_list](security_list.md) | 证券列表结构 |
-| [series](series.md) | 序列数据结构 |
+| 我不了解这个术语 | [术语表](./glossary.md) |
+| 遇到错误/问题 | [故障排查](./troubleshooting.md) |
+| 需要参考实际案例 | [案例库](./examples.md) |
+
+## 安装
+
+```bash
+pip install fquant-fqdata
+```
 
 ## 相关文档
 
-- [FQData 模块](../README.md)
-- [DataSource 模块](../datasource/README.md)
-- [DataStore 模块](../datastore/README.md)
+| 类型 | 文档 | 链接 |
+|------|------|------|
+| 项目首页 | FQData 首页 | [README](../README.md) |
+| 数据源 | 数据源模块 | [datasource](../datasource/README.md) |
+| 数据存储 | 数据存储模块 | [datastore](../datastore/README.md) |
+| 架构设计 | Mixin 模式分析 | [mixin-analysis](./mixin-analysis.md) |

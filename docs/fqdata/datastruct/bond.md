@@ -1,181 +1,144 @@
-# DataStruct bond 模块
+---
+title: bond - 可转债数据
+description: 可转债行情数据类
+tag:
+  - fqdata
+  - datastruct
+  - bond
 
-可转债数据结构模块，提供可转债转股数据结构的实现。
+summary:
+  type: data-processing
+  complexity: medium
+  maturity: stable
+  core_classes:
+    - Bond2StockDayData
+    - Bond2StockMinData
+  features:
+    is_thread_safe: true
+  usage_scenarios:
+    - "场景1：获取可转债日线数据"
+    - "场景2：获取可转债分钟数据"
+  warnings: []
+  limitations:
+    - "仅支持可转债数据"
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqdata.datastruct
+  depends_on:
+    - fquant.fqbase
+    - pandas
 
-```
-bond.py
-```
-
+api:
+  signatures:
+    Bond2StockDayData:
+      __init__: "(self, data: pd.DataFrame, dtype: str = 'bond_day', if_fq: str = 'bfq', market_type: str = None, frequence: str = None) -> None"
+      week: "self -> pd.Series"
+      month: "self -> pd.Series"
+      quarter: "self -> pd.Series"
+      year: "self -> pd.Series"
+      resample: "(self, level: str) -> Bond2StockDayData"
+    Bond2StockMinData:
+      __init__: "(self, data: pd.DataFrame, dtype: str = 'bond_min', if_fq: str = 'bfq', market_type: str = None, frequence: str = None) -> None"
+      min5: "self -> pd.Series"
+      min15: "self -> pd.Series"
+      min30: "self -> pd.Series"
+      min60: "self -> pd.Series"
+      resample: "(self, level: str) -> Bond2StockMinData"
+  examples:
+    basic: |
+      from FQData.DataStruct import Bond2StockDayData
+      bond = Bond2StockDayData(data, dtype='bond_day', if_fq='bfq')
+      print(bond.close)
+      print(bond.resample('w'))
 ---
 
-## Bond2StockDayData
+# bond - 可转债数据
 
-可转债转股日线数据结构。
+## 一句话总览
 
-```python
-from FQData.DataStruct import Bond2StockDayData
+📌 **可转债行情数据类，支持日线和分钟数据**
 
-bond_day = Bond2StockDayData(df, dtype='bond2stock_day')
-```
+## ⚠️ AI 开发必读
 
-**继承自：** `QuotationDataStructBase`, `QuotationIndicatorsMixin`, `QuotationOperationsMixin`, `QuotationIOSMixin`
+### 使用场景
 
-### 初始化参数
+✅ **应该使用**：
+- 场景1：获取可转债日线数据
+- 场景2：获取可转债分钟数据
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `data` | pd.DataFrame | - | DataFrame 数据 |
-| `dtype` | str | 'bond2stock_day' | 数据类型 |
-| `if_fq` | str | '' | 复权类型 |
+❌ **不应该使用**：
+- 不应该用于非可转债数据
 
----
+### 依赖
 
-## 属性
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | fquant.fqbase | 基础工具 |
+| 必须 | pandas | 数据处理 |
 
-### 周期属性
+**TL;DR**：
+- 核心能力：可转债日线、分钟线数据处理
 
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `week` | Bond2StockDayData | 周线数据 |
-| `month` | Bond2StockDayData | 月线数据 |
-| `quarter` | Bond2StockDayData | 季线数据 |
-| `year` | Bond2StockDayData | 年线数据 |
-
----
-
-## 方法
-
-### resample
-
-重采样为其他周期。
-
-```python
-weekly = bond_day.resample('W')
-monthly = bond_day.resample('M')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `level` | str | 目标周期 ('W', 'M', 'Q', 'Y') |
-
-**返回：** Bond2StockDayData
-
----
-
-## Bond2StockMinData
-
-可转债转股分钟线数据结构。
-
-```python
-from FQData.DataStruct import Bond2StockMinData
-
-bond_min = Bond2StockMinData(df, dtype='bond2stock_min')
-```
-
-**继承自：** `QuotationDataStructBase`, `QuotationIndicatorsMixin`, `QuotationOperationsMixin`, `QuotationIOSMixin`
-
-### 初始化参数
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `data` | pd.DataFrame | - | DataFrame 数据 |
-| `dtype` | str | 'bond2stock_min' | 数据类型 |
-| `if_fq` | str | '' | 复权类型 |
-
-### 数据预处理
-
-自动筛选列：`open`, `high`, `low`, `close`, `volume`, `amount`, `preclose`, `type`
-
----
-
-## 属性
-
-### 分钟周期属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `min5` | Bond2StockMinData | 5 分钟线 |
-| `min15` | Bond2StockMinData | 15 分钟线 |
-| `min30` | Bond2StockMinData | 30 分钟线 |
-| `min60` | Bond2StockMinData | 60 分钟线 |
-
----
-
-## 方法
-
-### resample
-
-重采样为其他周期。
-
-```python
-min_5 = bond_min.resample('5min')
-min_15 = bond_min.resample('15min')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `level` | str | 目标周期 ('5min', '15min', '30min', '60min') |
-
-**返回：** Bond2StockMinData
-
----
-
-### add_funcx
-
-按证券分组应用函数（单索引）。
-
-```python
-result = bond_min.add_funcx(custom_func, arg1)
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `func` | function | 函数 |
-
-**返回：** 函数执行结果
-
----
-
-## 使用示例
-
-### 基本使用
+## 快速开始
 
 ```python
 from FQData.DataStruct import Bond2StockDayData, Bond2StockMinData
 
-bond_day = Bond2StockDayData(df)
-print(bond_day)
+# 日线数据
+bond_day = Bond2StockDayData(data, dtype='bond_day', if_fq='bfq')
+print(bond_day.close)
+print(bond_day.resample('w'))  # 周线
 
-bond_min = Bond2StockMinData(min_df)
-print(bond_min)
+# 分钟数据
+bond_min = Bond2StockMinData(data, dtype='bond_min', if_fq='bfq')
+print(bond_min.min5)
+print(bond_min.resample('5min'))
 ```
 
-### 周线/月线
+## 核心类
 
-```python
-weekly = bond_day.week
-monthly = bond_day.month
-```
+### Bond2StockDayData
 
-### 分钟重采样
+可转债日线数据类。
 
-```python
-min_5 = bond_min.min5
-min_15 = bond_min.min15
-```
+#### 属性
 
----
+| 属性 | 类型 | 描述 |
+|------|------|------|
+| week | pd.Series | 周数据 |
+| month | pd.Series | 月数据 |
+| quarter | pd.Series | 季度数据 |
+| year | pd.Series | 年数据 |
 
-## 相关文档
+#### 方法
 
-- [DataStruct README](README.md)
-- [DataStruct API](api.md)
-- [DataStruct stock](stock.md)
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| resample | Bond2StockDayData | 重采样 |
+
+### Bond2StockMinData
+
+可转债分钟数据类。
+
+#### 属性
+
+| 属性 | 类型 | 描述 |
+|------|------|------|
+| min5 | pd.Series | 5分钟数据 |
+| min15 | pd.Series | 15分钟数据 |
+| min30 | pd.Series | 30分钟数据 |
+| min60 | pd.Series | 60分钟数据 |
+
+#### 方法
+
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| resample | Bond2StockMinData | 重采样 |
+| add_funcx | - | 添加自定义函数 |
+
+## 变更日志
+
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v1.0.0 | 2024-01 | 初始版本 |

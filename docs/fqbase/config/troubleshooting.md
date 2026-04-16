@@ -1,6 +1,6 @@
 ---
 title: Config - 故障排查
-description: Config 配置中心常见问题与解决方案
+description: FQBase 配置中心常见问题与解决方案
 tag:
   - fqbase
   - config
@@ -12,128 +12,194 @@ tag:
 
 | 角色 | 阅读路径 |
 |------|---------|
-| 🟡 运维/安全 | [README](./README.md) → [配置指南](./configuration.md) → **[故障排查](./troubleshooting.md)** |
+| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [配置指南](./configuration.md) → [安全指南](./security.md) → **[故障排查](./troubleshooting.md)** → [常见问题](./faq.md) |
+
+## 子模块故障排查
+
+| 子模块 | 故障排查 | 说明 |
+|--------|----------|------|
+| base | [故障排查](./base/troubleshooting.md) | 基础配置问题 |
+| business | [故障排查](./business/troubleshooting.md) | 业务配置问题 |
 
 
 ## 概述
 
-Config 配置中心的常见问题和解决方案。
+配置中心的常见问题和解决方案。
 
 ## 常见问题
 
-### 问题 1: 环境变量未加载
+### 问题 1: get_env 返回 None
 
 **症状：**
-- `get_env` 返回 None 或默认值
-- 提示 "环境变量未设置"
+- `get_env('KEY')` 返回 `None`
+- 配置值读取失败
 
 **可能原因：**
-- .env 文件不存在
-- 未调用 `load_env()`
-- .env 文件格式错误
+- 环境变量文件未加载
+- 环境变量名称拼写错误
+- 配置文件路径不正确
 
 **解决方案：**
 
-1. 检查 .env 文件是否存在：
-```python
-import os
-print(os.path.exists('.env'))
-```
+1. 确认已调用 load_env()：
 
-2. 确保调用了 load_env：
 ```python
-from FQBase.Config import load_env
+from FQBase.Config import load_env, get_env
+
+# 加载环境变量
 load_env()
+
+# 然后获取
+value = get_env('KEY')
 ```
 
-3. 检查 .env 文件格式：
+2. 检查环境变量名称：
+
+```python
+# 确认 .env 文件中的键名
+# DEBUG=true (不是 debug=true)
+print(get_env('DEBUG'))  # 大小写敏感
 ```
-# 正确的格式
-KEY=value
-# 错误的格式
-KEY = value  # 有空格
+
+3. 检查配置文件路径：
+
+```python
+# 使用绝对路径
+load_env('/absolute/path/to/.env')
 ```
 
 ---
 
-### 问题 2: 敏感配置返回 None
+### 问题 2: DATABASE 连接失败
 
 **症状：**
-- `get_secure_env` 返回 None
-- 提示 "API_KEY 为占位符"
+- `DATABASE` 访问报错
+- MongoDB 连接超时
 
 **可能原因：**
-- .env 文件中该值为注释状态
-- 值被设置为占位符字符串（如 `your_api_key_here`）
+- MongoDB 服务未运行
+- 连接字符串错误
+- 网络问题
 
 **解决方案：**
 
-1. 检查 .env 文件内容：
+1. 检查 MongoDB 服务：
+
 ```bash
-# 正确
-API_KEY=actual_key_here
-
-# 错误（被注释）
-# API_KEY=your_api_key_here
+# 启动 MongoDB
+mongod --dbpath /data/db
 ```
 
-2. 取消注释或设置实际值
+2. 验证连接字符串：
 
----
-
-### 问题 3: 配置值类型错误
-
-**症状：**
-- `int(get_env('PORT', 27017))` 报错
-- 配置值类型不符合预期
-
-**可能原因：**
-- 环境变量是字符串类型
-- 默认值类型与实际值类型不匹配
-
-**解决方案：**
-
-1. 显式转换类型：
 ```python
-port = int(get_env('MONGODB_PORT', '27017'))
+from FQBase.Config import SETTING
+
+# 测试连接
+uri = SETTING.get_mongo()
+print(f"连接: {uri}")
 ```
 
-2. 使用配置验证：
-```python
-def get_int_env(key, default):
-    value = get_env(key)
-    if value is None:
-        return default
-    try:
-        return int(value)
-    except ValueError:
-        return default
+3. 检查网络连通性：
+
+```bash
+ping localhost
 ```
 
 ---
 
-### 问题 4: 配置监听不生效
+### 问题 3: 缓存配置无效
 
 **症状：**
-- 修改配置文件后应用未更新
-- 回调函数未触发
+- 缓存类型切换不生效
+- 缓存过期时间无效
 
 **可能原因：**
-- 监听器未启动
-- 监听路径错误
-- 文件变化未触发事件
+- 缓存配置在创建后未保存
+- 缓存后端服务未运行
 
 **解决方案：**
 
-1. 确保监听器已启动：
+1. 重新创建缓存配置：
+
 ```python
-watcher = ConfigWatcher('config.yaml')
-watcher.start()
+from FQBase.Config import CacheConfig, set_cache_config
+
+# 重新设置缓存配置
+config = CacheConfig(cache_type='redis', ttl=1800)
+set_cache_config(config)
 ```
 
-2. 检查监听路径是否正确
+2. 检查缓存服务状态：
 
-3. 对于某些文件系统，可能需要手动触发
+```bash
+# Redis
+redis-cli ping
+
+# MongoDB
+mongosh -u admin -p --authenticationDatabase admin
+```
+
+---
+
+### 问题 4: ConfigWatcher 回调不触发
+
+**症状：**
+- 注册的回调函数不执行
+- 配置变更未被监听
+
+**可能原因：**
+- 回调函数签名不正确
+- 监听键名不匹配
+
+**解决方案：**
+
+1. 检查回调函数签名：
+
+```python
+# 正确的回调函数
+def my_callback(key, value):
+    print(f"{key} 已变更为 {value}")
+
+watcher.watch('database', callback=my_callback)
+```
+
+2. 检查监听键名：
+
+```python
+# 确保监听正确的键名
+watcher.watch('database', callback=on_change)  # 不是 'db' 或 'mongo'
+```
+
+---
+
+### 问题 5: 路径配置为 None
+
+**症状：**
+- `FQDATA_PATH` 等路径返回 `None`
+- 路径未正确初始化
+
+**可能原因：**
+- 配置文件未创建
+- 路径未在配置文件中设置
+
+**解决方案：**
+
+1. 检查配置文件：
+
+```bash
+# 确认 setting.json 存在
+cat FQData/setting.json
+```
+
+2. 手动设置路径：
+
+```python
+from FQBase.Config import SETTING
+
+# 获取路径
+fqdata_path = SETTING.get_fqdata_path()
+```
 
 ---
 
@@ -144,23 +210,29 @@ watcher.start()
 | 代码 | 错误 | 描述 | 解决方案 |
 |------|------|------|---------|
 | 001 | EnvNotLoaded | 环境变量未加载 | 调用 load_env() |
-| 002 | EnvNotFound | .env 文件不存在 | 创建 .env 文件 |
-| 003 | InvalidFormat | .env 格式错误 | 检查文件格式 |
-| 004 | PlaceholderDetected | 检测到占位符 | 配置实际值 |
+| 002 | ConfigNotFound | 配置文件不存在 | 检查文件路径 |
+| 003 | DatabaseConnectionFailed | 数据库连接失败 | 检查 MongoDB 服务 |
+| 004 | CacheTypeInvalid | 缓存类型无效 | 使用 'redis' 或 'mongo' |
+| 005 | PathNotConfigured | 路径未配置 | 检查 setting.json |
 
 ### 错误处理模式
 
 ```python
-from FQBase.Config import get_env, load_env
+from FQBase.Config import (
+    get_env,
+    SETTING,
+    ConfigValidationError,
+)
 
 try:
-    load_env()
-    value = get_env('KEY')
-except FileNotFoundError:
-    print(".env 文件不存在")
+    value = get_env('REQUIRED_KEY')
+    if value is None:
+        raise ValueError("必需的配置项未设置")
 except Exception as e:
     print(f"配置错误: {e}")
 ```
+
+---
 
 ## 诊断工具
 
@@ -170,32 +242,50 @@ except Exception as e:
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("fquant.config")
+logger = logging.getLogger("fqbase.config")
 logger.debug("调试信息")
 ```
 
-### 检查配置状态
+### 配置健康检查
 
 ```python
-from FQBase.Config import load_env, get_env
+from FQBase.Config import (
+    get_env,
+    SETTING,
+    DATABASE,
+    get_cache_config,
+)
 
-# 加载配置
-load_env()
+def health_check():
+    results = {}
+    
+    # 检查环境变量
+    results['env'] = get_env('DEBUG') is not None
+    
+    # 检查数据库
+    try:
+        results['database'] = SETTING.get_mongo() is not None
+    except:
+        results['database'] = False
+    
+    # 检查缓存配置
+    results['cache'] = get_cache_config() is not None
+    
+    return results
 
-# 打印所有环境变量（调试用）
-import os
-for key, value in os.environ.items():
-    if key.startswith(('MONGODB_', 'REDIS_', 'API_')):
-        print(f"{key}={value}")
+print(health_check())
 ```
+
+---
 
 ## 获取帮助
 
 ### 联系支持前
 
-1. 检查 .env 文件是否存在
-2. 确保已调用 load_env()
-3. 检查配置值是否正确
+1. 启用调试日志
+2. 收集错误日志
+3. 记录错误代码和消息
+4. 记录重现步骤
 
 ### 联系支持
 

@@ -223,3 +223,4 @@ min_df = query_stock_min(
 
 - [FQBase 文档](../fqbase/README.md) - FQData 依赖的基础模块
 - [FQFactor 文档](../fqfactor/README.md) - 因子分析模块
+- [DataStruct Mixin 模式分析](datastruct/mixin-analysis.md) - 数据结构模块的架构设计分析

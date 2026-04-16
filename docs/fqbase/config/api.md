@@ -1,22 +1,22 @@
 ---
 title: Config - API参考
-description: Config 配置中心 API 参考文档
+description: FQBase 配置中心 API 参考文档
 tag:
   - fqbase
   - config
 
 summary:
   purpose: api-reference
+  type: container
   core_classes:
-    - EnvManager
+    - SETTING
+    - DATABASE
     - CacheConfig
     - ConfigWatcher
-    - DataSourceConfig
   core_functions:
     - get_env
     - load_env
-    - reload_env
-    - get_datasource_priority
+    - get_cache_config
 ---
 
 # Config - API参考
@@ -25,8 +25,19 @@ summary:
 
 | 角色 | 阅读路径 |
 |------|---------|
-| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → **[API参考](./api.md)** → [使用指南](./usage.md) |
+| 🔵 开发者 | [README](./README.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) → [设计原则](./design.md) → **[API参考](./api.md)** → [开发指南](./development.md) → [最佳实践](./best-practices.md) |
 
+## 子模块 API 参考
+
+| 子模块 | API 参考 | 说明 |
+|--------|----------|------|
+| base | [API参考](./base/api.md) | 基础配置 API |
+| business | [API参考](./business/api.md) | 业务配置 API |
+
+
+## 概述
+
+本文档介绍配置中心的核心 API，包括环境变量管理、数据库配置、缓存配置和配置监听的完整接口。
 
 ## 函数
 
@@ -38,7 +49,7 @@ from FQBase.Config import get_env
 value = get_env(key: str, default: Any = None) -> Any
 ```
 
-**描述：** 获取环境变量值
+**描述：** 获取环境变量值，支持默认值
 
 **参数：**
 
@@ -47,45 +58,13 @@ value = get_env(key: str, default: Any = None) -> Any
 | key | str | 是 | - | 环境变量名称 |
 | default | Any | 否 | None | 默认值 |
 
-**返回：** 环境变量值或默认值
+**返回：** `Any` - 环境变量值或默认值
 
 **示例：**
 
 ```python
-# 获取环境变量
-host = get_env('MONGODB_HOST', 'localhost')
-
-# 获取带默认值的配置
-port = get_env('MONGODB_PORT', 27017)
-```
-
----
-
-### get_secure_env
-
-```python
-from FQBase.Config import get_secure_env
-
-value = get_secure_env(key: str) -> Optional[str]
-```
-
-**描述：** 获取敏感环境变量（会检测占位符）
-
-**参数：**
-
-| 参数 | 类型 | 必填 | 描述 |
-|------|------|------|------|
-| key | str | 是 | 环境变量名称 |
-
-**返回：** 环境变量值，如果是占位符则返回 None
-
-**示例：**
-
-```python
-# 获取敏感配置
-api_key = get_secure_env('API_KEY')
-if api_key is None:
-    print("警告: API_KEY 未配置或为占位符")
+debug = get_env('DEBUG', False)
+db_url = get_env('MONGODB_URL', 'mongodb://localhost:27017')
 ```
 
 ---
@@ -95,20 +74,22 @@ if api_key is None:
 ```python
 from FQBase.Config import load_env
 
-result = load_env() -> bool
+load_env(env_file: str = '.env') -> None
 ```
 
-**描述：** 加载 .env 文件
+**描述：** 加载 .env 文件到环境变量
 
-**返回：** 是否成功加载
+**参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| env_file | str | 否 | '.env' | 环境变量文件路径 |
 
 **示例：**
 
 ```python
-# 加载环境变量
-success = load_env()
-if success:
-    print("环境变量加载成功")
+load_env()  # 加载默认 .env 文件
+load_env('/path/to/custom.env')  # 加载自定义文件
 ```
 
 ---
@@ -118,83 +99,28 @@ if success:
 ```python
 from FQBase.Config import reload_env
 
-result = reload_env() -> bool
+reload_env(env_file: str = '.env') -> None
 ```
 
-**描述：** 重新加载 .env 文件（清除缓存后重新加载）
+**描述：** 重新加载环境变量文件
 
-**返回：** 是否成功重载
+**参数：**
 
-**示例：**
-
-```python
-# 重新加载环境变量（用于 Celery 等长期运行进程）
-reload_env()
-```
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| env_file | str | 否 | '.env' | 环境变量文件路径 |
 
 ---
 
-### get_datasource_priority
+### get_secure_env
 
 ```python
-from FQBase.Config import get_datasource_priority
+from FQBase.Config import get_secure_env
 
-priority = get_datasource_priority() -> List[str]
+value = get_secure_env(key: str, default: Any = None) -> Any
 ```
 
-**描述：** 获取数据源优先级列表
-
-**返回：** 数据源名称列表，按优先级排序
-
-**示例：**
-
-```python
-# 获取数据源优先级
-priority = get_datasource_priority()
-# ['tushare', 'tonghua', 'wy']
-```
-
----
-
-## 类
-
-### EnvManager
-
-**位置：** `FQBase/Config/core/env.py`
-
-**描述：** 环境变量管理器（单例模式）
-
-```python
-from FQBase.Config.core.env import EnvManager
-
-manager = EnvManager()
-```
-
-#### 方法
-
-##### load_env
-
-```python
-manager.load_env() -> bool
-```
-
-**描述：** 加载环境变量
-
-##### reload_env
-
-```python
-manager.reload_env() -> bool
-```
-
-**描述：** 重新加载环境变量
-
-##### get_env
-
-```python
-manager.get_env(key: str, default: Any = None) -> Any
-```
-
-**描述：** 获取环境变量
+**描述：** 安全获取环境变量，不会被记录到日志
 
 **参数：**
 
@@ -203,121 +129,153 @@ manager.get_env(key: str, default: Any = None) -> Any
 | key | str | 是 | - | 环境变量名称 |
 | default | Any | 否 | None | 默认值 |
 
-**返回：** 环境变量值
+---
+
+## 类
+
+### SETTING
+
+**描述：** MongoDB 连接配置单例
+
+```python
+from FQBase.Config import SETTING
+
+uri = SETTING.get_mongo()
+```
+
+#### 方法
+
+##### get_mongo
+
+```python
+uri = SETTING.get_mongo() -> str
+```
+
+**返回：** `str` - MongoDB 连接 URI
+
+---
+
+### DATABASE
+
+**描述：** MongoDB 数据库实例（懒加载）
+
+```python
+from FQBase.Config import DATABASE
+
+db = DATABASE
+collection = db['my_collection']
+```
 
 ---
 
 ### CacheConfig
 
-**位置：** `FQBase/Config/core/cache_config.py`
-
 **描述：** 缓存配置类
 
 ```python
-from FQBase.Config import CacheConfig
+from FQBase.Config import CacheConfig, get_cache_config
 
-config = CacheConfig(cache_type: str = "memory", **kwargs)
+config = CacheConfig(cache_type='redis', ttl=3600)
 ```
 
 #### 参数
 
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
-| cache_type | str | 否 | "memory" | 缓存类型 |
+| cache_type | str | 否 | 'mongo' | 缓存类型：'redis' 或 'mongo' |
+| ttl | int | 否 | 3600 | 缓存过期时间（秒） |
 
 #### 方法
 
-##### get_cache_config
+##### get_cache_type
 
 ```python
-from FQBase.Config import get_cache_config
-
-config = get_cache_config() -> dict
+cache_type = config.get_cache_type() -> str
 ```
 
-**描述：** 获取缓存配置
+**返回：** `str` - 缓存类型
+
+##### get_ttl
+
+```python
+ttl = config.get_ttl() -> int
+```
+
+**返回：** `int` - 缓存过期时间
 
 ---
 
 ### ConfigWatcher
 
-**位置：** `FQBase/Config/core/config_watcher.py`
-
-**描述：** 配置文件监听器
+**描述：** 配置监听器
 
 ```python
 from FQBase.Config import ConfigWatcher
 
-watcher = ConfigWatcher(config_path: str)
+watcher = ConfigWatcher()
+watcher.watch('database', callback=lambda: print("配置已变更"))
 ```
 
 #### 方法
 
-##### start
+##### watch
 
 ```python
-watcher.start()
+watcher.watch(key: str, callback: Callable) -> None
 ```
 
-**描述：** 启动监听
+**描述：** 监听配置变化
 
-##### stop
+**参数：**
 
-```python
-watcher.stop()
-```
-
-**描述：** 停止监听
+| 参数 | 类型 | 必填 | 描述 |
+|------|------|------|------|
+| key | str | 是 | 配置键名 |
+| callback | Callable | 是 | 回调函数 |
 
 ---
 
-### DataSourceConfig
+### ConfigWatcherManager
 
-**位置：** `FQBase/Config/business/datasource_config.py`
-
-**描述：** 数据源配置类
+**描述：** 配置监听管理器
 
 ```python
-from FQBase.Config import DataSourceConfig
+from FQBase.Config import ConfigWatcherManager
 
-config = DataSourceConfig(name: str, priority: int = 0, **options)
+manager = ConfigWatcherManager()
+manager.add_watcher(watcher)
 ```
 
 ---
 
 ## 常量
 
-### 交易常量
+| 常量 | 类型 | 值 | 描述 |
+|------|------|-----|------|
+| CacheType | Enum | 'redis', 'mongo' | 缓存类型枚举 |
+| FQDATA_PATH | str | - | FQData 目录路径 |
+| SETTING_PATH | str | - | 设置文件路径 |
+| CACHE_PATH | str | - | 缓存目录路径 |
+| LOG_PATH | str | - | 日志目录路径 |
+| DOWNLOAD_PATH | str | - | 下载目录路径 |
+| STRATEGY_PATH | str | - | 策略目录路径 |
+| BIN_PATH | str | - | 二进制文件路径 |
 
-| 常量 | 类型 | 说明 |
-|------|------|------|
-| ORDER_DIRECTION | Enum | 订单方向：BUY, SELL |
-| TIME_CONDITION | Enum | 时间条件：GFD, IOC, FOK |
-| VOLUME_CONDITION | Enum | 成交量条件：ANY, MIN, ALL |
-| EXCHANGE_ID | Enum | 交易所：SH, SZ, CFFEX, DCE, CZCE, SHFE |
-| OFFSET | Enum | 开平仓：OPEN, CLOSE |
-| ORDER_MODEL | Enum | 订单模式：LIMIT, MARKET, STOP |
-| ORDER_STATUS | Enum | 订单状态 |
-| MARKET_TYPE | Enum | 市场类型：SH, SZ, BJ |
+## 异常
 
-### 数据库配置
+| 异常 | 描述 | 触发条件 | 解决方案 |
+|------|------|---------|---------|
+| ConfigValidationError | 配置验证错误 | 配置值格式或类型不正确 | 检查配置格式 |
+| ConnectionError | 数据库连接失败 | MongoDB 服务不可用 | 检查服务状态 |
 
-| 常量 | 类型 | 说明 |
-|------|------|------|
-| SETTING | dict | 主设置配置 |
-| DATABASE | dict | 数据库连接配置 |
-| DATABASE_ASYNC | dict | 异步数据库配置 |
+## 子模块 API 索引
 
-### 路径配置
+各子模块的详细 API 文档请参考：
 
-| 常量 | 类型 | 说明 |
-|------|------|------|
-| FQDATA_PATH | str | FQData 目录路径 |
-| SETTING_PATH | str | 设置文件路径 |
-| CACHE_PATH | str | 缓存目录路径 |
-| LOG_PATH | str | 日志目录路径 |
-| DOWNLOAD_PATH | str | 下载目录路径 |
-| STRATEGY_PATH | str | 策略目录路径 |
+| 子模块 | 主要类/函数 | 文档 |
+|--------|-------------|------|
+| base | get_env, SETTING, DATABASE, CacheConfig, ConfigWatcher | [API](./base/api.md) |
+| business | get_datasource_priority, DataSourceConfig, TDXIPListManager | [API](./business/api.md) |
 
 ## 相关文档
 

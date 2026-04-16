@@ -1,173 +1,116 @@
-# DataStruct series 模块
+---
+title: series - 序列数据
+description: 数据序列封装类
+tag:
+  - fqdata
+  - datastruct
+  - series
 
-通用序列数据结构模块，提供带有 MultiIndex 的 Series 数据处理功能。
+summary:
+  type: data-processing
+  complexity: low
+  maturity: stable
+  core_classes:
+    - SeriesData
+  features:
+    is_thread_safe: true
+  usage_scenarios:
+    - "场景1：封装单列数据"
+    - "场景2：序列数据筛选"
+  warnings: []
+  limitations:
+    - "仅支持单列数据处理"
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqdata.datastruct
+  depends_on:
+    - pandas
 
-```
-series.py
-```
-
+api:
+  signatures:
+    SeriesData:
+      __init__: "(self, series: pd.Series) -> None"
+      series: "self -> pd.Series"
+      index: "self -> Any"
+      code: "self -> Optional[List[str]]"
+      datetime: "self -> Optional[List[pd.Timestamp]]"
+      select_code: "(self, code: str) -> SeriesData"
+      select_time: "(self, start: str, end: Optional[str] = None) -> SeriesData"
+      to_series: "(self) -> pd.Series"
+      to_dataframe: "(self) -> pd.DataFrame"
+  examples:
+    basic: |
+      from FQData.DataStruct import SeriesData
+      series = SeriesData(pd.Series([1, 2, 3]))
+      print(series.to_dataframe())
 ---
 
-## SeriesData
+# series - 序列数据
 
-通用序列数据结构。
+## 一句话总览
+
+📌 **数据序列封装类**
+
+## ⚠️ AI 开发必读
+
+### 使用场景
+
+✅ **应该使用**：
+- 场景1：封装单列数据
+- 场景2：序列数据筛选
+
+❌ **不应该使用**：
+- 不应该用于多列数据处理
+
+### 依赖
+
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | pandas | 数据处理 |
+
+**TL;DR**：
+- 核心能力：序列封装、筛选、转换
+
+## 快速开始
 
 ```python
 from FQData.DataStruct import SeriesData
+import pandas as pd
 
-series_data = SeriesData(series)
-```
+series = SeriesData(pd.Series([1, 2, 3], index=['a', 'b', 'c']))
 
-### 初始化参数
+# 转换为 DataFrame
+df = series.to_dataframe()
 
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `series` | pd.Series | Series 数据，必须有 MultiIndex (datetime, code) 或 DatetimeIndex |
-
-### 数据预处理
-
-- 自动排序索引
-- 自动检测 MultiIndex 类型
-
----
-
-## 属性
-
-| 属性 | 类型 | 说明 |
-|------|------|------|
-| `series` | pd.Series | 原始 Series |
-| `if_multiindex` | bool | 是否 MultiIndex |
-| `index` | pd.Index | 数据索引 |
-| `code` | List[str] | 股票代码列表（MultiIndex 时） |
-| `datetime` | List[pd.Timestamp] | 时间列表（MultiIndex 时） |
-| `date` | List | 日期列表 |
-
----
-
-## 方法
-
-### new
-
-通过 Series 新建一个 SeriesData。
-
-```python
-new_series_data = series_data.new(new_series)
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `series` | pd.Series | 新的 Series 数据 |
-
-**返回：** SeriesData - 新实例
-
----
-
-### select_code
-
-按股票代码筛选。
-
-```python
-filtered = series_data.select_code('600000')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `code` | str | 股票代码 |
-
-**返回：** SeriesData - 筛选后的新实例
-
----
-
-### select_time
-
-按时间筛选。
-
-```python
-filtered = series_data.select_time('2024-01-01')
-
-filtered = series_data.select_time('2024-01-01', '2024-12-31')
-```
-
-**参数：**
-
-| 参数 | 类型 | 说明 |
-|------|------|------|
-| `start` | str | 开始时间 |
-| `end` | str | 结束时间，None 时只筛选 start 当天 |
-
-**返回：** SeriesData - 筛选后的新实例
-
----
-
-### to_series
-
-转换为 Series。
-
-```python
-series = series_data.to_series()
-```
-
-**返回：** pd.Series
-
----
-
-### to_dataframe
-
-转换为 DataFrame。
-
-```python
-df = series_data.to_dataframe()
-```
-
-**返回：** pd.DataFrame
-
----
-
-## 使用示例
-
-### 基本使用
-
-```python
-from FQData.DataStruct import SeriesData
-
-series_data = SeriesData(series)
-
-print(f"是否 MultiIndex: {series_data.if_multiindex}")
-print(f"代码列表: {series_data.code}")
-print(f"时间列表: {series_data.datetime}")
-```
-
-### 筛选操作
-
-```python
 # 按代码筛选
-stock_series = series_data.select_code('600000')
-
-# 按时间筛选
-day_series = series_data.select_time('2024-01-01')
-
-# 按时间范围筛选
-range_series = series_data.select_time('2024-01-01', '2024-12-31')
+filtered = series.select_code('000001')
 ```
 
-### 转换
+## 核心类
 
-```python
-series = series_data.to_series()
+### SeriesData
 
-df = series_data.to_dataframe()
-```
+#### 属性
 
----
+| 属性 | 类型 | 描述 |
+|------|------|------|
+| series | pd.Series | 原始序列 |
+| index | Any | 索引 |
+| code | Optional[List[str]] | 代码列表 |
+| datetime | Optional[List[pd.Timestamp]] | 时间列表 |
 
-## 相关文档
+#### 方法
 
-- [DataStruct README](README.md)
-- [DataStruct API](api.md)
-- [DataStruct _base](_base.md)
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| select_code | SeriesData | 按代码筛选 |
+| select_time | SeriesData | 按时间筛选 |
+| to_series | pd.Series | 转换为 Series |
+| to_dataframe | pd.DataFrame | 转换为 DataFrame |
+
+## 变更日志
+
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v1.0.0 | 2024-01 | 初始版本 |

@@ -1,406 +1,156 @@
-# DataStruct _io 模块
+---
+title: _io - 行情数据序列化 IO Mixin
+description: 提供各类数据导出格式的 Mixin 类
+tag:
+  - fqdata
+  - datastruct
+  - io
 
-行情数据序列化 Mixin 模块，提供数据导出、存储等 IO 相关方法。
+summary:
+  type: data-processing
+  complexity: low
+  maturity: stable
+  core_classes:
+    - QuotationIOSMixin
+  features:
+    is_pure_function: false
+    is_thread_safe: true
+  usage_scenarios:
+    - "场景1：将行情数据导出为多种格式"
+    - "场景2：数据持久化和分享"
+  warnings:
+    - "Mixin 类不能直接实例化"
+  limitations:
+    - "需要与 QuotationDataStructBase 配合使用"
 
-## 模块结构
+relationships:
+  belongs_to:
+    - fquant.fqdata.datastruct
+  depends_on:
+    - pandas
 
-```
-_io.py
-```
-
-## QuotationIOSMixin
-
-行情数据序列化 Mixin，通过多重继承为数据结构提供各种导出功能。
-
+api:
+  signatures:
+    QuotationIOSMixin:
+      to_json: "(self, orient: str = 'index') -> str"
+      to_csv: "(self, path: str = None, **kwargs) -> str"
+      to_excel: "(self, path: str, **kwargs) -> None"
+      to_hdf: "(self, path: str, key: str = 'data', **kwargs) -> None"
+      to_parquet: "(self, path: str, **kwargs) -> None"
+      to_pickle: "(self, path: str, **kwargs) -> None"
+      to_sql: "(self, con, name: str, **kwargs) -> None"
+      to_markdown: "(self, path: str = None) -> str"
+  examples:
+    basic: |
+      from FQData.DataStruct import StockDayData
+      stock = StockDayData(data, dtype='stock_day', if_fq='bfq')
+      stock.to_csv('data.csv')
+      stock.to_json('data.json')
+      stock.to_excel('data.xlsx')
 ---
 
-## 序列化导出
+# _io - 行情数据序列化 IO Mixin
 
-### to_json
+## 一句话总览
 
-导出为 JSON 字符串。
+📌 **行情数据序列化 Mixin，支持多种格式导出**
 
-```python
-json_str = data.to_json(orient='index')
-```
+## ⚠️ AI 开发必读
 
-**参数：**
+### 使用场景
 
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `orient` | str | 'index' | DataFrame to_json 参数 |
+✅ **应该使用**：
+- 场景1：将行情数据导出为多种格式
+- 场景2：数据持久化和分享
 
-**返回：** str - JSON 字符串
+❌ **不应该使用**：
+- 不应该直接实例化 Mixin 类
+- 不应该单独使用，需要与基类配合
 
----
+### 注意事项
 
-### to_csv
+1. **Mixin 类不能直接实例化**
+   - 说明：此类仅用于多重继承，必须放在 QuotationDataStructBase 之后
 
-导出为 CSV。
+### 依赖
 
-```python
-csv_str = data.to_csv()
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | pandas | 数据处理 |
 
-data.to_csv('data.csv')
-```
+**TL;DR**：
+- 核心能力：to_csv, to_json, to_excel, to_parquet, to_pickle 等导出方法
 
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `path` | str | None | 文件路径，None 时返回字符串 |
-| `encoding` | str | 'utf-8' | 编码 |
-| `index` | bool | True | 是否包含索引 |
-
-**返回：** str - CSV 字符串或文件路径
-
----
-
-### to_excel
-
-导出为 Excel。
-
-```python
-data.to_excel('data.xlsx', sheet_name='Sheet1')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `path` | str | - | 文件路径 |
-| `sheet_name` | str | 'Sheet1' | 工作表名称 |
-| `encoding` | str | 'utf-8' | 编码 |
-| `index` | bool | True | 是否包含索引 |
-
----
-
-### to_clipboard
-
-复制到剪贴板。
-
-```python
-data.to_clipboard(excel=True, sep='\t')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `excel` | bool | True | 是否为 Excel 格式 |
-| `sep` | str | '\t' | 分隔符 |
-
----
-
-## 列式存储格式
-
-### to_hdf
-
-导出为 HDF5 格式。
-
-```python
-data.to_hdf('data.h5', key='data')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `path` | str | - | 文件路径 |
-| `key` | str | 'data' | 数据集名称 |
-| `mode` | str | 'w' | 打开模式 |
-| `format` | str | 'table' | 存储格式 |
-| `complib` | str | 'blosc' | 压缩库 |
-| `complevel` | int | 5 | 压缩级别 |
-
----
-
-### to_parquet
-
-导出为 Parquet 格式。
-
-```python
-data.to_parquet('data.parquet')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `path` | str | - | 文件路径 |
-| `engine` | str | 'auto' | 引擎 |
-| `compression` | str | 'snappy' | 压缩方式 |
-
----
-
-### to_feather
-
-导出为 Feather 格式。
-
-```python
-data.to_feather('data.feather')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `path` | str | - | 文件路径 |
-| `compression` | str | 'uncompressed' | 压缩方式 |
-
----
-
-## 文档格式
-
-### to_html
-
-导出为 HTML。
-
-```python
-html_str = data.to_html()
-
-data.to_html('data.html')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `path` | str | None | 文件路径，None 时返回字符串 |
-| `encoding` | str | 'utf-8' | 编码 |
-| `border` | int | 1 | 边框宽度 |
-| `table_id` | str | None | 表格 ID |
-| `classes` | str | None | CSS 类 |
-
-**返回：** str - HTML 字符串或文件路径
-
----
-
-### to_markdown
-
-导出为 Markdown 表格。
-
-```python
-md_str = data.to_markdown()
-
-data.to_markdown('data.md')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `path` | str | None | 文件路径，None 时返回字符串 |
-
-**返回：** str - Markdown 字符串或文件路径
-
-**依赖：** 需要 tabulate 库（可选）
-
----
-
-### to_latex
-
-导出为 LaTeX 表格。
-
-```python
-latex_str = data.to_latex()
-
-data.to_latex('data.tex')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `path` | str | None | 文件路径，None 时返回字符串 |
-| `encoding` | str | 'utf-8' | 编码 |
-
-**返回：** str - LaTeX 字符串或文件路径
-
----
-
-## 其他格式
-
-### to_pickle
-
-导出为 pickle。
-
-```python
-data.to_pickle('data.pkl')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `path` | str | - | 文件路径 |
-| `compression` | str | 'infer' | 压缩方式 |
-| `protocol` | int | 5 | pickle 协议版本 |
-
----
-
-### to_sql
-
-导出为 SQL 数据库。
-
-```python
-data.to_sql(con, name='stock_data')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `con` | - | - | 数据库连接 |
-| `name` | str | - | 表名 |
-| `if_exists` | str | 'fail' | 表已存在时的行为 |
-| `index` | bool | True | 是否包含索引 |
-| `index_label` | str | None | 索引列名 |
-| `chunksize` | int | None | 批量写入大小 |
-| `dtype` | dict | None | 列类型 |
-
----
-
-## 转换方法
-
-### to_records
-
-转换为记录数组。
-
-```python
-records = data.to_records(index=True)
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `index` | bool | True | 是否包含索引 |
-
-**返回：** numpy 记录数组
-
----
-
-### to_string
-
-转换为格式化字符串。
-
-```python
-str_data = data.to_string()
-```
-
-**返回：** str - 格式化字符串
-
----
-
-### to_xarray
-
-转换为 xarray 数据结构。
-
-```python
-xr_data = data.to_xarray()
-```
-
-**返回：** xarray DataSet
-
----
-
-## 索引转换
-
-### to_period
-
-转换为 PeriodIndex。
-
-```python
-period_data = data.to_period(freq='D')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `freq` | str | None | 频率 |
-
-**返回：** QuotationDataStructBase - 新的数据实例
-
----
-
-### to_timestamp
-
-转换为 TimestampIndex。
-
-```python
-ts_data = data.to_timestamp(freq='D')
-```
-
-**参数：**
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| `freq` | str | None | 频率 |
-
-**返回：** QuotationDataStructBase - 新的数据实例
-
----
-
-## 使用示例
-
-### 基本导出
+## 快速开始
 
 ```python
 from FQData.DataStruct import StockDayData
 
-# 假设 stock 是 StockDayData 实例
+stock = StockDayData(data, dtype='stock_day', if_fq='bfq')
 
 # 导出为 CSV
-stock.to_csv('stock.csv')
-
-# 导出为 Excel
-stock.to_excel('stock.xlsx')
+stock.to_csv('data.csv')
 
 # 导出为 JSON
-json_str = stock.to_json()
+stock.to_json('data.json')
+
+# 导出为 Excel
+stock.to_excel('data.xlsx')
+
+# 导出为 Parquet
+stock.to_parquet('data.parquet')
+
+# 导出为 Pickle
+stock.to_pickle('data.pkl')
 ```
 
-### 高效存储
+## 导出方法
 
-```python
-# HDF5 格式（推荐用于大量数据）
-stock.to_hdf('stock.h5', key='data', complib='blosc', complevel=5)
+### 文本格式
 
-# Parquet 格式（推荐用于跨平台）
-stock.to_parquet('stock.parquet')
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| to_csv | str | 导出为 CSV |
+| to_json | str | 导出为 JSON |
+| to_markdown | str | 导出为 Markdown |
+| to_string | str | 导出为字符串 |
+| to_clipboard | None | 导出到剪贴板 |
+| to_html | str | 导出为 HTML |
 
-# Feather 格式（快速读写）
-stock.to_feather('stock.feather')
-```
+### 二进制格式
 
-### 文档导出
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| to_excel | None | 导出为 Excel |
+| to_hdf | None | 导出为 HDF5 |
+| to_parquet | None | 导出为 Parquet |
+| to_pickle | None | 导出为 Pickle |
+| to_feather | None | 导出为 Feather |
+| to_records | list | 导出为记录数组 |
 
-```python
-# Markdown 表格
-md = stock.to_markdown('stock.md')
+### 数据库
 
-# HTML
-html = stock.to_html('stock.html')
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| to_sql | None | 导出到 SQL 数据库 |
 
-# LaTeX
-latex = stock.to_latex('stock.tex')
-```
+### 转换方法
 
-### 数据库导出
+| 方法 | 返回类型 | 描述 |
+|------|---------|------|
+| to_period | QuotationDataStructBase | 转换为周期数据 |
+| to_timestamp | QuotationDataStructBase | 转换为时间戳 |
+| to_xarray | - | 转换为 xarray |
 
-```python
-from sqlalchemy import create_engine
+## 常见错误
 
-engine = create_engine('sqlite:///:memory:')
-stock.to_sql(engine, name='stock_data')
-```
+| 错误 | 原因 | 解决方案 |
+|------|------|---------|
+| IOError | 文件写入失败 | 检查文件路径权限 |
+| AttributeError | Mixin 未正确继承 | 确保继承顺序正确 |
 
----
+## 变更日志
 
-## 相关文档
-
-- [DataStruct README](README.md)
-- [DataStruct API](api.md)
-- [DataStruct _base](_base.md)
+| 版本 | 日期 | 变更 |
+|------|------|------|
+| v1.0.0 | 2024-01 | 初始版本 |

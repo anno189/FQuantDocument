@@ -30,7 +30,7 @@ relationships:
     - fquant.fqbase.util
   depends_on: []
   import_path:
-    - from FQBase.Foundation.crypto import random_stock_code, random_string
+    - from FQBase.Util.crypto import random_stock_code, random_string
 ---
 
 # 随机数生成工具
@@ -46,7 +46,7 @@ relationships:
 ## 快速开始
 
 ```python
-from FQBase.Foundation.crypto import random_stock_code, random_string
+from FQBase.Util.crypto import random_stock_code, random_string
 
 # 生成股票代码
 codes = random_stock_code(stock_number=5)
@@ -62,7 +62,7 @@ print(s)  # Acc3kF9mNp
 ### random_stock_code
 
 ```python
-from FQBase.Foundation.crypto import random_stock_code
+from FQBase.Util.crypto import random_stock_code
 
 codes = random_stock_code(stock_number=10, markets=['SH', 'SZ'])
 ```
@@ -98,7 +98,7 @@ print(codes)  # ['600234', '000123', '300456', 'A12345', ...]
 ### random_string
 
 ```python
-from FQBase.Foundation.crypto import random_string
+from FQBase.Util.crypto import random_string
 
 s = random_string(topic='Acc', length=8)
 ```
@@ -127,15 +127,15 @@ print(s)  # Token4aB7cD8eF9g
 ### random_with_topic
 
 ```python
-from FQBase.Foundation.crypto import random_with_topic
+from FQBase.Util.crypto import random_with_topic
 
-s = random_with_topic(topic='Acc', lens=8)
+s = random_with_topic(topic='Acc', length=8)
 ```
 
 | 参数 | 类型 | 必填 | 描述 |
 |------|------|------|------|
 | topic | str | 否 | 开头标识（默认：'Acc'） |
-| lens | int | 否 | 长度（默认：8） |
+| length | int | 否 | 长度（默认：8） |
 
 **返回：** `str` - 随机字符串，格式为 `{topic}_{random}`
 
@@ -147,7 +147,7 @@ account = random_with_topic()
 print(account)  # Acc3kF9mNp
 
 # 生成随机Token
-token = random_with_topic(topic='Token', lens=32)
+token = random_with_topic(topic='Token', length=32)
 print(token)  # Token4aB7cD8eF9gH0iJ1kL2mN3oP
 ```
 

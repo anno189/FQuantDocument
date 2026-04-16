@@ -1,127 +1,227 @@
 ---
-title: Config - 统一配置中心
-description: FQBase 统一配置中心，提供环境变量、数据库配置、缓存配置等功能
+title: Config - 配置中心
+description: FQBase 统一配置中心，聚合基础配置和业务配置
 tag:
   - fqbase
   - config
 
 summary:
-  type: infrastructure
+  type: container
   complexity: medium
   maturity: stable
   size: m
-  core_classes:
-    - EnvManager
-    - CacheConfig
-    - ConfigWatcher
-    - DataSourceConfig
-  key_functions:
-    - get_env
-    - load_env
-    - get_datasource_priority
-  # ⚠️ AI 开发必需信息
+  sub_modules:
+    - base
+    - business
+  sub_modules_stats:
+    total: 2
+    L3_count: 1
+    L2_count: 1
+    L1_count: 0
+  api_exports:
+    total: 40
+    classes: 10
+    functions: 22
+    constants: 8
   usage_scenarios:
-    - "读取环境变量配置"
-    - "管理多数据源配置"
-    - "监听配置文件变化"
+    - "场景1：获取环境变量配置"
+    - "场景2：管理 MongoDB 数据库连接"
+    - "场景3：配置缓存策略（Redis/MongoDB）"
+    - "场景4：监听配置文件变化"
+    - "场景5：获取数据源优先级配置"
   warnings:
-    - "配置变更后需重启服务"
-    - "敏感信息不能写在配置文件中"
+    - "警告1：SETTING 是单例，修改后全局生效"
+    - "警告2：DATABASE 需要在应用启动时初始化"
+    - "警告3：CacheConfig 不支持运行时动态切换缓存类型"
   limitations:
-    - "不支持热重载"
-    - "仅支持本地文件配置"
+    - "限制1：配置文件不支持热重载（需调用 reload_env）"
+    - "限制2：DATABASE_ASYNC 仅支持异步上下文"
 
 relationships:
   belongs_to:
     - fquant.fqbase
-  depends_on:
-    - fquant.foundation
+  contains:
+    - fquant.fqbase.config.base
+    - fquant.fqbase.config.business
   used_by:
     - fquant.fqdata
-    - fquant.fqfactor
+    - fquant.fqalgorithm
 
-concepts:
-  provides:
-    - name: 环境变量管理
-      definition: 集中管理 .env 文件加载，支持敏感信息占位符
-    - name: 配置监听
-      definition: 监控配置文件变化，支持热更新
-    - name: 交易常量
-      definition: 量化交易相关的枚举常量定义
+api:
+  signatures:
+    get_env:
+      params: "key: str, default: Any = None"
+      return: "Any"
+    SETTING:
+      type: "Singleton"
+      description: "MongoDB 连接配置单例"
+    DATABASE:
+      type: "Database"
+      description: "MongoDB 数据库实例"
+    CacheConfig:
+      type: "Class"
+      description: "缓存配置类"
+  exceptions:
+    - name: ConfigValidationError
+      when: "配置值验证失败"
+      solution: "检查配置格式和类型"
+    - name: ConnectionError
+      when: "数据库连接失败"
+      solution: "检查 MongoDB 服务状态"
+  best_practices:
+    - "使用 get_env 获取环境变量，避免直接访问 os.environ"
+    - "DATABASE 实例化后不要重复创建"
+    - "缓存配置在应用启动时设置好，不要频繁更改"
+  examples:
+    get_env: |
+      # 获取环境变量
+      db_url = get_env('MONGODB_URL', 'mongodb://localhost:27017')
+      debug_mode = get_env('DEBUG', False)
+    SETTING: |
+      # 获取 MongoDB 配置
+      mongo_uri = SETTING.get_mongo()
+
+usage:
+  quick_example: |
+    from FQBase.Config import get_env, SETTING, CacheConfig
+    
+    # 获取环境变量
+    debug = get_env('DEBUG', False)
+    
+    # 获取数据库配置
+    db_uri = SETTING.get_mongo()
+    
+    # 配置缓存
+    cache_config = CacheConfig()
+
+maintenance:
+  test_coverage: "80%"
+  change_frequency: quarterly
+  last_updated: "2024-01"
 ---
 
-# Config - 统一配置中心
+# Config - 配置中心
 
 ## 阅读路径
 
 | 角色 | 阅读路径 |
 |------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [速查表](./cheatsheet.md) → [使用指南](./usage.md) → [案例库](./examples.md) |
-| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → [API参考](./api.md) → [使用指南](./usage.md) → [最佳实践](./best-practices.md) |
-| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [配置指南](./configuration.md) → [故障排查](./troubleshooting.md) → [常见问题](./faq.md) |
+| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [子模块文档] → [案例库](./examples.md) |
+| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → [API参考](./api.md) → [子模块文档] |
+| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [配置指南](./configuration.md) |
+| 🟠 架构师 | [README](./README.md) → [技术架构](./architecture.md) → [设计模式](./patterns.md) → [数据流](./data-flow.md) |
+| 📚 案例库 | **[案例库](./examples.md)** → [跨模块集成示例] |
 | 📖 索引 | [README](./README.md) → [变更日志](./changelog.md) |
-
 
 ## 一句话总览
 
-📌 **FQBase 统一配置中心，管理环境变量、数据库配置、缓存配置等**
+📌 **FQBase 统一配置中心，聚合基础配置和业务配置**
+
+## ⚠️ AI 开发必读
+
+### 使用场景
+
+✅ **应该使用**：
+- 获取环境变量配置
+- 管理 MongoDB 数据库连接
+- 配置缓存策略
+- 监听配置文件变化
+- 获取数据源优先级配置
+
+❌ **不应该使用**：
+- 复杂业务逻辑
+
+### 注意事项
+
+1. **SETTING 是单例**
+   - 说明：修改后全局生效
+
+2. **DATABASE 需要初始化**
+   - 说明：在应用启动时初始化
+
+3. **CacheConfig 不支持动态切换**
+   - 说明：运行时更改需要重启
+
+### 已知限制
+
+- 配置文件不支持热重载（需调用 reload_env）
+- DATABASE_ASYNC 仅支持异步上下文
 
 **TL;DR**：
-- 解决什么问题：集中管理应用配置，支持热更新
-- 核心能力：环境变量、数据库配置、缓存配置、交易常量
-- 入门难度：🟢 简单
+- 功能：统一配置管理
+- 包含：2 个子模块（base + business）
+- 定位：应用配置中心
 
-**快速判断**：当您需要管理应用配置、使用交易常量、连接数据库时，使用本模块。
+## 子模块概览
 
-## 知识脉络
+本模块是一个**容器模块**，聚合了以下核心子模块：
 
-🧑‍🎓 **从零到精通的推荐学习顺序**：
+| 子模块 | 说明 | 文档级别 | 文档链接 |
+|--------|------|---------|----------|
+| base/ | 基础配置（环境变量、数据库、缓存） | L3 | [README](./base/README.md) |
+| business/ | 业务配置（数据源、IP列表） | L2 | [README](./business/README.md) |
 
-1. [快速入门](./quick-start.md) - 5 分钟上手
-2. [核心概念](./concepts.md) - 理解基本概念
-3. [技术架构](./architecture.md) - 理解设计思路
-4. [使用指南](./usage.md) - 深入使用
-5. [最佳实践](./best-practices.md) - 升华理解
+## 架构图
 
-⏱️ 预计学习时间：0.5 小时
+```
+┌─────────────────────────────────────────────┐
+│              Config 配置中心                   │
+├─────────────────────────────────────────────┤
+│  ┌─────────┐  ┌─────────┐                  │
+│  │  base   │  │business │                  │
+│  │ 基础配置 │  │ 业务配置 │                  │
+│  └────┬────┘  └────┬────┘                  │
+│       │            │                        │
+│       └────────────┼────────────────────────┤
+│                    │                         │
+│            ┌───────┴───────┐                │
+│            │   聚合层 API   │                │
+│            └───────────────┘                │
+└─────────────────────────────────────────────┘
+```
 
-## 前置知识
+## 快速开始
 
-在开始学习本模块前，建议先掌握：
+### 安装
 
-| 知识领域 | 建议资源 | 状态 |
-|---------|---------|------|
-| Python 基础 | [官方教程](https://docs.python.org/zh-cn/3/tutorial/) | ⬜ |
-| 环境变量概念 | - | ⬜ |
+```bash
+pip install fquant-fqbase
+```
 
-## 适用场景
+### 组合使用示例
 
-✅ **推荐使用**：
-- 管理应用配置（数据库连接、缓存设置等）
-- 使用交易常量（订单方向、交易所ID等）
-- 配置数据源优先级
-- 监听配置文件变化
+```python
+from FQBase.Config import (
+    get_env,
+    SETTING,
+    CacheConfig,
+    get_datasource_priority,
+)
 
-❌ **不推荐使用**：
-- 需要复杂业务逻辑的配置
+# 基础配置
+debug = get_env('DEBUG', False)
+mongo_uri = SETTING.get_mongo()
 
-💡 **与其他模块的关系**：
-- 依赖 [Foundation](../foundation/)（单例模式）
-- 被 [FQData](../fqdata/) 等模块使用
+# 业务配置
+priority = get_datasource_priority('stock')
+```
 
-## 概述
+## 快速链接
 
-Config 是 FQBase 的统一配置中心，提供以下功能：
+| 文档 | 说明 |
+|------|------|
+| [技术架构](./architecture.md) | 子模块架构与关系 |
+| [API参考](./api.md) | 跨模块组合 API |
+| [案例库](./examples.md) | 跨模块集成示例 |
+| [变更日志](./changelog.md) | 各子模块变更汇总 |
 
-- **核心配置**：环境变量管理、数据库配置、缓存配置、配置监听
-- **业务配置**：交易常量、数据源配置、财务指标映射、IP列表
+## 相关文档
 
-## 子模块
-
-| 子模块 | 说明 | 文档 |
-|--------|------|------|
-| [core/](./core/) | 核心配置：环境变量、数据库、缓存、监听 | L2 |
-| [business/](./business/) | 业务配置：交易常量、数据源、映射 | L2 |
+| 类型 | 文档 | 链接 |
+|------|------|------|
+| 项目首页 | FQBase首页 | [README](../README.md) |
+| 基础配置 | Base模块 | [base/README.md](./base/README.md) |
+| 业务配置 | Business模块 | [business/README.md](./business/README.md) |
 
 ## 快速链接
 
@@ -132,19 +232,12 @@ Config 是 FQBase 的统一配置中心，提供以下功能：
 | [核心概念](./concepts.md) | 核心概念详解 |
 | [技术架构](./architecture.md) | 技术架构说明 |
 | [API参考](./api.md) | API参考文档 |
+| [使用指南](./usage.md) | 详细使用指南 |
 | [案例库](./examples.md) | 案例库 |
-
-## 安装
-
-```bash
-pip install fquant-fqbase
-```
-
-## 相关文档
-
-| 类型 | 文档 | 链接 |
-|------|------|------|
-| 项目首页 | FQBase首页 | [README](../README.md) |
-| 快速入门 | 快速入门 | [快速入门](./quick-start.md) |
-| 核心模块 | Core模块 | [core](./core/) |
-| 业务模块 | Business模块 | [business](./business/) |
+| [集成指南](./integrations.md) | 模块集成指南 |
+| [最佳实践](./best-practices.md) | 最佳实践 |
+| [故障排查](./troubleshooting.md) | 问题排查 |
+| [性能调优](./performance.md) | 性能优化 |
+| [常见问题](./faq.md) | 常见问题 |
+| [开发指南](./development.md) | 开发指南 |
+| [变更日志](./changelog.md) | 版本变更 |
