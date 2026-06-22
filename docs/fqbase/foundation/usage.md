@@ -1,161 +1,138 @@
 ---
-title: Foundation 模块 - 使用指南
-description: Foundation 模块使用指南
+title: Foundation - 使用指南
+description: Foundation 详细使用指南
 tag:
+  - fquant
   - fqbase
   - foundation
+
+summary:
+  purpose: usage
 ---
 
-# Foundation 模块 - 使用指南
+# Foundation - 使用指南
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🔵 开发者 | [README](./README.md) → **[使用指南](./usage.md)** |
+🔵 **开发者**：README → api → usage → concepts → examples
 
-## 子模块使用指南
+## 概述
 
-| 子模块 | 使用指南 | 说明 |
-|--------|----------|------|
-| validators | [使用指南](./validators/usage.md) | 输入验证 |
-| exceptions | [使用指南](./validators/usage.md) | 统一异常 |
-| retry | [使用指南](./retry/usage.md) | 重试装饰器 |
-| dotty | [使用指南](./dotty/usage.md) | 字典访问 |
-| singleton | [使用指南](./singleton/usage.md) | 单例模式 |
-| lifecycle | [使用指南](./lifecycle/usage.md) | 生命周期 |
-| container | [使用指南](./container/usage.md) | 依赖注入 |
-| circuit_breaker | [使用指南](./circuit_breaker/usage.md) | 熔断器 |
+本指南详细说明如何在各种场景下使用 Foundation 模块。
 
-## 目录
+## 基本用法
 
-1. [基础环境](#1-基础环境)
-2. [单例模式](#2-单例模式)
-3. [依赖注入容器](#3-依赖注入容器)
-4. [熔断器](#4-熔断器)
-5. [重试装饰器](#5-重试装饰器)
-6. [生命周期管理](#6-生命周期管理)
-7. [验证器](#7-验证器)
-8. [嵌套字典访问](#8-嵌套字典访问)
-9. [统一异常处理](#9-统一异常处理)
-
----
-
-## 1. 基础环境
-
-### 1.1 导入模块
-
-```python
-from FQBase.Foundation import (
-    singleton,
-    ServiceContainer,
-    ServiceLocator,
-    circuit_breaker,
-    retry,
-    retry_with_exponential_backoff,
-    HealthCheckable,
-    CompositeHealthCheck,
-    validate_code,
-    FQException,
-    dotty,
-)
-```
-
----
-
-## 2. 单例模式
-
-```python
-from FQBase.Foundation import singleton
-
-@singleton
-class ConfigManager:
-    def __init__(self):
-        self.settings = {}
-
-config1 = ConfigManager()
-config2 = ConfigManager()
-assert config1 is config2  # True
-```
-
----
-
-## 3. 依赖注入容器
-
-```python
-from FQBase.Foundation import ServiceContainer, ServiceLocator
-
-container = ServiceContainer()
-container.register_singleton(ICache, RedisCache)
-cache = container.get(ICache)
-```
-
----
-
-## 4. 熔断器
-
-```python
-from FQBase.Foundation import CircuitBreaker
-
-breaker = CircuitBreaker(name="api", failure_threshold=5)
-result = breaker.call(call_api)
-```
-
----
-
-## 5. 重试装饰器
-
-```python
-from FQBase.Foundation import retry
-
-@retry(max_attempts=3)
-def fetch_data():
-    return api.get()
-```
-
----
-
-## 6. 生命周期管理
-
-```python
-from FQBase.Foundation import HealthCheckable, HealthStatus, ServiceStatus
-
-class MyService(HealthCheckable):
-    def health_check(self):
-        return HealthStatus(status=ServiceStatus.RUNNING)
-```
-
----
-
-## 7. 验证器
-
-```python
-from FQBase.Foundation import validate_code, validate_date
-
-validate_code("600000")   # True
-validate_date("2026-04-14")  # True
-```
-
----
-
-## 8. 嵌套字典访问
+### Dotty 字典访问
 
 ```python
 from FQBase.Foundation import dotty
 
-d = dotty({'user': {'name': '张三'}})
-print(d['user.name'])  # 张三
+data = {'user': {'profile': {'name': '张三', 'age': 30}}}
+d = dotty(data)
+
+print(d['user.profile.name'])
+d['user.profile.age'] = 31
+print(d['user.profile.age'])
 ```
 
----
-
-## 9. 统一异常处理
+### 事件总线
 
 ```python
-from FQBase.Foundation import FQException
+from FQBase.Foundation import EventBus, Event, get_event_bus
 
-try:
-    raise DataSourceException("Error", code="DS001")
-except FQException as e:
-    print(e.code)
+bus = get_event_bus()
+
+def on_update(event):
+    print(f"Update: {event.data}")
+
+bus.subscribe('update', on_update)
+bus.publish(Event('update', {'key': 'value'}))
 ```
+
+## 常见用例
+
+### 用例 1: 解耦组件通信
+
+```python
+from FQBase.Foundation import EventBus, Event, get_event_bus
+
+class DataService:
+    def __init__(self, bus):
+        self.bus = bus
+
+    def update_price(self, symbol, price):
+        self.bus.publish(Event('price_update', {'symbol': symbol, 'price': price}))
+
+class AlertService:
+    def __init__(self, bus):
+        self.bus = bus
+        self.bus.subscribe('price_update', self.check_alert)
+
+    def check_alert(self, event):
+        if event.data['price'] > 100:
+            print(f"Alert: {event.data['symbol']} price too high!")
+
+bus = get_event_bus()
+data_service = DataService(bus)
+alert_service = AlertService(bus)
+
+data_service.update_price('AAPL', 150)
+```
+
+### 用例 2: 统一通知
+
+```python
+from FQBase.Foundation.notification import NotificationManager
+
+manager = NotificationManager()
+manager.add_handler('wecom', webhook_url='your_wecom_webhook')
+manager.add_handler('serverchan', sc_key='your_sc_key')
+
+manager.send('notification', 'System alert: High CPU usage!')
+```
+
+### 用例 3: 生命周期管理
+
+```python
+from FQBase.Foundation.lifecycle import (
+    ServiceStatus, HealthStatus, HealthCheckable, Initializable, Shutdownable
+)
+
+class MyService(HealthCheckable, Initializable, Shutdownable):
+    def __init__(self):
+        self._initialized = False
+        self._shutdown = False
+
+    def initialize(self) -> bool:
+        self._initialized = True
+        return True
+
+    def health_check(self) -> HealthStatus:
+        return HealthStatus(
+            status=ServiceStatus.RUNNING if self._initialized else ServiceStatus.ERROR,
+            details={'initialized': self._initialized}
+        )
+
+    def shutdown(self) -> bool:
+        self._shutdown = True
+        return True
+
+    @property
+    def is_initialized(self) -> bool:
+        return self._initialized
+
+    @property
+    def is_shutdown(self) -> bool:
+        return self._shutdown
+
+service = MyService()
+service.initialize()
+print(service.health_check())
+service.shutdown()
+```
+
+## 相关文档
+
+- [API参考](./api.md)
+- [最佳实践](./best-practices.md)
+- [故障排查](./troubleshooting.md)

@@ -1,243 +1,173 @@
 ---
-title: Config - 配置中心
-description: FQBase 统一配置中心，聚合基础配置和业务配置
+title: Config
+description: FQBase 配置管理模块，提供环境变量、MongoDB 配置、路径配置、缓存配置等
 tag:
+  - fquant
   - fqbase
   - config
 
 summary:
-  type: container
+  type: config
   complexity: medium
   maturity: stable
-  size: m
-  sub_modules:
-    - base
-    - business
-  sub_modules_stats:
-    total: 2
-    L3_count: 1
-    L2_count: 1
-    L1_count: 0
+  size: small
+  is_container: false
   api_exports:
-    total: 40
-    classes: 10
-    functions: 22
-    constants: 8
+    total: 31
+    classes: 6
+    functions: 25
+    constants: 0
+  features:
+    has_async: false
+    is_thread_safe: true
+    has_config: true
+    has_logging: true
+    has_security: true
   usage_scenarios:
-    - "场景1：获取环境变量配置"
-    - "场景2：管理 MongoDB 数据库连接"
-    - "场景3：配置缓存策略（Redis/MongoDB）"
-    - "场景4：监听配置文件变化"
-    - "场景5：获取数据源优先级配置"
+    - "管理 MongoDB 连接配置"
+    - "管理应用路径配置"
+    - "管理缓存配置"
+    - "监听配置变更"
+    - "安全获取敏感配置"
   warnings:
-    - "警告1：SETTING 是单例，修改后全局生效"
-    - "警告2：DATABASE 需要在应用启动时初始化"
-    - "警告3：CacheConfig 不支持运行时动态切换缓存类型"
+    - "敏感配置应使用环境变量而非配置文件"
+    - "SETTINGS_PATH 设置后不应随意修改"
   limitations:
-    - "限制1：配置文件不支持热重载（需调用 reload_env）"
-    - "限制2：DATABASE_ASYNC 仅支持异步上下文"
+    - "配置监听依赖文件系统"
+  design_patterns:
+    - singleton
 
 relationships:
   belongs_to:
     - fquant.fqbase
-  contains:
-    - fquant.fqbase.config.base
-    - fquant.fqbase.config.business
+  depends_on:
+    - fquant.fqbase.infrastructure
   used_by:
-    - fquant.fqdata
-    - fquant.fqalgorithm
+    - fquant.fqbase.cache
+    - fquant.fqbase.datastore
+    - fquant.fqbase.foundation
 
-api:
-  signatures:
-    get_env:
-      params: "key: str, default: Any = None"
-      return: "Any"
-    SETTING:
-      type: "Singleton"
-      description: "MongoDB 连接配置单例"
-    DATABASE:
-      type: "Database"
-      description: "MongoDB 数据库实例"
-    CacheConfig:
-      type: "Class"
-      description: "缓存配置类"
-  exceptions:
-    - name: ConfigValidationError
-      when: "配置值验证失败"
-      solution: "检查配置格式和类型"
-    - name: ConnectionError
-      when: "数据库连接失败"
-      solution: "检查 MongoDB 服务状态"
-  best_practices:
-    - "使用 get_env 获取环境变量，避免直接访问 os.environ"
-    - "DATABASE 实例化后不要重复创建"
-    - "缓存配置在应用启动时设置好，不要频繁更改"
-  examples:
-    get_env: |
-      # 获取环境变量
-      db_url = get_env('MONGODB_URL', 'mongodb://localhost:27017')
-      debug_mode = get_env('DEBUG', False)
-    SETTING: |
-      # 获取 MongoDB 配置
-      mongo_uri = SETTING.get_mongo()
-
-usage:
-  quick_example: |
-    from FQBase.Config import get_env, SETTING, CacheConfig
-    
-    # 获取环境变量
-    debug = get_env('DEBUG', False)
-    
-    # 获取数据库配置
-    db_uri = SETTING.get_mongo()
-    
-    # 配置缓存
-    cache_config = CacheConfig()
+documentation_progress:
+  status: complete
+  level: L2
+  total_expected: 12
+  total_generated: 12
+  generated:
+    - README.md
+    - quick-start.md
+    - concepts.md
+    - api.md
+    - usage.md
+    - examples.md
+    - glossary.md
+    - changelog.md
+    - best-practices.md
+    - integrations.md
+    - troubleshooting.md
+    - configuration.md
+  missing: []
 
 maintenance:
-  test_coverage: "80%"
-  change_frequency: quarterly
-  last_updated: "2024-01"
+  source_hash: "32952c0a3600b702bb18d02edfbe05f9ffb1f472366fa4964ca8d3b873a7a0f9"
+  source_mtime: 1776815700
+  source_files:
+    - "__init__.py"
+    - "cache_config.py"
+    - "config_watcher.py"
+    - "env.py"
+    - "setting.py"
+  last_updated: "2026-04"
 ---
 
-# Config - 配置中心
+# Config
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [子模块文档] → [案例库](./examples.md) |
-| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → [API参考](./api.md) → [子模块文档] |
-| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [配置指南](./configuration.md) |
-| 🟠 架构师 | [README](./README.md) → [技术架构](./architecture.md) → [设计模式](./patterns.md) → [数据流](./data-flow.md) |
-| 📚 案例库 | **[案例库](./examples.md)** → [跨模块集成示例] |
-| 📖 索引 | [README](./README.md) → [变更日志](./changelog.md) |
+🟢 **新手入门**：README → quick-start → examples → concepts → glossary → usage
+
+🔵 **开发者**：README → api → usage → concepts → examples
+
+🟡 **运维/安全**：README → changelog → configuration → troubleshooting → best-practices
 
 ## 一句话总览
 
-📌 **FQBase 统一配置中心，聚合基础配置和业务配置**
+📌 **FQBase 配置管理模块，提供环境变量、MongoDB 配置、路径配置、缓存配置、配置监听等功能。**
 
 ## ⚠️ AI 开发必读
 
 ### 使用场景
 
 ✅ **应该使用**：
-- 获取环境变量配置
-- 管理 MongoDB 数据库连接
-- 配置缓存策略
-- 监听配置文件变化
-- 获取数据源优先级配置
+- 获取 MongoDB 连接 URI → 使用 `SETTING.get_mongo()`
+- 获取应用路径配置 → 使用 `GLOBALMAP.FQDATA_PATH`
+- 获取缓存配置 → 使用 `get_cache_config()`
+- 监听配置变更 → 使用 `ConfigWatcher` 或 `watch_config()`
+- 安全获取敏感配置 → 使用 `get_secure_env()`
 
 ❌ **不应该使用**：
-- 复杂业务逻辑
+- 在业务代码中硬编码配置值
+- 直接读取 `.env` 文件
 
 ### 注意事项
 
-1. **SETTING 是单例**
-   - 说明：修改后全局生效
+1. **单例模式**
+   - `SETTING` 和 `GLOBALMAP` 都是单例
+   - 无需手动创建实例
 
-2. **DATABASE 需要初始化**
-   - 说明：在应用启动时初始化
+2. **配置加载顺序**
+   - 环境变量 → .env 文件 → config.ini → 默认值
 
-3. **CacheConfig 不支持动态切换**
-   - 说明：运行时更改需要重启
+3. **安全获取**
+   - 使用 `get_secure_env()` 过滤占位符
+   - 避免占位符泄露
 
-### 已知限制
+### 依赖
 
-- 配置文件不支持热重载（需调用 reload_env）
-- DATABASE_ASYNC 仅支持异步上下文
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | os | 环境变量读取 |
+| 必须 | configparser | INI 文件解析 |
+| 必须 | dotenv | .env 文件加载 |
+| 可选 | pymongo | MongoDB 客户端 |
 
 **TL;DR**：
-- 功能：统一配置管理
-- 包含：2 个子模块（base + business）
-- 定位：应用配置中心
+- 解决什么问题：统一管理 FQuant 项目的所有配置
+- 核心能力：环境变量、MongoDB 连接、路径配置、缓存配置、配置监听
+- 入门难度：🟢 简单
 
-## 子模块概览
-
-本模块是一个**容器模块**，聚合了以下核心子模块：
-
-| 子模块 | 说明 | 文档级别 | 文档链接 |
-|--------|------|---------|----------|
-| base/ | 基础配置（环境变量、数据库、缓存） | L3 | [README](./base/README.md) |
-| business/ | 业务配置（数据源、IP列表） | L2 | [README](./business/README.md) |
+**快速判断**：当您需要 获取配置/管理路径/监听配置变更 时，使用 Config。
 
 ## 架构图
 
-```
-┌─────────────────────────────────────────────┐
-│              Config 配置中心                   │
-├─────────────────────────────────────────────┤
-│  ┌─────────┐  ┌─────────┐                  │
-│  │  base   │  │business │                  │
-│  │ 基础配置 │  │ 业务配置 │                  │
-│  └────┬────┘  └────┬────┘                  │
-│       │            │                        │
-│       └────────────┼────────────────────────┤
-│                    │                         │
-│            ┌───────┴───────┐                │
-│            │   聚合层 API   │                │
-│            └───────────────┘                │
-└─────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Config["Config"]
+        env["env - 环境变量"]
+        setting["setting - MongoDB配置"]
+        globalmap["GlobalMap - 路径配置"]
+        cache_config["cache_config - 缓存配置"]
+        config_watcher["config_watcher - 配置监听"]
+    end
 ```
 
-## 快速开始
+## 子模块
 
-### 安装
-
-```bash
-pip install fquant-fqbase
-```
-
-### 组合使用示例
-
-```python
-from FQBase.Config import (
-    get_env,
-    SETTING,
-    CacheConfig,
-    get_datasource_priority,
-)
-
-# 基础配置
-debug = get_env('DEBUG', False)
-mongo_uri = SETTING.get_mongo()
-
-# 业务配置
-priority = get_datasource_priority('stock')
-```
+| 子模块 | 说明 |
+|--------|------|
+| env | 环境变量加载和管理 |
+| setting | MongoDB 连接配置和路径配置 |
+| cache_config | 缓存配置管理 |
+| config_watcher | 配置变更监听 |
 
 ## 快速链接
 
-| 文档 | 说明 |
+| 需求 | 文档 |
 |------|------|
-| [技术架构](./architecture.md) | 子模块架构与关系 |
-| [API参考](./api.md) | 跨模块组合 API |
-| [案例库](./examples.md) | 跨模块集成示例 |
-| [变更日志](./changelog.md) | 各子模块变更汇总 |
+| 快速入门 | [快速入门](./quick-start.md) |
+| 查看 API | [API参考](./api.md) |
+| 配置指南 | [配置指南](./configuration.md) |
+| 故障排查 | [故障排查](./troubleshooting.md) |
 
 ## 相关文档
 
-| 类型 | 文档 | 链接 |
-|------|------|------|
-| 项目首页 | FQBase首页 | [README](../README.md) |
-| 基础配置 | Base模块 | [base/README.md](./base/README.md) |
-| 业务配置 | Business模块 | [business/README.md](./business/README.md) |
-
-## 快速链接
-
-| 文档 | 说明 |
-|------|------|
-| [快速入门](./quick-start.md) | 5分钟快速上手 |
-| [术语表](./glossary.md) | 术语定义 |
-| [核心概念](./concepts.md) | 核心概念详解 |
-| [技术架构](./architecture.md) | 技术架构说明 |
-| [API参考](./api.md) | API参考文档 |
-| [使用指南](./usage.md) | 详细使用指南 |
-| [案例库](./examples.md) | 案例库 |
-| [集成指南](./integrations.md) | 模块集成指南 |
-| [最佳实践](./best-practices.md) | 最佳实践 |
-| [故障排查](./troubleshooting.md) | 问题排查 |
-| [性能调优](./performance.md) | 性能优化 |
-| [常见问题](./faq.md) | 常见问题 |
-| [开发指南](./development.md) | 开发指南 |
-| [变更日志](./changelog.md) | 版本变更 |
+- [FQBase README](../README.md)

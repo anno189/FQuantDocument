@@ -1,47 +1,59 @@
 ---
 title: DataStore - 集成指南
-description: DataStore MongoDB数据存储模块第三方集成指南
+description: DataStore 集成指南
 tag:
+  - fquant
   - fqbase
   - datastore
+
+summary:
+  purpose: integrations
 ---
 
 # DataStore - 集成指南
 
-## 概述
+## 阅读路径
 
-DataStore MongoDB数据存储模块的集成指南。
+🔵 **开发者**：README → integrations → configuration → architecture
 
-## Pandas 集成
+## 1. DataStore + Config
 
 ```python
-import pandas as pd
 from FQBase.DataStore import get_mongo_db
+from FQBase.Config import SETTING
+
+uri = SETTING.get_mongo()
+db = get_mongo_db(database="mydb")
+```
+
+## 2. DataStore + Cache
+
+```python
+from FQBase.DataStore import get_mongo_db
+from FQBase.Cache import create_cache
 
 db = get_mongo_db(database="mydb")
+cache = create_cache()
 
-# 查询为 DataFrame
-df = db.find_as_dataframe("users", {})
-
-# 数据处理
-df = df[df['age'] >= 18]
+def get_user(user_id):
+    cache_key = f"user:{user_id}"
+    user = cache.get(cache_key)
+    if not user:
+        user = db.find_one("users", {"_id": user_id})
+        cache.set(cache_key, user, ttl=3600)
+    return user
 ```
 
-## PyMongo 集成
+## 3. DataStore + FQData
 
 ```python
-from pymongo import MongoClient
-from FQBase.DataStore import get_mongo_client_manager
+from FQBase.DataStore import get_mongo_db
 
-manager = get_mongo_client_manager()
-client = manager.get_client()
-
-# 使用原生 pymongo
-db = client["mydb"]
+db = get_mongo_db(database="fqdata")
+db.insert_one("daily", stock_data)
 ```
-
----
 
 ## 相关文档
 
 - [API参考](./api.md)
+- [配置指南](./configuration.md)

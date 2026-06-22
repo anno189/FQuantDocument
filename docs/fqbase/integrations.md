@@ -2,89 +2,62 @@
 title: FQBase - 集成指南
 description: FQBase 集成指南，包含模块内部集成、系统集成和跨系统集成
 tag:
+  - fquant
   - fqbase
+
+summary:
+  purpose: integrations
 ---
 
 # FQBase - 集成指南
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → **[集成指南](./integrations.md)** |
-
-## 子模块集成指南
-
-| 子模块 | 集成指南 | 说明 |
-|--------|----------|------|
-| Core | [集成指南](./core/integrations.md) | 事件总线、日志、通知 |
-| Foundation | [集成指南](./foundation/integrations.md) | 验证、异常、重试、单例 |
-| Util | [集成指南](./util/integrations.md) | 工具函数 |
-| Config | [集成指南](./config/integrations.md) | 配置管理 |
-| Cache | [集成指南](./cache/integrations.md) | 缓存抽象 |
-
----
+🔵 **开发者**：README → integrations → configuration → architecture
 
 ## 1. 模块内部集成
 
 FQBase 各子模块之间的组合使用。
 
-### 1.1 事件驱动 + 日志 + 通知
+### 1.1 Infrastructure + Foundation 事件总线
 
 ```python
-from FQBase.Core import get_event_bus, get_logger, NotificationManager, Event
+from FQBase.Infrastructure import get_logger
+from FQBase.Infrastructure.retry import retry
+from FQBase.Foundation import EventBus, Event
 
-event_bus = get_event_bus()
-logger = get_logger('app')
-notifier = NotificationManager()
+bus = EventBus()
 
-@event_bus.subscribe('task_completed')
-def on_task_completed(event):
-    logger.info(f"任务完成: {event.data}")
-    notifier.send(f"任务完成: {event.data}", channel='SYSTEM')
-
-event_bus.publish(Event('task_completed', {'task_id': 123}))
-```
-
-### 1.2 重试 + 熔断器 + 缓存
-
-```python
-from FQBase.Foundation import retry
-from FQBase.Foundation.circuit_breaker import CircuitBreaker
-from FQBase.Cache import CacheAdapter
-
-circuit = CircuitBreaker(failure_threshold=5, recovery_timeout=60)
-cache = CacheAdapter()
-
-@circuit
-@retry(max_attempts=3, delay=1)
-def fetch_data(code):
-    cached = cache.get(f"data:{code}")
-    if cached:
-        return cached
-    data = external_api.get(code)
-    cache.set(f"data:{code}", data, ttl=300)
+@retry(stop_max_attempt_number=3)
+def fetch_data():
+    logger = get_logger(__name__)
+    data = api_call()
+    bus.publish(Event("data_fetched", {"data": data}))
     return data
 ```
 
-### 1.3 验证 + 异常处理 + 日志
+### 1.2 Config + DataStore 配置驱动
 
 ```python
-from FQBase.Foundation import validate_code, handle_exception
-from FQBase.Core import get_logger
+from FQBase.Config import SETTING, get_database
+from FQBase.DataStore import MongoDB
 
-logger = get_logger('validator')
-
-def process(code):
-    try:
-        validate_code(code)
-        return do_process(code)
-    except Exception as e:
-        handle_exception(e, logger=logger)
-        raise
+uri = SETTING.get_mongo()
+db = MongoDB(uri=uri)
+db.insert_one("config", {"key": "value"})
 ```
 
----
+### 1.3 Cache + Util 缓存转换
+
+```python
+from FQBase.Cache import redis_cache
+from FQBase.Util import dict_to_df, df_to_dict
+
+data = redis_cache.get("key")
+df = dict_to_df(data)
+# 处理数据
+redis_cache.set("key", df_to_dict(df))
+```
 
 ## 2. 系统模块间集成
 
@@ -93,89 +66,89 @@ FQBase 与项目内其他模块的集成。
 ### 2.1 FQBase + FQData
 
 ```python
-from FQBase.Core import get_logger
-from FQData import DataSource
+from FQBase.Config import get_database
+from FQBase.Cache import create_cache
+from FQData import StockDataSource
 
-logger = get_logger('data')
-
-# 使用 FQBase 的日志系统记录 FQData 的操作
-logger.info("开始获取数据")
-data = DataSource.get_stock_data('000001')
-logger.info(f"获取数据成功: {len(data)} 条")
+cache = create_cache()
+ds = StockDataSource(cache=cache)
+data = ds.get_daily("000001.XSHE", "2024-01-01", "2024-12-31")
 ```
 
 ### 2.2 FQBase + FQFactor
 
 ```python
-from FQBase.Foundation import retry
+from FQBase.Foundation import EventBus
+from FQBase.Infrastructure import get_logger
 from FQFactor import FactorCalculator
 
-@retry(max_attempts=3)
-def calculate_factor(code, date):
-    calculator = FactorCalculator(code, date)
-    return calculator.calculate()
-```
+bus = EventBus()
+calculator = FactorCalculator(logger=get_logger(__name__))
 
----
+def on_factor_ready(event):
+    logger.info(f"Factor ready: {event.data}")
+
+bus.subscribe("factor_ready", on_factor_ready)
+```
 
 ## 3. 跨系统集成
 
 FQBase 与外部系统、框架的集成。
 
-### 3.1 Flask + FQBase
+### 3.1 Celery 集成
 
 ```python
-from flask import Flask
-from FQBase.Core import get_logger, init_logging
+from FQBase.Foundation.event_bus_celery import setup_event_bus, clear_event_bus
 
-app = Flask(__name__)
-init_logging(level='INFO')
-logger = get_logger('flask')
-
-@app.route('/')
-def index():
-    logger.info('首页访问')
-    return 'OK'
+setup_event_bus()
+clear_event_bus()
 ```
 
-### 3.2 Celery + FQBase
+### 3.2 Selenium 爬虫集成
 
 ```python
-from celery import Celery
-from FQBase.Core.event_bus_celery import setup_event_bus
+from FQBase.Crawler import BaseCrawler, PageParser
+from FQBase.Infrastructure import get_logger
 
-app = Celery('tasks')
+class MyCrawler(BaseCrawler):
+    def __init__(self):
+        super().__init__(use_browser=True)
+        self.logger = get_logger(self.__class__.__name__)
 
-@app.task
-def long_task():
-    setup_event_bus(app)
-    # 执行任务
+crawler = MyCrawler()
+html = crawler.fetch_url_with_browser("http://example.com")
+items = PageParser.extract_by_css(html, ".item", ["title", "href"])
 ```
 
-### 3.3 Redis + FQBase
+### 3.3 Redis 缓存集群
 
 ```python
-from FQBase.Cache import CacheAdapter
+from FQBase.Cache import RedisCacheAdapter
+from FQBase.Config import CacheConfig
 
-cache = CacheAdapter(backend='redis', host='localhost', port=6379)
-cache.set('key', 'value', ttl=3600)
+config = CacheConfig(
+    cache_type="redis",
+    redis_host="cluster.example.com",
+    redis_port=6379,
+    redis_password="${REDIS_PASSWORD}"
+)
+cache = RedisCacheAdapter(config)
 ```
-
----
 
 ## 集成模式总结
 
 | 集成类型 | 典型场景 | 组合方案 |
 |----------|----------|----------|
-| 模块内部 | 事件驱动流程 | event_bus + logger + notification |
-| 模块内部 | 外部调用保护 | retry + circuit_breaker + cache |
-| 系统模块间 | 数据处理流水线 | FQBase + FQData |
-| 跨系统 | Web 框架 | Flask + FQBase |
-| 跨系统 | 任务队列 | Celery + FQBase |
-| 跨系统 | 缓存后端 | Redis + FQBase |
+| 模块内部 | 事件+重试 | EventBus + retry 装饰器 |
+| 模块内部 | 配置+存储 | Config SETTING + DataStore MongoDB |
+| 模块内部 | 缓存+转换 | Cache + Util dict_to_df |
+| 系统模块间 | FQBase + FQData | Cache 作为数据源缓存 |
+| 系统模块间 | FQBase + FQFactor | EventBus 传递因子事件 |
+| 跨系统 | FQBase + Celery | event_bus_celery 集成 |
+| 跨系统 | FQBase + Selenium | BaseCrawler 封装 |
 
 ## 相关文档
 
 - [API参考](./api.md)
+- [配置指南](./configuration.md)
 - [技术架构](./architecture.md)
-- [案例库](./examples.md)

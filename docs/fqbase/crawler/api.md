@@ -1,7 +1,8 @@
 ---
 title: Crawler - API参考
-description: Crawler 爬虫工具模块 API 参考文档
+description: Crawler API 参考文档
 tag:
+  - fquant
   - fqbase
   - crawler
 
@@ -20,61 +21,35 @@ summary:
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → **[API参考](./api.md)** → [使用指南](./usage.md) |
-
+🔵 **开发者**：README → api → usage → concepts → examples
 
 ## 常量
 
-| 常量 | 类型 | 说明 |
-|------|------|------|
-| TIMEOUT | int | 默认超时时间（秒） |
-| POLL_FREQUENCY | float | 默认轮询频率（秒） |
+### TIMEOUT
 
----
-
-## 函数
-
-### make_headless_browser
+**位置：** `Crawler/browser.py#L35`
 
 ```python
-from FQBase.Crawler import make_headless_browser
+from FQBase.Crawler import TIMEOUT
 
-browser = make_headless_browser() -> webdriver
+print(TIMEOUT)  # 90
 ```
 
-**描述：** 创建无头浏览器
+**类型：** `int`
+**描述：** 默认超时时间（秒）
 
-**返回：** Selenium WebDriver 实例
+### POLL_FREQUENCY
 
-**示例：**
+**位置：** `Crawler/browser.py#L36`
 
 ```python
-browser = make_headless_browser()
-browser.get('https://example.com')
-browser.quit()
+from FQBase.Crawler import POLL_FREQUENCY
+
+print(POLL_FREQUENCY)  # 0.2
 ```
 
----
-
-### make_headless_browser_with_auto_save_path
-
-```python
-from FQBase.Crawler import make_headless_browser_with_auto_save_path
-
-browser = make_headless_browser_with_auto_save_path(save_path: str) -> webdriver
-```
-
-**描述：** 创建带自定义下载路径的无头浏览器
-
-**参数：**
-
-| 参数 | 类型 | 必填 | 描述 |
-|------|------|------|------|
-| save_path | str | 是 | 下载保存路径 |
-
-**返回：** Selenium WebDriver 实例
+**类型：** `float`
+**描述：** 默认轮询频率（秒）
 
 ---
 
@@ -82,12 +57,15 @@ browser = make_headless_browser_with_auto_save_path(save_path: str) -> webdriver
 
 ### BrowserPool
 
-**描述：** 浏览器池（单例模式）
+**位置：** `Crawler/browser.py#L71`
+
+**描述：** 浏览器池（单例模式），复用浏览器实例
 
 ```python
 from FQBase.Crawler import BrowserPool
 
 pool = BrowserPool()
+browser = pool.get_browser()
 ```
 
 #### 方法
@@ -95,103 +73,255 @@ pool = BrowserPool()
 ##### get_browser
 
 ```python
-browser = pool.get_browser() -> webdriver
+browser = pool.get_browser()
 ```
 
-**描述：** 获取浏览器实例
+**返回：** `webdriver.Chrome` - 浏览器实例
 
-##### release_browser
+##### close_all
 
 ```python
-pool.release_browser(browser: webdriver)
+pool.close_all()
 ```
 
-**描述：** 释放浏览器实例
+**描述：** 关闭所有浏览器实例
 
 ---
 
 ### BaseCrawler
 
-**描述：** 基础爬虫类
+**位置：** `Crawler/browser.py#L111`
+
+**描述：** 基础爬虫类，封装 Selenium 和 requests
 
 ```python
 from FQBase.Crawler import BaseCrawler
 
 with BaseCrawler(use_browser=True) as crawler:
-    # 爬取网页
+    html = crawler.fetch_url_with_browser('https://example.com')
 ```
 
 #### 参数
 
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
-| use_browser | bool | 否 | False | 是否使用浏览器 |
+| timeout | int | 否 | 90 | 超时时间（秒） |
+| use_browser | bool | 否 | False | 是否使用 Selenium 浏览器 |
+| use_proxy | str | 否 | None | 代理地址 |
+| headers | Dict | 否 | None | 自定义请求头 |
+| delay | float | 否 | 1.0 | 请求间隔（秒） |
 
 #### 方法
-
-##### fetch_url_with_browser
-
-```python
-html = crawler.fetch_url_with_browser(url: str) -> str
-```
-
-**描述：** 使用浏览器获取网页内容
-
-**参数：**
-
-| 参数 | 类型 | 必填 | 描述 |
-|------|------|------|------|
-| url | str | 是 | 网页 URL |
-
-**返回：** HTML 内容
 
 ##### fetch_url
 
 ```python
-html = crawler.fetch_url(url: str) -> str
+html = crawler.fetch_url(url, method='GET', params=None, data=None, headers=None, encoding='utf-8')
 ```
 
-**描述：** 获取网页内容（不使用浏览器）
+**位置：** `Crawler/browser.py#L175`
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| url | str | 是 | - | 目标URL |
+| method | str | 否 | GET | 请求方法 GET/POST |
+| params | Dict | 否 | None | URL参数 |
+| data | Dict | 否 | None | POST数据 |
+| headers | Dict | 否 | None | 自定义请求头 |
+| encoding | str | 否 | utf-8 | 响应编码 |
+
+**返回：** `str` - 页面HTML内容
+
+##### fetch_url_with_browser
+
+```python
+html = crawler.fetch_url_with_browser(url, wait_for=None)
+```
+
+**位置：** `Crawler/browser.py#L243`
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| url | str | 是 | - | 目标URL |
+| wait_for | str | 否 | None | 等待元素加载的选择器 |
+
+**返回：** `str` - 页面HTML内容
+
+##### wait_and_click
+
+```python
+result = crawler.wait_and_click(selector, by=By.CSS_SELECTOR, timeout=None, index=0)
+```
+
+**位置：** `Crawler/browser.py#L270`
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| selector | str | 是 | - | 选择器 |
+| by | str | 否 | By.CSS_SELECTOR | 选择器类型 |
+| timeout | int | 否 | None | 超时时间 |
+| index | int | 否 | 0 | 元素索引 |
+
+**返回：** `bool` - 是否成功
+
+##### get_element_text
+
+```python
+text = crawler.get_element_text(selector, by=By.CSS_SELECTOR, timeout=None, default='')
+```
+
+**位置：** `Crawler/browser.py#L306`
+
+**返回：** `str` - 元素文本
+
+##### scroll_to_element
+
+```python
+result = crawler.scroll_to_element(selector, by=By.CSS_SELECTOR)
+```
+
+**位置：** `Crawler/browser.py#L338`
+
+**返回：** `bool` - 是否成功
+
+##### close
+
+```python
+crawler.close()
+```
+
+**位置：** `Crawler/browser.py#L359`
+
+**描述：** 关闭浏览器
 
 ---
 
 ### PageParser
 
+**位置：** `Crawler/browser.py#L378`
+
 **描述：** 页面解析工具类
 
 ```python
 from FQBase.Crawler import PageParser
+
+items = PageParser.extract_by_css(html, 'div.item', ['title', 'href'])
 ```
 
 #### 静态方法
 
+##### extract_by_regex
+
+```python
+results = PageParser.extract_by_regex(html, pattern, group=0, flags=0)
+```
+
+**位置：** `Crawler/browser.py#L390`
+
+##### extract_by_css
+
+```python
+results = PageParser.extract_by_css(html, selector, attrs=None)
+```
+
+**位置：** `Crawler/browser.py#L413`
+
+##### extract_tables
+
+```python
+tables = PageParser.extract_tables(html, attrs=None)
+```
+
+**位置：** `Crawler/browser.py#L442`
+
+##### extract_json
+
+```python
+value = PageParser.extract_json(text, keys)
+```
+
+**位置：** `Crawler/browser.py#L474`
+
+##### clean_html
+
+```python
+text = PageParser.clean_html(raw_html)
+```
+
+**位置：** `Crawler/browser.py#L503`
+
 ##### extract_links
 
 ```python
-links = PageParser.extract_links(html: str) -> List[str]
+links = PageParser.extract_links(html, base_url=None, pattern=None)
 ```
 
-**描述：** 提取页面中的所有链接
+**位置：** `Crawler/browser.py#L519`
 
-##### extract_data
+##### extract_images
 
 ```python
-data = PageParser.extract_data(html: str, selector: str) -> List[str]
+images = PageParser.extract_images(html, base_url=None)
 ```
 
-**描述：** 使用 CSS 选择器提取数据
+**位置：** `Crawler/browser.py#L549`
 
-##### extract_table
+---
+
+## 函数
+
+### make_headless_browser
+
+**位置：** `Crawler/browser.py#L39`
 
 ```python
-table_data = PageParser.extract_table(html: str, selector: str = None) -> List[Dict]
+from FQBase.Crawler import make_headless_browser
+
+browser = make_headless_browser(custom_options={'headless': True})
 ```
 
-**描述：** 提取表格数据
+**描述：** 创建无头 Chrome 浏览器
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| custom_options | Dict | 否 | None | 自定义选项 |
+
+**返回：** `webdriver.Chrome`
+
+---
+
+### make_headless_browser_with_auto_save_path
+
+**位置：** `Crawler/browser.py#L574`
+
+```python
+from FQBase.Crawler import make_headless_browser_with_auto_save_path
+
+browser = make_headless_browser_with_auto_save_path('/tmp/downloads', 'application/pdf')
+```
+
+**描述：** 创建带自定义下载路径的 Firefox 无头浏览器
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| download_path | str | 是 | - | 下载路径 |
+| content_type | str | 是 | - | 下载文件类型 |
+
+**返回：** `webdriver.Firefox`
 
 ---
 
 ## 相关文档
 
 - [使用指南](./usage.md)
-- [最佳实践](./best-practices.md)
+- [最佳实践](../best-practices.md)

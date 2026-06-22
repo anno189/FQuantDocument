@@ -1,49 +1,98 @@
 ---
-title: Foundation 模块 - 开发指南
-description: Foundation 模块开发指南
+title: Foundation - 开发指南
+description: 如何参与 Foundation 开发与扩展
 tag:
+  - fquant
   - fqbase
   - foundation
+
+summary:
+  purpose: development
 ---
 
-# Foundation 模块 - 开发指南
+# Foundation - 开发指南
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🔵 开发者 | [README](./README.md) → [使用指南](./usage.md) → **[开发指南](./development.md)** |
+🔵 **开发者**：README → development → patterns
 
-## 子模块开发指南
+## 开发环境
 
-| 子模块 | 开发指南 | 说明 |
-|--------|----------|------|
-| validators | [开发指南](./validators/development.md) | 输入验证 |
-| exceptions | [开发指南](./exceptions/development.md) | 统一异常 |
-| retry | [开发指南](./retry/development.md) | 重试装饰器 |
-| dotty | [开发指南](./dotty/development.md) | 字典访问 |
-| singleton | [开发指南](./singleton/development.md) | 单例模式 |
-| lifecycle | [开发指南](./lifecycle/development.md) | 生命周期 |
-| container | [开发指南](./container/development.md) | 依赖注入 |
-| circuit_breaker | [开发指南](./circuit_breaker/development.md) | 熔断器 |
+### 前置要求
 
-## 扩展开发
+- Python 3.8+
+- FQBase.Infrastructure 已安装
 
-### 添加新验证器
+### 初始化
 
-```python
-from FQBase.Foundation.validators import register_validator
-
-@register_validator
-def validate_custom(value):
-    return value is not None
+```bash
+cd /Users/A.D.189/FQuant/FQuant.Server/FQBase
+python -c "from FQBase.Infrastructure import init; init()"
 ```
 
-### 添加新异常
+## 添加新通知渠道
+
+### Step 1: 创建 Handler
 
 ```python
-from FQBase.Foundation.exceptions import FQException
+from FQBase.Foundation.notification import NotificationHandler
 
-class CustomException(FQException):
-    pass
+class SlackHandler(NotificationHandler):
+    def __init__(self, webhook_url: str):
+        self.webhook_url = webhook_url
+
+    def send(self, message: str, **kwargs) -> bool:
+        # 实现发送逻辑
+        return True
+
+    def _validate_config(self) -> bool:
+        return bool(self.webhook_url)
 ```
+
+### Step 2: 注册 Handler
+
+```python
+from FQBase.Foundation.notification import NotificationManager
+
+manager = NotificationManager()
+manager.add_handler('slack', SlackHandler(webhook_url='...'))
+```
+
+## 添加新事件类型
+
+### Step 1: 定义事件常量
+
+```python
+class EventTypes:
+    DATA_UPDATE = 'data_update'
+    PRICE_CHANGE = 'price_change'
+    SYSTEM_ALERT = 'system_alert'
+```
+
+### Step 2: 发布事件
+
+```python
+from FQBase.Foundation import Event, get_event_bus
+
+bus = get_event_bus()
+bus.publish(Event(EventTypes.DATA_UPDATE, {'key': 'value'}))
+```
+
+## 测试
+
+```bash
+cd /Users/A.D.189/FQuant/FQuant.Server/FQBase
+python -m pytest tests/Foundation/
+```
+
+## 代码风格
+
+- 遵循 PEP8
+- 使用类型注解
+- 所有公共 API 必须有 docstring
+- 使用 get_logger 记录日志
+
+## 相关文档
+
+- [设计模式](./patterns.md)
+- [API参考](./api.md)

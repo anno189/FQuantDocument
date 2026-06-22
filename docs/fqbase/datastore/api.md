@@ -1,7 +1,8 @@
 ---
 title: DataStore - API参考
-description: DataStore MongoDB数据存储模块 API 参考文档
+description: DataStore API 参考文档
 tag:
+  - fquant
   - fqbase
   - datastore
 
@@ -9,84 +10,32 @@ summary:
   purpose: api-reference
   core_classes:
     - MongoDB
-    - MongoClientManager
+    - MongoConnection
+    - MongoCollection
+    - MongoIndexManager
+    - MongoDatabaseAdmin
   core_functions:
     - get_mongo_db
-    - get_mongo_client_manager
-    - reset_mongo_db
 ---
 
 # DataStore - API参考
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → **[API参考](./api.md)** → [使用指南](./usage.md) |
-
-
-## 函数
-
-### get_mongo_db
-
-```python
-from FQBase.DataStore import get_mongo_db
-
-db = get_mongo_db(database: str = "default", **kwargs) -> MongoDB
-```
-
-**描述：** 获取全局 MongoDB 单例实例
-
-**参数：**
-
-| 参数 | 类型 | 必填 | 默认值 | 描述 |
-|------|------|------|--------|------|
-| database | str | 否 | "default" | 数据库名称 |
-
-**返回：** MongoDB 实例
-
-**示例：**
-
-```python
-db = get_mongo_db(database="mydb")
-```
-
----
-
-### get_mongo_client_manager
-
-```python
-from FQBase.DataStore import get_mongo_client_manager
-
-manager = get_mongo_client_manager() -> MongoClientManager
-```
-
-**描述：** 获取 MongoDB 客户端管理器
-
----
-
-### reset_mongo_db
-
-```python
-from FQBase.DataStore import reset_mongo_db
-
-reset_mongo_db()
-```
-
-**描述：** 重置全局 MongoDB 实例
-
----
+🔵 **开发者**：README → api → usage → concepts → examples
 
 ## 类
 
 ### MongoDB
 
-**描述：** MongoDB 通用操作类（单例模式）
+**位置：** `DataStore/mongo_db.py`
+
+**描述：** MongoDB 门面类，统一入口
 
 ```python
-from FQBase.DataStore import MongoDB
+from FQBase.DataStore import get_mongo_db
 
-db = MongoDB(database="mydb")
+db = get_mongo_db(database="mydb")
 ```
 
 #### 方法
@@ -94,80 +43,152 @@ db = MongoDB(database="mydb")
 ##### insert_one
 
 ```python
-result = db.insert_one(collection: str, document: dict) -> InsertOneResult
+result = db.insert_one(collection, document)
 ```
 
-**描述：** 插入单条记录
+**参数：**
 
-##### insert_many
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| collection | str | 是 | - | 集合名 |
+| document | Dict | 是 | - | 文档数据 |
 
-```python
-result = db.insert_many(collection: str, documents: List[dict]) -> InsertManyResult
-```
-
-**描述：** 插入多条记录
-
-##### find
-
-```python
-results = db.find(collection: str, filter: dict, **kwargs) -> List[dict]
-```
-
-**描述：** 查询记录
+**返回：** `InsertOneResult`
 
 ##### find_one
 
 ```python
-result = db.find_one(collection: str, filter: dict, **kwargs) -> dict
+document = db.find_one(collection, query, projection=None)
 ```
 
-**描述：** 查询单条记录
+**返回：** `Optional[Dict]` - 匹配的文档
 
 ##### update_one
 
 ```python
-result = db.update_one(collection: str, filter: dict, update: dict, **kwargs) -> UpdateResult
+result = db.update_one(collection, query, update, upsert=False)
 ```
 
-**描述：** 更新单条记录
-
-##### update_many
-
-```python
-result = db.update_many(collection: str, filter: dict, update: dict, **kwargs) -> UpdateResult
-```
-
-**描述：** 更新多条记录
+**返回：** `UpdateResult`
 
 ##### delete_one
 
 ```python
-result = db.delete_one(collection: str, filter: dict, **kwargs) -> DeleteResult
+result = db.delete_one(collection, query)
 ```
 
-**描述：** 删除单条记录
+**返回：** `DeleteResult`
 
-##### delete_many
+##### aggregate
 
 ```python
-result = db.delete_many(collection: str, filter: dict, **kwargs) -> DeleteResult
+results = db.aggregate(collection, pipeline)
 ```
 
-**描述：** 删除多条记录
+**返回：** `List[Dict]` - 聚合结果
 
-##### find_as_dataframe
+##### ensure_index
 
 ```python
-df = db.find_as_dataframe(collection: str, filter: dict, **kwargs) -> DataFrame
+db.ensure_index(collection, keys, **kwargs)
 ```
 
-**描述：** 查询并返回 DataFrame
+---
+
+### MongoCollection
+
+**位置：** `DataStore/_collection.py`
+
+**描述：** 数据操作类
+
+---
+
+### MongoIndexManager
+
+**位置：** `DataStore/_index_manager.py`
+
+**描述：** 索引管理类
+
+```python
+from FQBase.DataStore import MongoIndexManager
+
+manager = MongoIndexManager(connection)
+manager.create_index("users", [("name", 1)])
+```
+
+---
+
+### MongoDatabaseAdmin
+
+**位置：** `DataStore/_database_admin.py`
+
+**描述：** 数据库运维类
+
+---
+
+### MongoConnection
+
+**位置：** `DataStore/_connection.py`
+
+**描述：** 连接管理类
+
+---
+
+## 函数
+
+### get_mongo_db
+
+**位置：** `DataStore/mongo_db.py#L190`
+
+```python
+from FQBase.DataStore import get_mongo_db
+
+db = get_mongo_db(database="mydb")
+```
+
+**描述：** 获取 MongoDB 数据库实例（单例）
+
+**返回：** `MongoDB`
+
+---
+
+### reset_mongo_db
+
+**位置：** `DataStore/mongo_db.py#L194`
+
+```python
+from FQBase.DataStore import reset_mongo_db
+
+reset_mongo_db()
+```
+
+**描述：** 重置全局 MongoDB 实例（清除所有连接）
+
+**异常：** 无
+
+---
+
+### get_mongo_client_manager
+
+**位置：** `FQBase.Infrastructure._mongo`
+
+```python
+from FQBase.DataStore import get_mongo_client_manager
+
+manager = get_mongo_client_manager()
+```
+
+**描述：** 获取 MongoDB 客户端管理器实例（单例）
+
+**返回：** `MongoClientManager`
 
 ---
 
 ### MongoClientManager
 
-**描述：** MongoDB 客户端管理器
+**位置：** `FQBase.Infrastructure._mongo`
+
+**描述：** MongoDB 客户端管理器，负责管理多个 MongoClient 实例
 
 ```python
 from FQBase.DataStore import MongoClientManager
@@ -175,19 +196,10 @@ from FQBase.DataStore import MongoClientManager
 manager = MongoClientManager()
 ```
 
-#### 方法
-
-##### get_client
-
-```python
-client = manager.get_client(host: str = "localhost", port: int = 27017, **kwargs)
-```
-
-**描述：** 获取 MongoDB 客户端
-
 ---
 
 ## 相关文档
 
 - [使用指南](./usage.md)
 - [最佳实践](./best-practices.md)
+- [配置指南](./configuration.md)

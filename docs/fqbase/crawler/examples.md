@@ -1,48 +1,61 @@
 ---
 title: Crawler - 案例库
-description: Crawler 爬虫工具模块实际应用场景与示例
+description: Crawler 实际应用场景、动手实验与案例研究
 tag:
+  - fquant
   - fqbase
   - crawler
+
+summary:
+  purpose: examples
 ---
 
 # Crawler - 案例库
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [使用指南](./usage.md) → **[案例库](./examples.md)** |
+🟢🔵 **新手+开发者**：README → examples → api → usage
 
+## 业务场景案例
 
-## 概述
+### 场景 1: 批量抓取新闻列表
 
-Crawler 爬虫工具模块的实际应用场景。
-
-## 基础示例
-
-### 示例 1：抓取网页内容
+**业务需求：** 抓取新闻网站的标题和链接
 
 ```python
 from FQBase.Crawler import BaseCrawler, PageParser
 
-with BaseCrawler(use_browser=True) as crawler:
-    html = crawler.fetch_url_with_browser('https://example.com')
-    links = PageParser.extract_links(html)
-    print(f"找到 {len(links)} 个链接")
+with BaseCrawler(use_browser=False, delay=2.0) as crawler:
+    html = crawler.fetch_url('https://news.example.com/tech')
+
+    items = PageParser.extract_by_css(
+        html,
+        'div.news-item',
+        ['title', 'href']
+    )
+
+    for item in items:
+        print(f"标题: {item['title']}, 链接: {item['href']}")
 ```
 
-### 示例 2：提取数据
+## 动手实验
+
+### Lab 1: 实现爬虫自动重试
+
+**目标：** 使用 @retry 装饰器实现自动重试
 
 ```python
-from FQBase.Crawler import PageParser
+from FQBase.Crawler import BaseCrawler
+from FQBase.Infrastructure.retry import retry
 
-html = '<div class="content">Hello World</div>'
-data = PageParser.extract_data(html, '.content')
-print(data)
+class ResilientCrawler(BaseCrawler):
+    @retry(stop_max_attempt_number=3, wait_random_min=1000, wait_random_max=2000)
+    def fetch_with_retry(self, url):
+        return self.fetch_url(url)
+
+crawler = ResilientCrawler()
+html = crawler.fetch_with_retry('https://unstable.example.com')
 ```
-
----
 
 ## 相关文档
 

@@ -1,37 +1,59 @@
 ---
 title: Crawler - 术语表
-description: Crawler 爬虫工具模块术语定义与解释
+description: Crawler 术语定义与解释
 tag:
+  - fquant
   - fqbase
   - crawler
+
+summary:
+  purpose: glossary
 ---
 
 # Crawler - 术语表
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → **[术语表](./glossary.md)** → [核心概念](./concepts.md) |
+🟢 **新手**：README → glossary → quick-start → usage
 
+## 概述
+
+本文档定义了 Crawler 模块中使用的核心术语。
 
 ## 术语
 
-### 无头浏览器
+### 无头浏览器 (Headless Browser)
 
-**定义：** 没有可视化界面的浏览器，通过程序控制
+**定义：** 没有可视化界面的浏览器，通过程序控制访问网页。
 
-**示例：** Selenium 控制的无头 Chrome
+**示例：**
 
-### WebDriver
+```python
+browser = make_headless_browser()
+browser.get('https://example.com')
+```
 
-**定义：** Selenium 用于控制浏览器的接口
+### CSS选择器 (CSS Selector)
 
-### CSS 选择器
+**定义：** 用于定位HTML元素的语法。
 
-**定义：** 用于定位 HTML 元素的语法
+**示例：**
 
----
+```python
+items = PageParser.extract_by_css(html, 'div.item a[href]')
+```
+
+### Selenium
+
+**定义：** 浏览器自动化框架，支持多种浏览器。
+
+### BeautifulSoup
+
+**定义：** Python HTML/XML 解析库。
+
+### 轮询频率 (Poll Frequency)
+
+**定义：** 检查元素出现的频率。
 
 ## 相关文档
 

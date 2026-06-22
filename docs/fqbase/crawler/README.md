@@ -1,7 +1,8 @@
 ---
-title: Crawler - 爬虫工具
-description: FQBase 爬虫工具模块，提供浏览器自动化和网页抓取功能
+title: Crawler
+description: FQBase 爬虫基础设施，基于 Selenium 和 requests 提供网页抓取和解析
 tag:
+  - fquant
   - fqbase
   - crawler
 
@@ -9,116 +10,143 @@ summary:
   type: utility
   complexity: medium
   maturity: stable
-  size: xs
-  core_classes:
-    - BrowserPool
-    - BaseCrawler
-    - PageParser
-  key_functions:
-    - make_headless_browser
-    - make_headless_browser_with_auto_save_path
+  size: small
+  is_container: false
+  api_exports:
+    total: 7
+    classes: 3
+    functions: 2
+    constants: 2
+  features:
+    has_async: false
+    is_thread_safe: false
+    has_config: false
+    has_logging: true
+    has_security: false
+  usage_scenarios:
+    - "使用 Selenium 抓取动态网页"
+    - "使用 requests 抓取静态网页"
+    - "页面解析（正则、CSS选择器、表格）"
+    - "浏览器池复用"
+  warnings:
+    - "爬虫需要遵守 robots.txt"
+    - "注意请求频率，避免封禁"
+    - "使用后记得关闭浏览器资源"
+  limitations:
+    - "需要 ChromeDriver/FirefoxDriver"
+    - "依赖 selenium、bs4、requests 库"
+  design_patterns:
+    - singleton
 
 relationships:
   belongs_to:
     - fquant.fqbase
+  depends_on:
+    - fquant.fqbase.infrastructure
+    - fquant.fqbase.util
+  used_by:
+    - fquant.fqdata
 
-concepts:
-  provides:
-    - name: 浏览器自动化
-      definition: 使用 Selenium 进行无头浏览器控制
-    - name: 网页爬取
-      definition: 自动抓取网页内容
-    - name: 页面解析
-      definition: 提取网页中的链接、数据等
+documentation_progress:
+  status: complete
+  level: L1
+  total_expected: 8
+  total_generated: 8
+  generated:
+    - README.md
+    - quick-start.md
+    - concepts.md
+    - api.md
+    - usage.md
+    - examples.md
+    - glossary.md
+    - changelog.md
+  missing: []
+
+maintenance:
+  source_hash: "417d75baf22ad67e1556ca139857880f12d4b9ef5245a28d452e9a52e27def39"
+  source_mtime: 1776751411
+  source_files:
+    - "__init__.py"
+    - "browser.py"
+  last_updated: "2026-04"
 ---
 
-# Crawler - 爬虫工具
+# Crawler
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [速查表](./cheatsheet.md) → [使用指南](./usage.md) → [案例库](./examples.md) |
-| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → [API参考](./api.md) → [使用指南](./usage.md) → [最佳实践](./best-practices.md) |
-| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [故障排查](./troubleshooting.md) → [常见问题](./faq.md) |
+🟢 **新手入门**：README → quick-start → examples → concepts → glossary → usage
 
+🔵 **开发者**：README → api → usage → concepts → examples
 
 ## 一句话总览
 
-📌 **FQBase 爬虫工具模块，提供浏览器自动化和网页抓取功能**
+📌 **FQBase 爬虫基础设施，基于 Selenium 和 requests 提供网页抓取和解析功能。**
+
+## ⚠️ AI 开发必读
+
+### 使用场景
+
+✅ **应该使用**：
+- 抓取 JavaScript 渲染的动态网页 → 使用 `BaseCrawler` + `fetch_url_with_browser`
+- 抓取静态网页 → 使用 `BaseCrawler.fetch_url`
+- 解析 HTML 内容 → 使用 `PageParser` 静态方法
+
+❌ **不应该使用**：
+- 违反网站 robots.txt 的爬取
+- 过高频率请求导致封禁
+- 不加延迟的快速请求
+
+### 注意事项
+
+1. **资源管理**
+   - 使用 `with` 语句或显式调用 `close()`
+   - 大量爬取时使用 `BrowserPool` 复用浏览器
+
+2. **反爬策略**
+   - 内置随机延迟 `delay` 参数
+   - 内置随机 User-Agent
+   - 支持代理 `use_proxy` 参数
+
+3. **依赖安装**
+   - 需要 ChromeDriver：`brew install chromedriver`
+   - 需要 selenium：`pip install selenium`
+   - 需要 bs4：`pip install beautifulsoup4`
+
+### 依赖
+
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | selenium | 浏览器自动化 |
+| 必须 | requests | HTTP 请求 |
+| 必须 | bs4 | HTML 解析 |
+| 可选 | chromedriver | Chrome 驱动 |
 
 **TL;DR**：
-- 解决什么问题：自动抓取网页数据
-- 核心能力：无头浏览器、页面解析、数据提取
-- 入门难度：🔵 中等
+- 解决什么问题：提供统一的网页抓取和解析工具
+- 核心能力：Selenium 浏览器、requests 请求、PageParser 解析
+- 入门难度：🟢 简单
 
-**快速判断**：当您需要抓取动态网页、自动化浏览器操作时，使用本模块。
+**快速判断**：当您需要 抓取网页/解析 HTML/提取数据 时，使用 Crawler。
 
-## 知识脉络
+## 主要组件
 
-🧑‍🎓 **从零到精通的推荐学习顺序**：
-
-1. [快速入门](./quick-start.md) - 5 分钟上手
-2. [核心概念](./concepts.md) - 理解基本概念
-3. [技术架构](./architecture.md) - 理解设计思路
-4. [使用指南](./usage.md) - 深入使用
-5. [最佳实践](./best-practices.md) - 升华理解
-
-⏱️ 预计学习时间：1 小时
-
-## 前置知识
-
-在开始学习本模块前，建议先掌握：
-
-| 知识领域 | 建议资源 | 状态 |
-|---------|---------|------|
-| Python 基础 | [官方教程](https://docs.python.org/zh-cn/3/tutorial/) | ⬜ |
-| Selenium 基础 | - | ⬜ |
-| HTML/CSS 基础 | - | ⬜ |
-
-## 适用场景
-
-✅ **推荐使用**：
-- 抓取动态网页（JavaScript 渲染）
-- 自动化浏览器测试
-- 网页截图
-- 表单自动提交
-
-❌ **不推荐使用**：
-- 简单静态网页抓取（使用 requests 即可）
-- 高频大规模爬取（考虑其他方案）
-
-## 概述
-
-Crawler 是 FQBase 的爬虫工具模块，提供以下功能：
-
-- **无头浏览器**：使用 Selenium 创建无头浏览器
-- **浏览器池**：BrowserPool 管理多个浏览器实例
-- **基础爬虫**：BaseCrawler 提供基础爬取功能
-- **页面解析**：PageParser 提取网页内容
+| 组件 | 说明 |
+|------|------|
+| BaseCrawler | 基础爬虫类，封装 Selenium 和 requests |
+| PageParser | 页面解析工具，正则、CSS选择器、表格提取 |
+| BrowserPool | 浏览器池，复用浏览器实例（单例） |
+| make_headless_browser | 创建无头浏览器 |
 
 ## 快速链接
 
-| 文档 | 说明 |
+| 需求 | 文档 |
 |------|------|
-| [快速入门](./quick-start.md) | 5分钟快速上手 |
-| [术语表](./glossary.md) | 术语定义 |
-| [核心概念](./concepts.md) | 核心概念详解 |
-| [技术架构](./architecture.md) | 技术架构说明 |
-| [API参考](./api.md) | API参考文档 |
-| [案例库](./examples.md) | 案例库 |
-
-## 安装
-
-```bash
-pip install fquant-fqbase
-pip install selenium
-pip install webdriver-manager
-```
+| 快速入门 | [快速入门](./quick-start.md) |
+| 查看 API | [API参考](./api.md) |
+| 使用指南 | [使用指南](./usage.md) |
 
 ## 相关文档
 
-| 类型 | 文档 | 链接 |
-|------|------|------|
-| 项目首页 | FQBase首页 | [README](../README.md) |
-| 快速入门 | 快速入门 | [快速入门](./quick-start.md) |
+- [FQBase README](../README.md)

@@ -1,89 +1,140 @@
 ---
 title: Cache - 术语表
-description: Cache 模块术语定义与解释
+description: Cache 术语定义与解释
 tag:
+  - fquant
   - fqbase
   - cache
+
+summary:
+  purpose: glossary
 ---
 
 # Cache - 术语表
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → **[术语表](./glossary.md)** → [核心概念](./concepts.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) |
+🟢 **新手**：README → glossary → quick-start → usage
 
 ## 概述
 
-本术语表定义 Cache 模块中使用的关键术语。
+本文档定义了 Cache 模块中使用的核心术语。
 
 ## 术语
 
-### 缓存（Cache）
+### 缓存适配器 (Cache Adapter)
 
-**定义：** 临时存储数据的技术，用于加速数据访问。
-
-**示例：**
-```python
-cache.set('key', 'value')
-value = cache.get('key')
-```
-
-### 缓存命中（Cache Hit）
-
-**定义：** 请求的数据在缓存中存在。
+**定义：** 封装不同缓存后端，提供统一接口的设计模式。
 
 **示例：**
+
 ```python
-cache.set('key', 'value')
-value = cache.get('key')  # 缓存命中
+cache = create_cache()  # 返回 CacheInterface 实现
 ```
 
-### 缓存未命中（Cache Miss）
+**与相关术语的区别：**
 
-**定义：** 请求的数据在缓存中不存在。
+| 术语 | 区别 |
+|------|------|
+| 缓存后端 | 适配器是对后端的封装 |
+| 缓存接口 | 适配器实现 CacheInterface |
+
+### TTL (Time To Live)
+
+**定义：** 缓存数据的存活时间。
 
 **示例：**
+
 ```python
-value = cache.get('nonexistent')  # 缓存未命中，返回 None
+cache.set("key", "value", ttl=3600)  # 1小时后过期
 ```
 
-### 命中率（Hit Rate）
+**与相关术语的区别：**
 
-**定义：** 缓存命中次数与总请求次数的比率。
+| 术语 | 区别 |
+|------|------|
+| TTL | 绝对过期时间 |
+| 滑动窗口 | 访问时重置过期时间 |
 
-**公式：** hit_rate = hits / (hits + misses)
-
-### 驱逐（Eviction）
-
-**定义：** 当缓存满时，移除旧条目以容纳新条目的过程。
-
-### LRU（Least Recently Used）
-
-**定义：** 最近最少使用驱逐策略。
-
-### FIFO（First In First Out）
-
-**定义：** 先进先出驱逐策略。
-
-### TTL（Time To Live）
-
-**定义：** 缓存条目的生存时间。
-
-### 序列化（Serialization）
+### 序列化 (Serialization)
 
 **定义：** 将对象转换为可存储格式的过程。
 
-### 前缀（Prefix）
+**示例：**
 
-**定义：** 添加到缓存键前的字符串，用于隔离不同业务。
+```python
+cache.set("df", pandas.DataFrame(...))  # 自动序列化
+```
 
----
+**与相关术语的区别：**
+
+| 术语 | 区别 |
+|------|------|
+| 序列化 | 对象转字节 |
+| 编码 | 字节转字符串 |
+
+### 缓存键 (Cache Key)
+
+**定义：** 唯一标识缓存值的字符串。
+
+**示例：**
+
+```python
+cache.set("user:123:profile", data)
+```
+
+**与相关术语的区别：**
+
+| 术语 | 区别 |
+|------|------|
+| 缓存键 | 唯一标识 |
+| 键前缀 | 用于分类的键前缀 |
+
+### 缓存穿透 (Cache Penetration)
+
+**定义：** 查询不存在的数据，导致请求直达数据库。
+
+**示例：**
+查询 `user:-1` 每次都会穿透到数据库。
+
+**与相关术语的区别：**
+
+| 术语 | 区别 |
+|------|------|
+| 缓存穿透 | 查询不存在的数据 |
+| 缓存击穿 | 热点 key 过期 |
+| 缓存雪崩 | 大量 key 同时过期 |
+
+### 缓存击穿 (Cache Breakdown)
+
+**定义：** 热点 key 过期瞬间，大量请求直达数据库。
+
+**示例：**
+某个热门商品详情页缓存过期。
+
+**与相关术语的区别：**
+
+| 术语 | 区别 |
+|------|------|
+| 缓存击穿 | 单一热点 key 过期 |
+| 缓存雪崩 | 大量 key 同时过期 |
+
+### 缓存雪崩 (Cache Avalanche)
+
+**定义：** 大量缓存同时过期，导致数据库压力骤增。
+
+**示例：**
+系统重启后所有缓存清空。
+
+**与相关术语的区别：**
+
+| 术语 | 区别 |
+|------|------|
+| 缓存雪崩 | 大量 key 同时过期或失效 |
+| 缓存击穿 | 单一热点 key 过期 |
 
 ## 相关文档
 
 - [README](./README.md)
 - [快速入门](./quick-start.md)
 - [核心概念](./concepts.md)
-- [使用指南](./usage.md)

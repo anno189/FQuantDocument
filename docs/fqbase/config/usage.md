@@ -1,199 +1,123 @@
 ---
 title: Config - 使用指南
-description: FQBase 配置中心详细使用指南
+description: Config 详细使用指南
 tag:
+  - fquant
   - fqbase
   - config
+
+summary:
+  purpose: usage
 ---
 
 # Config - 使用指南
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [速查表](./cheatsheet.md) → **[使用指南](./usage.md)** → [案例库](./examples.md) |
-| 🔵 开发者 | [README](./README.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) → [设计原则](./design.md) → [API参考](./api.md) → [开发指南](./development.md) → **[使用指南](./usage.md)** → [最佳实践](./best-practices.md) |
-
-## 子模块使用指南
-
-| 子模块 | 使用指南 | 说明 |
-|--------|----------|------|
-| base | [使用指南](./base/usage.md) | 基础配置使用指南 |
-| business | [使用指南](./business/usage.md) | 业务配置使用指南 |
-
+🔵 **开发者**：README → api → usage → concepts → examples
 
 ## 概述
 
-详细介绍配置中心的使用方法，包括环境变量管理、数据库连接、缓存配置和配置监听的最佳实践。
+本指南详细说明如何在各种场景下使用 Config 模块。
 
 ## 基本用法
 
-### 安装
-
-```bash
-pip install fquant-fqbase
-```
-
-### 快速开始
+### 获取 MongoDB 配置
 
 ```python
-from FQBase.Config import (
-    get_env,
-    SETTING,
-    CacheConfig,
-    load_env,
-)
+from FQBase.Config import SETTING
 
-# 第1步：加载环境变量
-load_env()
+uri = SETTING.get_mongo()
+print(f"MongoDB URI: {uri}")
 
-# 第2步：获取配置
-debug = get_env('DEBUG', False)
-mongo_uri = SETTING.get_mongo()
+client = SETTING.client
+```
 
-# 第3步：配置缓存
-cache_config = CacheConfig(cache_type='redis')
+### 获取路径配置
+
+```python
+from FQBase.Config import GLOBALMAP
+
+paths = {
+    "data": GLOBALMAP.FQDATA_PATH,
+    "cache": GLOBALMAP.CACHE_PATH,
+    "log": GLOBALMAP.LOG_PATH,
+    "download": GLOBALMAP.DOWNLOAD_PATH,
+}
 ```
 
 ## 常见用例
 
 ### 用例 1: 环境变量管理
 
-**场景：** 统一管理应用配置
-
-**代码：**
+**场景：** 管理不同环境下的配置
 
 ```python
-# 创建 .env 文件
-# DEBUG=true
-# MONGODB_URL=mongodb://localhost:27017
-# REDIS_URL=redis://localhost:6379
+from FQBase.Config import load_env, get_env, get_secure_env
 
-from FQBase.Config import load_env, get_env
-
-# 加载环境变量
+# 开发环境
 load_env()
 
-# 获取配置（支持默认值）
-debug = get_env('DEBUG', False)
-mongo_url = get_env('MONGODB_URL', 'mongodb://localhost:27017')
-redis_url = get_env('REDIS_URL', 'redis://localhost:6379')
+# 生产环境（从系统环境变量读取）
+debug = get_env("DEBUG", default="false")
+api_key = get_secure_env("API_KEY")
 ```
 
-### 用例 2: MongoDB 数据库连接
+### 用例 2: 动态配置更新
 
-**场景：** 获取数据库连接配置
-
-**代码：**
+**场景：** 在不停机的情况下更新配置
 
 ```python
-from FQBase.Config import SETTING, DATABASE
+from FQBase.Config import SETTING, watch_config
 
-# 获取 MongoDB 连接 URI
-mongo_uri = SETTING.get_mongo()
-print(f"连接 MongoDB: {mongo_uri}")
+# 监听配置变更
+def on_mongo_change(new_uri):
+    print(f"MongoDB URI 变更: {new_uri}")
+    SETTING.change(ip="newhost", port=27017)
 
-# 使用数据库实例
-db = DATABASE
-collection = db['my_data']
+watcher = watch_config(["MONGODB_URI"])
+watcher.add_callback(on_mongo_change)
 ```
 
-### 用例 3: Redis 缓存配置
+### 用例 3: 缓存配置管理
 
-**场景：** 配置 Redis 缓存
-
-**代码：**
+**场景：** 动态切换缓存后端
 
 ```python
-from FQBase.Config import CacheConfig, get_cache_config, get_cache_kwargs
+from FQBase.Config import get_cache_config, set_cache_config, CacheConfig
 
-# 配置缓存
-cache_config = CacheConfig(cache_type='redis', ttl=1800)
+# 获取当前配置
+config = get_cache_config()
+print(f"当前缓存类型: {config.cache_type}")
 
-# 获取全局缓存配置
-global_config = get_cache_config()
-print(f"缓存类型: {global_config.get_cache_type()}")
-
-# 获取缓存参数字典
-cache_kwargs = get_cache_kwargs()
-print(f"缓存参数: {cache_kwargs}")
-```
-
-### 用例 4: 配置监听
-
-**场景：** 监听配置文件变化并自动更新
-
-**代码：**
-
-```python
-from FQBase.Config import ConfigWatcher, watch_config
-
-# 方式1：使用 ConfigWatcher
-def on_database_change():
-    print("数据库配置已变更")
-
-watcher = ConfigWatcher()
-watcher.watch('database', callback=on_database_change)
-
-# 方式2：使用便捷函数
-watch_config('cache', callback=lambda: print("缓存配置已变更"))
-```
-
-## 配置
-
-### 环境变量文件格式
-
-```bash
-# 注释以 # 开头
-DEBUG=false
-MONGODB_URL=mongodb://user:password@localhost:27017
-REDIS_URL=redis://localhost:6379
-API_KEY=your-secret-key
-```
-
-### 路径配置
-
-```python
-from FQBase.Config import (
-    FQDATA_PATH,
-    SETTING_PATH,
-    CACHE_PATH,
-    LOG_PATH,
-    DOWNLOAD_PATH,
-    STRATEGY_PATH,
-    BIN_PATH,
+# 切换到 Redis
+new_config = CacheConfig(
+    cache_type='redis',
+    redis_host='redis.example.com',
+    redis_port=6379
 )
-
-print(f"数据目录: {FQDATA_PATH}")
-print(f"设置目录: {SETTING_PATH}")
+set_cache_config(new_config)
 ```
 
-## 错误处理
+### 用例 4: 路径一致性
+
+**场景：** 在不同模块中使用统一路径
 
 ```python
-from FQBase.Config import (
-    get_env,
-    SETTING,
-    ConfigValidationError,
-)
+from FQBase.Config import GLOBALMAP
 
-try:
-    # 获取配置
-    value = get_env('REQUIRED_CONFIG')
-    if value is None:
-        raise ValueError("必需的配置项未设置")
-    
-    # 获取数据库配置
-    mongo_uri = SETTING.get_mongo()
-except ConfigValidationError as e:
-    print(f"配置验证错误: {e}")
-except Exception as e:
-    print(f"配置错误: {e}")
+# 数据模块
+DATA_DIR = GLOBALMAP.FQDATA_PATH
+
+# 日志模块
+LOG_DIR = GLOBALMAP.LOG_PATH
+
+# 缓存模块
+CACHE_DIR = GLOBALMAP.CACHE_PATH
 ```
 
 ## 相关文档
 
 - [API参考](./api.md)
-- [开发指南](./development.md)
 - [最佳实践](./best-practices.md)
+- [故障排查](./troubleshooting.md)

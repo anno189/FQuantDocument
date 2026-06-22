@@ -2,62 +2,75 @@
 title: FQBase - 变更日志
 description: FQBase 版本历史与更新说明
 tag:
+  - fquant
   - fqbase
+
+summary:
+  purpose: changelog
 ---
 
 # FQBase - 变更日志
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 📖 索引 | [README](./README.md) → **[变更日志](./changelog.md)** |
+全部角色：README → changelog
 
-## 子模块变更日志
-
-| 子模块 | 变更日志 | 说明 |
-|--------|----------|------|
-| Core | [变更日志](./core/changelog.md) | 事件总线、日志、通知 |
-| Foundation | [变更日志](./foundation/changelog.md) | 验证、异常、重试、单例 |
-| Util | [变更日志](./util/changelog.md) | 工具函数 |
-| Config | [变更日志](./config/changelog.md) | 配置管理 |
-| Cache | [变更日志](./cache/changelog.md) | 缓存抽象 |
-| Date | [变更日志](./date/changelog.md) | 日期时间 |
-| DataStore | [变更日志](./datastore/changelog.md) | 数据存储 |
-| Crawler | [变更日志](./crawler/changelog.md) | 网页爬虫 |
-
-
-## v1.0.0 (2024-01)
+## v2.0.0 (2026-04)
 
 ### 新增
 
-- 首次发布 FQBase 基础框架
-- Core 模块：事件总线、日志系统、通知服务
-- Foundation 模块：验证器、异常类、重试机制、单例模式
-- Util 模块：工具函数集合
-- Config 模块：环境变量配置管理
-- Cache 模块：缓存抽象层
-- Date 模块：日期时间处理
-- DataStore 模块：MongoDB 客户端
-- Crawler 模块：网页爬虫
+- Infrastructure 层重构，增加依赖注入容器
+- Foundation 层新增 event_bus_celery 模块，支持 Celery 集成
+- Cache 层新增 MongoCacheAdapter，支持 MongoDB 作为缓存后端
+- 新增 CircuitBreakerManager 管理多个熔断器
 
-### 核心功能
+### 更改
 
-- 事件驱动架构（发布-订阅模式）
-- 统一日志系统
-- 多渠道通知（企业微信、Server酱、PushBear）
-- 数据验证框架
-- 带指数退避的重试装饰器
-- 熔断器模式
-- 统一异常体系
-- 环境变量配置管理
-- Redis 缓存适配器
+- 重构导入结构，取消包级别便捷导入，必须通过子模块导入
+- Config 层配置监听改为 ConfigWatcher 统一管理
+- 事件总线支持异步处理
 
-### 文档
+### 修复
 
-- L3 完整文档（26个文档）
-- 子模块独立文档
-- 完整的 API 参考
+- 修复单例模式在多进程环境下的并发问题
+- 修复重试装饰器在异常时不释放资源的问题
+
+## v1.5.0 (2025-12)
+
+### 新增
+
+- Cache 层支持 Redis Sentinel 模式
+- 新增 ConfigWatcher 配置监听机制
+- Foundation 层新增通知模板功能
+
+### 更改
+
+- 日志系统支持结构化日志
+- 熔断器支持自定义状态转换回调
+
+## v1.0.0 (2025-06)
+
+### 新增
+
+- 首次发布
+- Infrastructure 层：单例、日志、异常、重试
+- Foundation 层：Dotty、生命周期、通知
+- Config 层：环境变量、MongoDB 配置
+- Cache 层：Redis、Memory 缓存
+- DataStore 层：MongoDB CRUD
+- Util 层：转换器、文件、网络、并行
+- Crawler 层：Selenium 爬虫
+
+---
+
+## 弃用追踪
+
+> 本章节追踪已弃用的功能，帮助迁移
+
+| 弃用项 | 替代方案 | 迁移指南 | 弃用版本 |
+|--------|---------|---------|---------|
+| `from FQBase import singleton` | `from FQBase.Infrastructure import singleton` | 修改导入路径 | v2.0.0 |
+| `FQBase.Config.env` 直接导入 | 通过 `FQBase.Config` 导入 | `from FQBase.Config import get_env` | v2.0.0 |
 
 ## 相关文档
 

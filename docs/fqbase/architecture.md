@@ -1,122 +1,225 @@
 ---
 title: FQBase - 技术架构
-description: FQBase 的技术架构与组件设计
+description: FQBase 的技术架构、组件设计与数据流
 tag:
+  - fquant
   - fqbase
+
+summary:
+  purpose: architecture
 ---
 
 # FQBase - 技术架构
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🔵 开发者 | [README](./README.md) → [框架集成](./framework.md) → **[技术架构](./architecture.md)** → [设计原则](./design.md) → [API参考](./api.md) → [开发指南](./development.md) → [最佳实践](./best-practices.md) |
-| 🟡 运维/安全 | [README](./README.md) → **[技术架构](./architecture.md)** → [配置指南](./configuration.md) → [安全指南](./security.md) → [故障排查](./troubleshooting.md) → [常见问题](./faq.md) |
-| 🟠 架构师 | [README](./README.md) → **[技术架构](./architecture.md)** → [设计模式](./patterns.md) → [技术权衡](./tradeoff.md) → [决策指南](./decision-guide.md) → [案例研究](./case-studies.md) → [数据流](./data-flow.md) |
-
-## 子模块技术架构
-
-| 子模块 | 技术架构 | 说明 |
-|--------|----------|------|
-| Core | [技术架构](./core/architecture.md) | 事件总线、日志、通知 |
-| Foundation | [技术架构](./foundation/architecture.md) | 验证、异常、重试、单例 |
-| Util | [技术架构](./util/architecture.md) | 工具函数 |
-| Config | [技术架构](./config/architecture.md) | 配置管理 |
-| Cache | [技术架构](./cache/architecture.md) | 缓存抽象 |
-| Date | [技术架构](./date/concepts.md) | 日期时间 |
-| DataStore | [技术架构](./datastore/architecture.md) | 数据存储 |
-| Crawler | [技术架构](./crawler/architecture.md) | 网页爬虫 |
-
+🟠🔵 **架构师+开发者**：README → architecture → design → patterns → development
 
 ## 概述
 
-FQBase 的架构概览，展示了各子模块的职责和交互关系。
+FQBase 采用分层架构，从底向上分为：Infrastructure（基础设施层）、Foundation（抽象层）、业务功能层（Config、Cache、DataStore、Util、Crawler）。
 
 ## 架构图
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                        FQBase 基础框架                        │
-├─────────────────────────────────────────────────────────────┤
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │                    Core 核心层                        │   │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌───────────┐  │   │
-│  │  │   EventBus   │  │    Logger    │  │Notifica- │  │   │
-│  │  │   事件总线    │  │    日志系统   │  │  tion    │  │   │
-│  │  └──────────────┘  └──────────────┘  │  通知    │  │   │
-│  │                                      └───────────┘  │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-│  ┌─────────────────────────────────────────────────────┐   │
-│  │                 Foundation 基础组件层                   │   │
-│  │  ┌────────┐ ┌────────┐ ┌────────┐ ┌──────────────┐  │   │
-│  │  │Validators│ │Excep-  │ │ Retry │ │CircuitBreak-│  │   │
-│  │  │ 验证器  │ │ tions  │ │ 重试   │ │    er       │  │   │
-│  │  └────────┘ │  异常   │ └────────┘ │   熔断器    │  │   │
-│  │             └────────┘            └──────────────┘  │   │
-│  └─────────────────────────────────────────────────────┘   │
-│                                                             │
-│  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐  │
-│  │   Util   │  │  Config  │  │  Cache   │  │   Date   │  │
-│  │ 工具函数  │  │  配置管理 │  │  缓存    │  │  日期时间  │  │
-│  └──────────┘  └──────────┘  └──────────┘  └──────────┘  │
-│                                                             │
-│  ┌──────────┐  ┌──────────┐                                │
-│  │DataStore │  │ Crawler  │                                │
-│  │  数据存储 │  │  网页爬虫 │                                │
-│  └──────────┘  └──────────┘                                │
-└─────────────────────────────────────────────────────────────┘
+```mermaid
+graph TB
+    subgraph Client["客户端层"]
+        FQData["FQData"]
+        FQFactor["FQFactor"]
+        FQServer["FQServer"]
+    end
+
+    subgraph FQBase["FQBase"]
+        subgraph BusinessLayer["业务功能层"]
+            Config["Config"]
+            Cache["Cache"]
+            DataStore["DataStore"]
+            Util["Util"]
+            Crawler["Crawler"]
+        end
+
+        subgraph FoundationLayer["Foundation 层"]
+            EventBus["EventBus"]
+            Notification["Notification"]
+            Lifecycle["Lifecycle"]
+            Dotty["Dotty"]
+        end
+
+        subgraph InfrastructureLayer["Infrastructure 层"]
+            Singleton["Singleton"]
+            Logger["Logger"]
+            Exceptions["Exceptions"]
+            Retry["Retry"]
+            CircuitBreaker["CircuitBreaker"]
+            Container["Container"]
+            MongoClient["MongoClient"]
+        end
+    end
+
+    subgraph External["外部依赖"]
+        MongoDB["MongoDB"]
+        Redis["Redis"]
+        Celery["Celery"]
+        Selenium["Selenium"]
+    end
+
+    Client --> FQBase
+    BusinessLayer --> FoundationLayer
+    FoundationLayer --> InfrastructureLayer
+    Cache --> Redis
+    DataStore --> MongoDB
+    Crawler --> Selenium
+    InfrastructureLayer --> MongoDB
+    EventBus -.-> Celery
 ```
 
 ## 组件
 
-### Core 组件
+### Infrastructure 层
 
-| 组件 | 职责 | 关键类 |
-|------|------|--------|
-| EventBus | 事件总线，发布-订阅 | Event, EventBus, get_event_bus |
-| Logger | 统一日志系统 | get_logger, FQLogger, init_logging |
-| Notification | 多渠道通知 | NotificationManager, sendWechat |
+**用途：** 提供底层技术基础设施
 
-### Foundation 组件
+**职责：**
+- 单例模式管理全局实例
+- 统一日志系统
+- 异常处理与传播
+- 重试机制
+- 熔断器保护
+- 依赖注入容器
+- MongoDB 客户端管理
 
-| 组件 | 职责 | 关键类 |
-|------|------|--------|
-| Validators | 数据验证 | validate_code, validate_date, Validator |
-| Exceptions | 统一异常 | FQException, ValidationError |
-| Retry | 重试机制 | retry, RetryContext |
-| CircuitBreaker | 熔断器 | CircuitBreaker |
-| Singleton | 单例装饰器 | singleton |
-| Container | 依赖注入容器 | Container |
+### Foundation 层
 
-## 数据流
+**用途：** 提供业务层面的通用抽象
 
-1. **事件驱动流程**：
-   - 业务代码 → EventBus.publish() → 订阅者处理
+**职责：**
+- 事件总线解耦组件通信
+- 统一通知服务
+- 生命周期管理
+- Dotty 字典访问
 
-2. **日志流程**：
-   - Logger.info() → 格式化 → 输出（控制台/文件）
+### Config 层
 
-3. **通知流程**：
-   - NotificationManager.send() → 渠道适配器 → 第三方服务
+**用途：** 管理配置
 
-4. **缓存流程**：
-   - Cache.get() → 命中返回 → 未命中查询 → 存入缓存
+**职责：**
+- 环境变量加载
+- MongoDB 连接配置
+- 缓存配置
+- 配置监听与动态更新
+- 路径管理
+
+### Cache 层
+
+**用途：** 多级缓存抽象
+
+**职责：**
+- 适配器模式封装多种后端
+- 本地内存缓存
+- Redis 分布式缓存
+- MongoDB 持久化缓存
+
+### DataStore 层
+
+**用途：** MongoDB 数据存储
+
+**职责：**
+- 门面模式封装复杂操作
+- CRUD 操作
+- 聚合查询
+- 索引管理
+- 数据库运维
+
+### Util 层
+
+**用途：** 工具函数集
+
+**职责：**
+- 数据转换
+- 文件处理
+- 网络工具
+- 并行计算
+- 加密随机
+
+### Crawler 层
+
+**用途：** 爬虫基础设施
+
+**职责：**
+- Selenium 浏览器封装
+- HTTP 请求封装
+- 页面解析工具
+- 浏览器池管理
+
+## 关键数据流
+
+### 数据流 1: 配置加载
+
+```mermaid
+flowchart LR
+    A[.env 文件] --> B[load_env]
+    B --> C[ConfigParser]
+    C --> D[SETTING 单例]
+    D --> E[MongoDB 连接]
+```
+
+**描述：** 应用启动时加载环境变量和配置文件，初始化配置单例。
+
+**代码示例：**
+
+```python
+from FQBase.Config import load_env, SETTING
+
+load_env()
+client = SETTING.client
+```
+
+### 数据流 2: 缓存读写
+
+```mermaid
+flowchart LR
+    A[请求] --> B{Cache Adapter}
+    B -->|命中| C[返回缓存]
+    B -->|未命中| D[获取数据源]
+    D --> E[写入缓存]
+    E --> C
+```
+
+**描述：** 缓存层拦截请求，命中则直接返回，未命中则查询数据源并写入缓存。
+
+### 数据流 3: 事件驱动
+
+```mermaid
+flowchart LR
+    A[Publisher] --> B[EventBus]
+    B --> C[Subscriber A]
+    B --> D[Subscriber B]
+    B --> E[Subscriber C]
+```
+
+**描述：** 发布者发布事件到总线，总线路由到所有订阅者。
 
 ## 依赖
 
 | 依赖 | 版本 | 用途 |
 |------|------|------|
-| python | >=3.8 | 运行环境 |
-| redis | >=4.0 | 缓存后端 |
-| pymongo | >=4.0 | MongoDB 客户端 |
-| requests | >=2.28 | HTTP 请求 |
-| selenium | >=4.0 | 浏览器自动化 |
+| pymongo | >=4.0 | MongoDB 驱动 |
+| redis | >=4.0 | Redis 驱动 |
+| celery | >=5.0 | 异步任务队列（可选） |
+| selenium | >=4.0 | 浏览器自动化（可选） |
+| bs4 | >=4.0 | HTML 解析（可选） |
+
+## 性能瓶颈点
+
+| 阶段 | 潜在瓶颈 | 优化建议 |
+|------|---------|---------|
+| MongoDB 连接 | 连接池耗尽 | 合理配置 max_pool_size |
+| Redis 缓存 | 网络延迟 | 使用本地缓存 + Redis 分层 |
+| 事件总线 | 订阅者过多 | 异步处理 + 批量订阅 |
+| 爬虫 | 浏览器资源 | 使用浏览器池复用 |
 
 ## 相关文档
 
-- [框架集成](./framework.md)
 - [设计原则](./design.md)
+- [设计模式](./patterns.md)
 - [API参考](./api.md)

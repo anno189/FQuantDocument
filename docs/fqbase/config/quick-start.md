@@ -1,7 +1,8 @@
 ---
 title: Config - 快速入门
-description: 5分钟快速上手 FQBase 配置中心
+description: 5分钟快速上手 Config 模块
 tag:
+  - fquant
   - fqbase
   - config
 
@@ -14,105 +15,81 @@ summary:
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → **[快速入门](./quick-start.md)** → [速查表](./cheatsheet.md) → [使用指南](./usage.md) → [案例库](./examples.md) |
-
+🟢 **新手入门**：README → quick-start → examples → concepts
 
 ## 概述
 
-5分钟快速上手 FQBase 配置中心，掌握环境变量、数据库配置、缓存配置和配置监听的核心用法。
+本快速入门指南将帮助您在 5 分钟内理解 Config 模块并开始使用。
 
 ## 前置要求
 
 - Python 3.8+
-- pip
-- MongoDB（可选，用于数据库配置）
-
-## 安装
-
-```bash
-pip install fquant-fqbase
-```
+- .env 文件（可选，用于开发环境）
 
 ## 5分钟上手
 
-### Step 1: 导入配置模块
+### Step 1: 获取环境变量
 
 ```python
-from FQBase.Config import (
-    get_env,
-    SETTING,
-    CacheConfig,
-    load_env,
-)
-```
-
-### Step 2: 加载环境变量
-
-```python
-# 加载 .env 文件
-load_env()
+from FQBase.Config import get_env
 
 # 获取环境变量
-debug_mode = get_env('DEBUG', False)
-mongo_uri = get_env('MONGODB_URL', 'mongodb://localhost:27017')
+mongo_uri = get_env("MONGODB_URI", default="mongodb://localhost:27017")
 ```
 
-### Step 3: 获取数据库配置
+### Step 2: 获取 MongoDB 配置
 
 ```python
-# 获取 MongoDB 连接配置
-mongo_uri = SETTING.get_mongo()
-print(f"MongoDB URI: {mongo_uri}")
+from FQBase.Config import SETTING
+
+# 获取 MongoDB URI
+uri = SETTING.get_mongo()
+print(f"MongoDB URI: {uri}")
 ```
 
-### Step 4: 配置缓存
+### Step 3: 获取路径配置
 
 ```python
-# 配置 Redis 缓存
-cache_config = CacheConfig(cache_type='redis')
-print(f"缓存类型: {cache_config.cache_type}")
+from FQBase.Config import GLOBALMAP
+
+# 获取各种路径
+data_path = GLOBALMAP.FQDATA_PATH
+cache_path = GLOBALMAP.CACHE_PATH
+log_path = GLOBALMAP.LOG_PATH
 ```
 
-### Step 5: 监听配置变化
+### Step 4: 获取缓存配置
 
 ```python
-from FQBase.Config import ConfigWatcher
+from FQBase.Config import get_cache_config
 
-watcher = ConfigWatcher()
-watcher.watch('database', callback=lambda: print("配置已变更"))
+# 获取缓存配置
+config = get_cache_config()
+print(f"缓存类型: {config.cache_type}")
 ```
-
-### 完成！
-
-恭喜！你已经掌握了 Config 配置中心的基本用法。
 
 ## ⚠️ 常见陷阱
 
-1. **陷阱 1：环境变量未加载**
-   - ❌ 错误做法：直接使用 `get_env()` 但未先调用 `load_env()`
-   - ✅ 正确做法：先调用 `load_env()` 加载配置文件
+1. **直接导入单例**
+   - ❌ 错误做法：`from FQBase.Config import Setting; s = Setting()`
+   - ✅ 正确做法：`from FQBase.Config import SETTING; uri = SETTING.get_mongo()`
 
-2. **陷阱 2：SETTING 是单例**
-   - ❌ 错误做法：每次都创建新的 SETTING 实例
-   - ✅ 正确做法：直接使用 `from FQBase.Config import SETTING`
+2. **环境变量未加载**
+   - ❌ 错误做法：直接使用 `get_env()` 但 .env 文件不存在
+   - ✅ 正确做法：确保 .env 文件存在或使用默认值
 
-3. **陷阱 3：DATABASE 未初始化**
-   - ❌ 错误做法：在应用启动前使用 DATABASE
-   - ✅ 正确做法：在应用启动时确保数据库已连接
+3. **硬编码路径**
+   - ❌ 错误做法：`path = "/data/fquant"`
+   - ✅ 正确做法：`path = GLOBALMAP.FQDATA_PATH`
 
 ## 下一步
 
 - 学习 [核心概念](./concepts.md)
-- 阅读 [术语表](./glossary.md)
+- 阅读 [API参考](./api.md)
 - 查看 [使用指南](./usage.md)
-- 参考 [案例库](./examples.md)
 
 ## 相关文档
 
 - [README](./README.md)
-- [术语表](./glossary.md)
-- [核心概念](./concepts.md)
-- [使用指南](./usage.md)
 - [API参考](./api.md)
+- [核心概念](./concepts.md)

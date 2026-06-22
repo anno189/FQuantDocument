@@ -1,245 +1,445 @@
 ---
 title: Util - API参考
-description: Util 跨模块工具层 API 参考文档
+description: Util API 参考文档
 tag:
+  - fquant
   - fqbase
   - util
+
+summary:
+  purpose: api-reference
+  core_functions:
+    - parse_number
+    - safe_divide
+    - percentage_change
+    - format_percentage
+    - dict_to_df
+    - df_to_dict
+    - pandas_to_json
+    - json_to_pandas
+    - file_md5
+    - file_sha256
+    - file_size
+    - web_ping
+    - check_url_accessible
+    - random_string
+    - random_stock_code
 ---
 
 # Util - API参考
 
-> **注意**: 部分功能已迁移到 FQData 模块
-> - 股票代码格式转换 → `FQData.normalizer`
-> - K线时间索引 → `FQData.DataStruct`
+## 阅读路径
 
-## 子模块索引
+🔵 **开发者**：README → api → usage → concepts → examples
 
-| 子模块 | 主要函数 |
-|--------|---------|
-| crypto | random_stock_code, random_string, random_with_topic |
-| file | file_md5, file_sha256, file_size, file_exists, dir_exists, ensure_dir |
-| network | web_ping, check_url_accessible |
-| parallel | ParallelProcess, ParallelThread |
-| converters | date_to_str, str_to_date, normalize_code, parse_number, safe_divide, percentage_change, format_percentage |
-| transformer | dict_to_df, df_to_dict, pandas_to_json, json_to_pandas, pandas_to_list, numpy_to_list, list_to_numpy, list_to_series, dict_to_json, json_to_dict |
-
----
-
-## crypto - 随机数生成
-
-### random_stock_code
-```python
-random_stock_code(stock_number: int = 10, markets: Optional[List[str]] = None) -> List[str]
-```
-随机生成股票代码
-
-### random_string
-```python
-random_string(topic: str = 'Acc', length: int = 8) -> str
-```
-生成随机字符串（加密安全）
-
-### random_with_topic
-```python
-random_with_topic(topic: str = 'Acc', length: int = 8) -> str
-```
-生成带前缀的随机字符串（加密安全）
-
----
-
-## file - 文件处理
-
-### file_md5
-```python
-file_md5(filename: str) -> Optional[str]
-```
-计算文件 MD5
-
-### file_sha256
-```python
-file_sha256(filename: str) -> Optional[str]
-```
-计算文件 SHA256
-
-### file_size
-```python
-file_size(filename: str) -> Optional[int]
-```
-获取文件大小
-
-### file_exists
-```python
-file_exists(path: str) -> bool
-```
-检查文件是否存在
-
-### dir_exists
-```python
-dir_exists(path: str) -> bool
-```
-检查目录是否存在
-
-### ensure_dir
-```python
-ensure_dir(path: str) -> bool
-```
-确保目录存在
-
----
-
-## network - 网络工具
-
-### web_ping
-```python
-web_ping(url: str, count: int = 1) -> Optional[int]
-```
-Ping URL
-
-### check_url_accessible
-```python
-check_url_accessible(url: str, timeout: int = 5) -> bool
-```
-检查 URL 是否可访问
-
----
-
-## parallel - 并行计算
-
-### ParallelProcess
-```python
-class ParallelProcess(max_workers: Optional[int] = None)
-```
-多进程并行计算
-
-### ParallelThread
-```python
-class ParallelThread(max_workers: Optional[int] = None)
-```
-多线程并行计算
-
----
-
-## converters - 数据转换
-
-### date_to_str
-```python
-date_to_str(date: Any, fmt: str = '%Y-%m-%d') -> str
-```
-日期转字符串
-
-### str_to_date
-```python
-str_to_date(date_str: str, fmt: str = '%Y-%m-%d') -> datetime
-```
-字符串转日期
-
-### normalize_code
-```python
-normalize_code(code: str) -> str
-```
-标准化股票代码
+## 转换器 (converters)
 
 ### parse_number
+
+**位置：** `Util/converters.py#L16`
+
 ```python
-parse_number(value: Any, default: float = 0.0) -> float
+from FQBase.Util import parse_number
+
+num = parse_number("123.45", default=0.0)
 ```
-解析数字
+
+**参数：**
+
+| 参数 | 类型 | 默认值 | 描述 |
+|------|------|--------|------|
+| value | Any | - | 待解析的值 |
+| default | float | 0.0 | 默认值 |
+
+**返回：** `float`
+
+---
 
 ### safe_divide
+
+**位置：** `Util/converters.py#L34`
+
 ```python
-safe_divide(a: float, b: float, default: float = 0.0) -> float
+from FQBase.Util import safe_divide
+
+result = safe_divide(10, 3, default=0.0)
 ```
-安全除法
+
+**参数：**
+
+| 参数 | 类型 | 默认值 | 描述 |
+|------|------|--------|------|
+| a | float | - | 被除数 |
+| b | float | - | 除数 |
+| default | float | 0.0 | 默认值 |
+
+**返回：** `float`
+
+---
 
 ### percentage_change
+
+**位置：** `Util/converters.py`
+
 ```python
-percentage_change(current: float, previous: float) -> float
+from FQBase.Util import percentage_change
+
+change = percentage_change(110, 100)
 ```
-计算百分比变化
+
+---
 
 ### format_percentage
+
+**位置：** `Util/converters.py`
+
 ```python
-format_percentage(value: float, decimals: int = 2) -> str
+from FQBase.Util import format_percentage
+
+formatted = format_percentage(0.1234)
 ```
-格式化百分比
 
 ---
 
-## transformer - 格式转换
+## 格式化 (transformer)
 
 ### dict_to_df
-```python
-dict_to_df(data: List[Dict], **kwargs) -> pd.DataFrame
-```
-字典列表转 DataFrame
 
-### df_to_dict
-```python
-df_to_dict(df: pd.DataFrame, orient: str = 'records') -> Union[List[Dict], Dict]
-```
-DataFrame 转字典
+**位置：** `Util/transformer.py`
 
-### pandas_to_json
 ```python
-pandas_to_json(data: pd.DataFrame) -> List[Dict]
-```
-DataFrame 转 JSON
+from FQBase.Util import dict_to_df
 
-### json_to_pandas
-```python
-json_to_pandas(data: Union[Dict, List[Dict]]) -> pd.DataFrame
+df = dict_to_df({'name': ['张三'], 'age': [25]})
 ```
-JSON 转 DataFrame
-
-### pandas_to_list
-```python
-pandas_to_list(data: pd.DataFrame) -> List
-```
-DataFrame 转列表
-
-### numpy_to_list
-```python
-numpy_to_list(data: np.ndarray) -> List
-```
-numpy 数组转列表
-
-### list_to_numpy
-```python
-list_to_numpy(data: List) -> np.ndarray
-```
-列表转 numpy 数组
-
-### list_to_series
-```python
-list_to_series(data: List, index: List = None) -> pd.Series
-```
-列表转 Series
-
-### dict_to_json
-```python
-dict_to_json(data: Dict) -> str
-```
-字典转 JSON 字符串
-
-### json_to_dict
-```python
-json_to_dict(json_str: str) -> Dict
-```
-JSON 字符串转字典
 
 ---
 
-## 已迁移功能
+### df_to_dict
 
-以下功能已迁移到 FQData 模块：
+**位置：** `Util/transformer.py`
 
-| 原位置 | 新位置 | 函数 |
-|--------|--------|------|
-| Util.codec | FQData.normalizer | code_to_6digit, code_to_jqformat, code_adjust_ctp, code_to_list |
-| Util.bar | FQData.DataStruct | make_min_index, make_hour_index, make_future_min_index, time_gap |
+```python
+from FQBase.Util import df_to_dict
+
+data = df_to_dict(df)
+```
+
+---
+
+### pandas_to_json
+
+**位置：** `Util/transformer.py#L20`
+
+```python
+from FQBase.Util import pandas_to_json
+
+json_data = pandas_to_json(df)
+```
+
+---
+
+### json_to_pandas
+
+**位置：** `Util/transformer.py#L39`
+
+```python
+from FQBase.Util import json_to_pandas
+
+df = json_to_pandas({'name': '张三', 'age': 25})
+```
+
+---
+
+### pandas_to_list
+
+**位置：** `Util/transformer.py`
+
+```python
+from FQBase.Util import pandas_to_list
+
+data = pandas_to_list(df)
+```
+
+---
+
+### numpy_to_list
+
+**位置：** `Util/transformer.py`
+
+```python
+from FQBase.Util import numpy_to_list
+
+data = numpy_to_list(arr)
+```
+
+---
+
+### list_to_numpy
+
+**位置：** `Util/transformer.py`
+
+```python
+from FQBase.Util import list_to_numpy
+
+arr = list_to_numpy([1, 2, 3])
+```
+
+---
+
+### list_to_series
+
+**位置：** `Util/transformer.py`
+
+```python
+from FQBase.Util import list_to_series
+
+series = list_to_series([1, 2, 3])
+```
+
+---
+
+### dict_to_json
+
+**位置：** `Util/transformer.py`
+
+```python
+from FQBase.Util import dict_to_json
+
+json_str = dict_to_json({'name': '张三', 'age': 25})
+```
+
+---
+
+### json_to_dict
+
+**位置：** `Util/transformer.py`
+
+```python
+from FQBase.Util import json_to_dict
+
+data = json_to_dict('{"name": "张三"}')
+```
+
+---
+
+## 文件处理 (file)
+
+### file_md5
+
+**位置：** `Util/file.py`
+
+```python
+from FQBase.Util import file_md5
+
+md5 = file_md5('/path/to/file.txt')
+```
+
+---
+
+### file_sha256
+
+**位置：** `Util/file.py`
+
+```python
+from FQBase.Util import file_sha256
+
+sha256 = file_sha256('/path/to/file.txt')
+```
+
+---
+
+### file_size
+
+**位置：** `Util/file.py`
+
+```python
+from FQBase.Util import file_size
+
+size = file_size('/path/to/file.txt')
+```
+
+---
+
+### file_exists
+
+**位置：** `Util/file.py`
+
+```python
+from FQBase.Util import file_exists
+
+exists = file_exists('/path/to/file.txt')
+```
+
+---
+
+### dir_exists
+
+**位置：** `Util/file.py`
+
+```python
+from FQBase.Util import dir_exists
+
+exists = dir_exists('/path/to/directory/')
+```
+
+---
+
+### ensure_dir
+
+**位置：** `Util/file.py`
+
+```python
+from FQBase.Util import ensure_dir
+
+ensure_dir('/path/to/directory/')
+```
+
+---
+
+## 网络工具 (network)
+
+### web_ping
+
+**位置：** `Util/network.py`
+
+```python
+from FQBase.Util import web_ping
+
+is_reachable = web_ping('baidu.com')
+```
+
+---
+
+### check_url_accessible
+
+**位置：** `Util/network.py`
+
+```python
+from FQBase.Util import check_url_accessible
+
+is_valid = check_url_accessible('https://www.example.com')
+```
+
+---
+
+## 并行计算 (parallel)
+
+### ParallelProcess
+
+**位置：** `Util/parallel.py#L15`
+
+```python
+from FQBase.Util import ParallelProcess
+
+runner = ParallelProcess(max_workers=4)
+results = runner.map(my_function, data_list)
+```
+
+---
+
+### ParallelThread
+
+**位置：** `Util/parallel.py`
+
+```python
+from FQBase.Util import ParallelThread
+
+runner = ParallelThread(max_workers=8)
+results = runner.map(my_function, data_list)
+```
+
+---
+
+## 加密/随机 (crypto)
+
+### random_string
+
+**位置：** `Util/crypto.py`
+
+```python
+from FQBase.Util import random_string
+
+s = random_string(length=32)
+```
+
+---
+
+### random_stock_code
+
+**位置：** `Util/crypto.py#L29`
+
+```python
+from FQBase.Util import random_stock_code
+
+codes = random_stock_code(stock_number=10, markets=['SH', 'SZ'])
+```
+
+---
+
+## 验证器 (validators)
+
+### validate_code
+
+**位置：** `Util/validators.py#L17`
+
+```python
+from FQBase.Util.validators import validate_code
+
+is_valid = validate_code('600000')
+```
+
+---
+
+### validate_date
+
+**位置：** `Util/validators.py#L32`
+
+```python
+from FQBase.Util.validators import validate_date
+
+is_valid = validate_date('2024-01-01')
+```
+
+---
+
+### validate_date_range
+
+**位置：** `Util/validators.py#L49`
+
+```python
+from FQBase.Util.validators import validate_date_range
+
+is_valid = validate_date_range('2024-01-01', '2024-12-31')
+```
+
+---
+
+### validate_market
+
+**位置：** `Util/validators.py`
+
+```python
+from FQBase.Util.validators import validate_market
+
+is_valid = validate_market('SH')
+```
+
+---
+
+### validate_frequency
+
+**位置：** `Util/validators.py`
+
+```python
+from FQBase.Util.validators import validate_frequency
+
+is_valid = validate_frequency('1d')
+```
 
 ---
 
 ## 相关文档
 
 - [使用指南](./usage.md)
+- [最佳实践](./best-practices.md)

@@ -1,7 +1,8 @@
 ---
-title: Cache - API 参考
-description: Cache 模块 API 参考文档
+title: Cache - API参考
+description: Cache API 参考文档
 tag:
+  - fquant
   - fqbase
   - cache
 
@@ -11,77 +12,50 @@ summary:
     - LocalCache
     - RedisCacheAdapter
     - MongoCacheAdapter
+    - CacheContext
   core_functions:
-    - local_cache
-    - redis_cache
+    - create_cache
     - init_cache_adapter
+    - init_cache_from_env
     - get_cache_adapter
     - set_cache_adapter
     - invalidate_cache
+    - redis_cache
+    - local_cache
+    - register_cache_adapter
 ---
 
-# Cache - API 参考
+# Cache - API参考
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🔵 开发者 | [README](./README.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) → [设计原则](./design.md) → **[API参考](./api.md)** → [开发指南](./development.md) → [最佳实践](./best-practices.md) |
+🔵 **开发者**：README → api → usage → concepts → examples
 
 ## 类
 
 ### LocalCache
 
-**位置：** `FQBase/Cache/CacheAdapters.py`
+**位置：** `Cache/local_cache.py#L26`
 
-**描述：** 本地内存缓存实现，采用 LRU/FIFO 驱逐策略，支持 TTL 过期。内部使用 OrderedDict 存储，使用 threading.Lock 保证线程安全。采用单例模式，相同 (name, maxsize, ttl, eviction) 配置共享实例。
+**描述：** 本地内存缓存实现
 
 ```python
 from FQBase.Cache import LocalCache
 
-# 创建缓存实例
-cache = LocalCache(name='my_cache', maxsize=128, ttl=300, eviction='lru')
+cache = LocalCache(name="my_cache", ttl=3600, singleton=True)
+cache.set("key", "value")
+value = cache.get("key")
 ```
 
 #### 参数
 
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
-| name | str | 否 | 'default' | 缓存实例名称，用于单例识别 |
-| maxsize | int | 否 | 128 | 最大缓存条目数，超过后触发驱逐 |
-| ttl | int | 否 | 0 | 默认 TTL（秒），0 表示永不过期 |
-| eviction | str | 否 | 'lru' | 驱逐策略：'lru'（最近最少使用）或 'fifo'（先进先出） |
-
-#### 属性
-
-| 属性 | 类型 | 描述 |
-|------|------|------|
-| stats | dict | 缓存统计信息，包含 hits（命中次数）、misses（未命中次数）、hit_rate（命中率）、evictions（驱逐次数）等 |
+| name | str | 是 | - | 缓存名称 |
+| ttl | int | 否 | 0 | 默认过期时间（秒），0 表示永不过期 |
+| singleton | bool | 否 | False | 是否单例模式 |
 
 #### 方法
-
-##### get
-
-```python
-value = cache.get(key, default=None)
-```
-
-**描述：** 获取缓存值，如果缓存不存在或已过期，返回默认值。
-
-**参数：**
-| 参数 | 类型 | 必填 | 默认值 | 描述 |
-|------|------|------|--------|------|
-| key | str | 是 | - | 缓存键 |
-| default | Any | 否 | None | 缓存未命中时返回的默认值 |
-
-**返回：** `Any` - 缓存值或默认值
-
-**示例：**
-```python
-value = cache.get('user:1', default={'name': 'unknown'})
-```
-
----
 
 ##### set
 
@@ -89,40 +63,25 @@ value = cache.get('user:1', default={'name': 'unknown'})
 cache.set(key, value, ttl=None)
 ```
 
-**描述：** 设置缓存值。
-
 **参数：**
+
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
 | key | str | 是 | - | 缓存键 |
 | value | Any | 是 | - | 缓存值 |
-| ttl | int | 否 | None | TTL（秒），覆盖实例默认 TTL，0 表示永不过期 |
+| ttl | int | 否 | None | 过期时间（秒） |
 
-**返回：** `None`
+##### get
 
-**示例：**
 ```python
-cache.set('user:1', {'name': '张三', 'age': 30}, ttl=3600)
+value = cache.get(key, default=None)
 ```
-
----
 
 ##### delete
 
 ```python
-deleted = cache.delete(key)
+cache.delete(key)
 ```
-
-**描述：** 删除缓存键。
-
-**参数：**
-| 参数 | 类型 | 必填 | 默认值 | 描述 |
-|------|------|------|--------|------|
-| key | str | 是 | - | 缓存键 |
-
-**返回：** `bool` - True 表示键存在并删除，False 表示键不存在
-
----
 
 ##### clear
 
@@ -130,34 +89,25 @@ deleted = cache.delete(key)
 cache.clear()
 ```
 
-**描述：** 清空所有缓存。清除 stats 统计信息。
+##### keys
 
-**返回：** `None`
-
----
+```python
+keys = cache.keys(pattern="*")
+```
 
 ##### get_many
 
 ```python
-values = cache.get_many(keys)
+result = cache.get_many(keys)
 ```
-
-**描述：** 批量获取缓存值。
 
 **参数：**
+
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
-| keys | list[str] | 是 | - | 缓存键列表 |
+| keys | List[str] | 是 | - | 缓存键列表 |
 
-**返回：** `dict` - 键值对字典，不存在的键不会出现在返回字典中
-
-**示例：**
-```python
-values = cache.get_many(['user:1', 'user:2', 'user:3'])
-# 返回: {'user:1': {...}, 'user:3': {...}}（user:2 不存在则不返回）
-```
-
----
+**返回：** `Dict[str, Any]` - 存在的键值对
 
 ##### set_many
 
@@ -165,17 +115,12 @@ values = cache.get_many(['user:1', 'user:2', 'user:3'])
 cache.set_many(mapping, ttl=None)
 ```
 
-**描述：** 批量设置缓存。
-
 **参数：**
+
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
-| mapping | dict | 是 | - | 键值对字典 |
-| ttl | int | 否 | None | 默认 TTL（秒） |
-
-**返回：** `None`
-
----
+| mapping | Dict[str, Any] | 是 | - | 键值对字典 |
+| ttl | int | 否 | None | 过期时间（秒） |
 
 ##### delete_many
 
@@ -183,50 +128,41 @@ cache.set_many(mapping, ttl=None)
 cache.delete_many(keys)
 ```
 
-**描述：** 批量删除缓存。
-
 **参数：**
+
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
-| keys | list[str] | 是 | - | 缓存键列表 |
+| keys | List[str] | 是 | - | 缓存键列表 |
 
-**返回：** `int` - 删除的键数量
-
----
+**返回：** `bool` - 是否至少删除了一个键
 
 ##### exists
 
 ```python
-exists = cache.exists(key)
+result = cache.exists(key)
 ```
 
-**描述：** 检查键是否存在（且未过期）。
-
 **参数：**
+
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
 | key | str | 是 | - | 缓存键 |
 
-**返回：** `bool` - True 表示存在，False 表示不存在
-
----
+**返回：** `bool` - 键是否存在且未过期
 
 ##### ttl
 
 ```python
-remaining_ttl = cache.ttl(key)
+remaining = cache.ttl(key)
 ```
 
-**描述：** 获取键的剩余生存时间。
-
 **参数：**
+
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
 | key | str | 是 | - | 缓存键 |
 
-**返回：** `int` - 剩余秒数，-1 表示永不过期，-2 表示键不存在
-
----
+**返回：** `int` - 剩余生存时间（秒），-1 表示永久，-2 表示不存在
 
 ##### expire
 
@@ -234,250 +170,138 @@ remaining_ttl = cache.ttl(key)
 cache.expire(key, ttl)
 ```
 
-**描述：** 设置键的过期时间。
-
 **参数：**
+
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
 | key | str | 是 | - | 缓存键 |
-| ttl | int | 是 | - | TTL（秒） |
+| ttl | int | 是 | - | 过期时间（秒） |
 
-**返回：** `bool` - True 表示设置成功，False 表示键不存在
+**返回：** `bool` - 是否设置成功
+
+##### cleanup_expired
+
+```python
+count = cache.cleanup_expired()
+```
+
+**返回：** `int` - 清理的缓存项数量
+
+##### stats
+
+```python
+stats = cache.stats
+```
+
+**返回：** `Dict[str, Union[str, int, float]]` - 缓存统计信息，包含 name, maxsize, ttl, eviction, size, hits, misses, hit_rate
+
+##### has_key
+
+```python
+result = cache.has_key(key)
+```
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| key | str | 是 | - | 缓存键 |
+
+**返回：** `bool` - 键是否存在且未过期（不触发过期删除）
 
 ---
 
 ### RedisCacheAdapter
 
-**位置：** `FQBase/Cache/CacheAdapters.py`
+**位置：** `Cache/redis_adapter.py#L198`
 
-**描述：** Redis 缓存适配器，支持 String、Hash、List、Set 四种数据结构。采用单例模式管理 Redis 连接，通过 prefix 参数支持键隔离。
+**描述：** Redis 缓存适配器
 
 ```python
 from FQBase.Cache import RedisCacheAdapter
 
-redis = RedisCacheAdapter(host='localhost', port=6379, db=0, prefix='myapp:')
+adapter = RedisCacheAdapter()
+adapter.set("key", "value", ttl=3600)
 ```
 
 #### 参数
 
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
-| host | str | 否 | 'localhost' | Redis 主机地址 |
-| port | int | 否 | 6379 | Redis 端口 |
-| db | int | 否 | 0 | Redis 数据库编号 |
-| password | str | 否 | None | Redis 密码认证 |
-| prefix | str | 否 | '' | 键前缀，自动添加到所有键前 |
-| pickle_first | bool | 否 | False | 序列化优先级：True 优先使用 pickle，False 优先使用 msgpack |
-| safe_mode | bool | 否 | False | 安全模式：True 不使用 pickle（仅 msgpack），False 允许 pickle |
-| socket_timeout | int | 否 | 5 | socket 超时时间（秒） |
-| socket_connect_timeout | int | 否 | 5 | socket 连接超时（秒） |
-| max_connections | int | 否 | 50 | 连接池最大连接数 |
+| config | RedisConfigProtocol | 否 | None | Redis 配置 |
 
 #### 方法
 
 ##### ping
 
 ```python
-is_alive = redis.ping()
+result = adapter.ping()
 ```
 
-**描述：** 健康检查，测试 Redis 连接是否正常。
+**返回：** `bool` - Redis 连接是否正常
 
-**返回：** `bool` - True 表示连接正常
-
----
-
-##### get / set
+##### get
 
 ```python
-# 设置缓存（支持 TTL）
-redis.set('name', 'value', ttl=3600)
-
-# 获取缓存
-value = redis.get('name')
+value = adapter.get(key, default=None)
 ```
 
-**String 操作**
-
-| 方法 | 描述 |
-|------|------|
-| `set(key, value, ttl=None)` | 设置键值，ttl 为过期秒数 |
-| `get(key)` | 获取值 |
-| `mset(mapping)` | 批量设置 |
-| `mget(*keys)` | 批量获取 |
-| `delete(key)` | 删除键 |
-| `exists(key)` | 检查键是否存在 |
-| `expire(key, ttl)` | 设置过期时间 |
-| `ttl(key)` | 获取剩余 TTL |
-
----
-
-##### Hash 操作
+##### set
 
 ```python
-# Hash 操作
-redis.hset('user:1', 'name', '张三')
-redis.hset('user:1', 'age', '30')
-value = redis.hget('user:1', 'name')
-data = redis.hgetall('user:1')
+adapter.set(key, value, ttl=None)
 ```
 
-| 方法 | 描述 |
-|------|------|
-| `hset(name, key, value)` | 设置 Hash 字段 |
-| `hmset(name, mapping)` | 批量设置 Hash 字段 |
-| `hget(name, key)` | 获取 Hash 字段 |
-| `hmget(name, *keys)` | 批量获取 Hash 字段 |
-| `hgetall(name)` | 获取所有字段 |
-| `hvals(name)` | 获取所有值 |
-| `hkeys(name)` | 获取所有键 |
-| `hdel(name, *keys)` | 删除字段 |
-| `hexists(name, key)` | 检查字段是否存在 |
-
----
-
-##### List 操作
+##### delete_many
 
 ```python
-# List 操作
-redis.lpush('queue', 'task1')
-redis.rpush('queue', 'task2')
-items = redis.lrange('queue', 0, -1)
-item = redis.lpop('queue')
-item = redis.rpop('queue')
+adapter.delete_many(keys)
 ```
-
-| 方法 | 描述 |
-|------|------|
-| `lpush(name, *values)` | 左侧插入 |
-| `rpush(name, *values)` | 右侧插入 |
-| `lpop(name)` | 左侧弹出 |
-| `rpop(name)` | 右侧弹出 |
-| `lrange(name, start, end)` | 范围获取 |
-| `llen(name)` | 获取列表长度 |
-
----
-
-##### Set 操作
-
-```python
-# Set 操作
-redis.sadd('tags', 'python', 'redis', 'cache')
-members = redis.smembers('tags')
-is_member = redis.sismember('tags', 'python')
-```
-
-| 方法 | 描述 |
-|------|------|
-| `sadd(name, *values)` | 添加成员 |
-| `srem(name, *values)` | 移除成员 |
-| `smembers(name)` | 获取所有成员 |
-| `sismember(name, value)` | 检查是否为成员 |
-| `scard(name)` | 获取成员数量 |
-| `spop(name)` | 随机弹出成员 |
-
----
-
-##### scan
-
-```python
-keys = redis.scan(match='user:*', count=100)
-```
-
-**描述：** 使用 SCAN 迭代获取匹配的键（替代 KEYS 命令，避免阻塞）。
-
-**参数：**
-| 参数 | 类型 | 必填 | 默认值 | 描述 |
-|------|------|------|--------|------|
-| match | str | 否 | '*' | 键匹配模式 |
-| count | int | 否 | 100 | 每次 SCAN 返回的数量 |
-
-**返回：** `list[str]` - 键列表
 
 ---
 
 ### MongoCacheAdapter
 
-**位置：** `FQBase/Cache/CacheAdapters.py`
+**位置：** `Cache/mongo_adapter.py#L22`
 
-**描述：** MongoDB 缓存适配器。
+**描述：** MongoDB 缓存适配器
 
 ```python
 from FQBase.Cache import MongoCacheAdapter
 
-mongo = MongoCacheAdapter(
-    connection_string='mongodb://localhost:27017',
-    database='cache_db',
-    collection='cache_collection',
-    ttl=3600
-)
+adapter = MongoCacheAdapter()
+adapter.set("key", "value", ttl=3600)
 ```
-
-#### 参数
-
-| 参数 | 类型 | 必填 | 默认值 | 描述 |
-|------|------|------|--------|------|
-| connection_string | str | 是 | - | MongoDB 连接字符串 |
-| database | str | 是 | - | 数据库名称 |
-| collection | str | 是 | - | 集合名称 |
-| ttl | int | 否 | 3600 | 默认 TTL（秒） |
 
 ---
 
 ## 函数
 
-### local_cache
+### create_cache
 
-**位置：** `FQBase/Cache/CacheAdapters.py`
-
-```python
-from FQBase.Cache import local_cache
-
-@local_cache(maxsize=128, ttl=300)
-def expensive_function(arg1, arg2):
-    return compute_result(arg1, arg2)
-```
-
-**描述：** 本地缓存装饰器，基于 LocalCache 实现。相同 (func, maxsize, ttl) 组合共享缓存。
-
-**参数：**
-| 参数 | 类型 | 必填 | 默认值 | 描述 |
-|------|------|------|--------|------|
-| maxsize | int | 否 | 128 | 最大缓存条目数 |
-| ttl | int | 否 | 0 | 默认 TTL（秒） |
-| key_ttl_func | Callable | 否 | None | 自定义 TTL 函数，签名为 (func, args, kwargs) -> int |
-
-**返回：** `Callable` - 装饰器函数
-
----
-
-### redis_cache
-
-**位置：** `FQBase/Cache/CacheAdapters.py`
+**位置：** `Cache/__init__.py#L83`
 
 ```python
-from FQBase.Cache import redis_cache
+from FQBase.Cache import create_cache
 
-@redis_cache(ttl=3600, key_prefix='my_func')
-def fetch_data(data_id):
-    return api_client.get(f'/data/{data_id}')
+cache = create_cache(config=None)
 ```
 
-**描述：** Redis 缓存装饰器，基于 RedisCacheAdapter 实现。支持异步函数。
+**描述：** 根据配置创建缓存适配器（工厂方法）
 
 **参数：**
+
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
-| ttl | int | 否 | 300 | 默认 TTL（秒） |
-| key_prefix | str | 否 | '' | 缓存键前缀 |
-| key_ttl_func | Callable | 否 | None | 自定义 TTL 函数 |
-| pickle_first | bool | 否 | False | 序列化优先级 |
+| config | CacheConfigProtocol | 否 | None | 缓存配置 |
 
-**返回：** `Callable` - 装饰器函数
+**返回：** `CacheInterface` - 缓存适配器实例
 
 ---
 
 ### init_cache_adapter
+
+**位置：** `Cache/CacheAdapters.py#L217`
 
 ```python
 from FQBase.Cache import init_cache_adapter
@@ -485,90 +309,186 @@ from FQBase.Cache import init_cache_adapter
 init_cache_adapter()
 ```
 
-**描述：** 从环境变量初始化全局缓存适配器。
-
-**环境变量：**
-| 变量 | 描述 |
-|------|------|
-| CACHE_TYPE | 缓存类型：'redis'、'mongo'、'local' |
-| REDIS_HOST | Redis 主机地址 |
-| REDIS_PORT | Redis 端口 |
-| REDIS_DB | Redis 数据库编号 |
-| REDIS_PASSWORD | Redis 密码 |
-| MONGO_URI | MongoDB 连接字符串 |
-| MONGO_DB | MongoDB 数据库名称 |
-
-**返回：** `None`
+**描述：** 从环境变量初始化全局缓存适配器，失败时降级到 Memory
 
 ---
 
 ### get_cache_adapter
 
+**位置：** `Cache/CacheAdapters.py#L256`
+
 ```python
+from FQBase.Cache import get_cache_adapter
+
 adapter = get_cache_adapter()
 ```
 
-**描述：** 获取全局缓存适配器（通过 init_cache_adapter 或 set_cache_adapter 设置）。
+**描述：** 获取全局缓存适配器，首次调用时自动初始化
 
-**返回：** `RedisCacheAdapter | MongoCacheAdapter | LocalCache | None`
+**返回：** `Optional[RedisCacheAdapter]`
 
 ---
 
 ### set_cache_adapter
 
-```python
-from FQBase.Cache import set_cache_adapter, RedisCacheAdapter
+**位置：** `Cache/CacheAdapters.py#L243`
 
-adapter = RedisCacheAdapter(host='localhost', port=6379)
+```python
+from FQBase.Cache import set_cache_adapter
+
 set_cache_adapter(adapter)
 ```
 
-**描述：** 设置全局缓存适配器。
-
-**参数：**
-| 参数 | 类型 | 必填 | 默认值 | 描述 |
-|------|------|------|--------|------|
-| adapter | CacheInterface | 是 | - | 缓存适配器实例 |
-
-**返回：** `None`
+**描述：** 设置全局缓存适配器
 
 ---
 
 ### invalidate_cache
 
+**位置：** `Cache/CacheAdapters.py#L267`
+
 ```python
 from FQBase.Cache import invalidate_cache
 
-invalidate_cache(key_pattern='user:*')
+invalidate_cache(key_pattern="user:*")
 ```
 
-**描述：** 使缓存失效，支持模式匹配。
+**描述：** 使缓存失效
 
 **参数：**
+
 | 参数 | 类型 | 必填 | 默认值 | 描述 |
 |------|------|------|--------|------|
-| key_pattern | str | 否 | '*' | 键匹配模式，使用 Redis SCAN 或本地过滤 |
+| key_pattern | str | 否 | * | 缓存键模式 |
 
-**返回：** `bool` - 是否成功 |
+---
+
+### redis_cache
+
+**位置：** `Cache/CacheAdapters.py#L132`
+
+```python
+from FQBase.Cache import redis_cache
+
+@redis_cache(ttl=300, key_prefix="func")
+def my_func(arg):
+    return expensive_operation(arg)
+```
+
+**描述：** Redis 缓存装饰器，支持异步函数
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| ttl | int | 否 | 300 | 缓存过期时间（秒） |
+| key_prefix | str | 否 | "" | 缓存键前缀 |
+| key_ttl_func | Callable | 否 | None | 动态 TTL 函数 |
+
+---
+
+### local_cache
+
+**位置：** `Cache/local_cache.py#L488`
+
+```python
+from FQBase.Cache import local_cache
+
+@local_cache(ttl=300, maxsize=128)
+def cached_func():
+    return result
+```
+
+**描述：** 本地内存缓存装饰器，基于 LocalCache 实现
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| maxsize | int | 否 | 128 | 最大缓存条目数 |
+| ttl | int | 否 | 0 | 过期时间（秒），0 表示不过期 |
+| key_ttl_func | Callable | 否 | None | 动态 TTL 函数 |
+
+**附加属性：**
+
+| 属性 | 类型 | 描述 |
+|------|------|------|
+| cache_clear | Callable | 清除缓存 |
+| cache_stats | Dict | 缓存统计信息 |
+
+---
+
+### init_cache_from_env
+
+**位置：** `Cache/__init__.py#L111`
+
+```python
+from FQBase.Cache import init_cache_from_env
+
+adapter = init_cache_from_env()
+```
+
+**描述：** 从环境变量初始化全局缓存（推荐入口）
+
+**返回：** `CacheInterface` - 缓存适配器实例
+
+---
+
+### register_cache_adapter
+
+**位置：** `Cache/__init__.py#L57`
+
+```python
+from FQBase.Cache import register_cache_adapter
+
+register_cache_adapter('custom', lambda cfg: CustomAdapter(cfg))
+```
+
+**描述：** 注册自定义缓存适配器工厂
+
+**参数：**
+
+| 参数 | 类型 | 必填 | 默认值 | 描述 |
+|------|------|------|--------|------|
+| cache_type | str | 是 | - | 缓存类型标识 |
+| factory_func | Callable | 是 | - | 工厂函数，接收 config 返回适配器实例 |
+
+**示例：**
+
+```python
+from FQBase.Cache import register_cache_adapter, create_cache
+
+class CustomCacheAdapter:
+    def __init__(self, config):
+        self._config = config
+
+    def get(self, key):
+        return self._backend.get(key)
+
+    def set(self, key, value, ttl=0):
+        return self._backend.set(key, value, ttl)
+
+register_cache_adapter('custom', lambda cfg: CustomCacheAdapter(cfg))
+cache = create_cache(CustomCacheConfig(cache_type='custom'))
+```
 
 ---
 
 ## 异常
 
-| 异常 | 描述 |
-|------|------|
-| CacheError | 缓存操作基础异常 |
-| ConnectionError | 连接失败异常 |
-| SerializationError | 序列化/反序列化异常 |
+| 异常 | 描述 | 触发条件 | 解决方案 |
+|------|------|---------|---------|
+| CacheError | 缓存基类异常 | 缓存操作失败 | 检查缓存服务状态 |
+| CacheConnectionError | 连接错误 | Redis/MongoDB 连接失败 | 检查服务配置 |
+| CacheTimeoutError | 超时错误 | 缓存操作超时 | 增加超时时间 |
+| CacheSerializationError | 序列化错误 | 对象无法序列化 | 检查数据类型 |
+| CacheKeyError | 键错误 | 缓存键无效 | 检查键格式 |
+| CacheOperationError | 操作错误 | 缓存操作失败 | 查看具体错误信息 |
 
 ---
 
 ## 相关文档
 
 - [使用指南](./usage.md)
-- [开发指南](./development.md)
 - [最佳实践](./best-practices.md)
-- [CacheAdapters 与 DirectRedis 比较](./cache_adapters_directredis.md)
-- [CacheAdapters 与 JsonStorage 比较](./cache_adapters_jsonstorage.md)
-- [三种缓存机制的场景化对比分析](./cache_comparison.md)
-- [Cache Prefix 使用场景](./Cache_Prefix_使用场景.md)
+- [配置指南](./configuration.md)

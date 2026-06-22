@@ -1,127 +1,174 @@
 ---
-title: DataStore - MongoDB数据存储
-description: FQBase MongoDB 数据存储模块，提供 MongoDB 通用操作接口
+title: DataStore
+description: FQBase MongoDB 数据存储模块，提供 CRUD、聚合、索引管理等
 tag:
+  - fquant
   - fqbase
   - datastore
 
 summary:
-  type: data-processing
+  type: data_store
   complexity: medium
   maturity: stable
-  size: xs
-  core_classes:
-    - MongoDB
-    - MongoClientManager
-  key_functions:
+  size: small
+  is_container: false
+  api_exports:
+    total: 11
+    classes: 7
+    functions: 4
+    constants: 0
+  core_functions:
     - get_mongo_db
-    - get_mongo_client_manager
     - reset_mongo_db
-  # ⚠️ AI 开发必需信息
+    - get_mongo_client_manager
+  features:
+    has_async: false
+    is_thread_safe: true
+    has_config: true
+    has_logging: true
+    has_security: false
   usage_scenarios:
-    - "MongoDB 数据库连接管理"
-    - "需要通用数据存储接口"
+    - "MongoDB CRUD 操作"
+    - "聚合查询"
+    - "索引管理"
+    - "数据库运维"
   warnings:
-    - "连接池配置需合理"
-    - "需注意 MongoDB 连接数限制"
+    - "连接池耗尽会导致性能下降"
+    - "索引操作需要谨慎，影响性能"
   limitations:
-    - "仅支持 MongoDB"
+    - "需要 MongoDB 服务支持"
+  design_patterns:
+    - facade
 
 relationships:
   belongs_to:
     - fquant.fqbase
   depends_on:
-    - pymongo
+    - fquant.fqbase.infrastructure
+  used_by:
+    - fquant.fqdata
 
-concepts:
-  provides:
-    - name: MongoDB操作
-      definition: 提供 MongoDB 的 CRUD 操作接口
-    - name: 单例模式
-      definition: MongoDB 使用单例模式全局管理连接
-    - name: 客户端管理
-      definition: MongoClientManager 管理多个数据库连接
+documentation_progress:
+  status: complete
+  level: L2
+  total_expected: 12
+  total_generated: 12
+  generated:
+    - README.md
+    - quick-start.md
+    - concepts.md
+    - api.md
+    - usage.md
+    - examples.md
+    - glossary.md
+    - changelog.md
+    - best-practices.md
+    - integrations.md
+    - troubleshooting.md
+    - configuration.md
+  missing: []
+
+maintenance:
+  source_hash: "2e7b0e2e4b90759534cfc5785989f2850a43afce6ebb08d9de18771474ea555d"
+  source_mtime: 1776812430
+  source_files:
+    - "__init__.py"
+    - "_collection.py"
+    - "_connection.py"
+    - "_database_admin.py"
+    - "_index_manager.py"
+    - "mongo_db.py"
+  last_updated: "2026-04"
 ---
 
-# DataStore - MongoDB数据存储
+# DataStore
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [速查表](./cheatsheet.md) → [使用指南](./usage.md) → [案例库](./examples.md) |
-| 🔵 开发者 | [README](./README.md) → [技术架构](./architecture.md) → [API参考](./api.md) → [使用指南](./usage.md) → [最佳实践](./best-practices.md) |
-| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [配置指南](./configuration.md) → [故障排查](./troubleshooting.md) → [常见问题](./faq.md) |
+🟢 **新手入门**：README → quick-start → examples → concepts → glossary → usage
 
+🔵 **开发者**：README → api → usage → concepts → examples
+
+🟡 **运维/安全**：README → changelog → configuration → troubleshooting → best-practices
 
 ## 一句话总览
 
-📌 **FQBase MongoDB 数据存储模块，提供 MongoDB 通用操作接口**
+📌 **FQBase MongoDB 数据存储模块，提供门面模式封装的 CRUD、聚合、索引管理等操作。**
+
+## ⚠️ AI 开发必读
+
+### 使用场景
+
+✅ **应该使用**：
+- MongoDB 数据库操作 → 使用 `MongoDB` 门面类
+- 需要聚合查询 → 使用 `MongoCollection.aggregate()`
+- 需要索引管理 → 使用 `MongoIndexManager`
+- 数据库运维操作 → 使用 `MongoDatabaseAdmin`
+
+❌ **不应该使用**：
+- 直接使用 pymongo（应通过 DataStore 门面）
+- 在循环中进行单条插入（应使用批量操作）
+
+### 注意事项
+
+1. **门面模式**
+   - `MongoDB` 是统一入口，封装了底层复杂性
+   - 不要直接实例化 `MongoConnection` 等内部类
+
+2. **连接管理**
+   - 使用 `get_mongo_db()` 获取数据库实例
+   - 避免频繁创建和关闭连接
+
+3. **性能优化**
+   - 批量操作优先于单条操作
+   - 合理使用索引
+
+### 依赖
+
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | pymongo | MongoDB 驱动 |
+| 必须 | FQBase.Infrastructure | 日志、异常 |
 
 **TL;DR**：
-- 解决什么问题：简化 MongoDB 数据库操作
-- 核心能力：CRUD 操作、单例管理、客户端池
+- 解决什么问题：统一 MongoDB 数据存储操作
+- 核心能力：CRUD、聚合、索引管理、运维
 - 入门难度：🟢 简单
 
-**快速判断**：当您需要操作 MongoDB 数据库时，使用本模块。
+**快速判断**：当您需要 MongoDB 数据操作 时，使用 DataStore。
 
-## 知识脉络
+## 架构图
 
-🧑‍🎓 **从零到精通的推荐学习顺序**：
+```mermaid
+graph TB
+    subgraph DataStore["DataStore"]
+        facade["MongoDB - 门面类"]
+        connection["MongoConnection - 连接管理"]
+        collection["MongoCollection - 数据操作"]
+        index["MongoIndexManager - 索引管理"]
+        admin["MongoDatabaseAdmin - 运维管理"]
+    end
+```
 
-1. [快速入门](./quick-start.md) - 5 分钟上手
-2. [核心概念](./concepts.md) - 理解基本概念
-3. [技术架构](./architecture.md) - 理解设计思路
-4. [使用指南](./usage.md) - 深入使用
-5. [最佳实践](./best-practices.md) - 升华理解
+## 组件
 
-⏱️ 预计学习时间：0.5 小时
-
-## 前置知识
-
-| 知识领域 | 建议资源 | 状态 |
-|---------|---------|------|
-| MongoDB 基础 | - | ⬜ |
-| Python 基础 | [官方教程](https://docs.python.org/zh-cn/3/tutorial/) | ⬜ |
-
-## 适用场景
-
-✅ **推荐使用**：
-- MongoDB 数据库操作
-- 数据持久化存储
-- 文档型数据管理
-
-❌ **不推荐使用**：
-- 关系型数据库操作
-- 简单配置存储
-
-## 概述
-
-DataStore 是 FQBase 的 MongoDB 数据存储模块，提供以下功能：
-
-- **MongoDB 操作**：提供 CRUD 操作的封装
-- **单例模式**：全局唯一的数据库实例
-- **客户端管理**：MongoClientManager 管理多个连接
+| 组件 | 说明 |
+|------|------|
+| MongoDB | 门面类，统一入口 |
+| MongoConnection | MongoDB 连接管理 |
+| MongoCollection | CRUD 和聚合操作 |
+| MongoIndexManager | 索引管理 |
+| MongoDatabaseAdmin | 运维命令 |
 
 ## 快速链接
 
-| 文档 | 说明 |
+| 需求 | 文档 |
 |------|------|
-| [快速入门](./quick-start.md) | 5分钟快速上手 |
-| [术语表](./glossary.md) | 术语定义 |
-| [核心概念](./concepts.md) | 核心概念详解 |
-| [技术架构](./architecture.md) | 技术架构说明 |
-| [API参考](./api.md) | API参考文档 |
-
-## 安装
-
-```bash
-pip install fquant-fqbase
-pip install pymongo
-```
+| 快速入门 | [快速入门](./quick-start.md) |
+| 查看 API | [API参考](./api.md) |
+| 配置指南 | [配置指南](./configuration.md) |
+| 故障排查 | [故障排查](./troubleshooting.md) |
 
 ## 相关文档
 
-| 类型 | 文档 | 链接 |
-|------|------|------|
-| 项目首页 | FQBase首页 | [README](../README.md) |
+- [FQBase README](../README.md)

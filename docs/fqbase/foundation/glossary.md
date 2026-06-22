@@ -1,50 +1,68 @@
 ---
-title: Foundation 模块 - 术语表
-description: Foundation 核心术语定义
+title: Foundation - 术语表
+description: Foundation 术语和概念解释
 tag:
+  - fquant
   - fqbase
   - foundation
+
+summary:
+  purpose: glossary
 ---
 
-# Foundation 模块 - 术语表
+# Foundation - 术语表
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → **[术语表](./glossary.md)** |
-
-## 子模块术语表
-
-| 子模块 | 术语表 | 说明 |
-|--------|---------|------|
-| validators | [术语表](./validators/glossary.md) | 输入验证 |
-| exceptions | [术语表](./exceptions/glossary.md) | 统一异常 |
-| retry | [术语表](./retry/glossary.md) | 重试装饰器 |
-| dotty | [术语表](./dotty/glossary.md) | 字典访问 |
-| singleton | [术语表](./singleton/glossary.md) | 单例模式 |
-| lifecycle | [术语表](./lifecycle/glossary.md) | 生命周期 |
-| container | [术语表](./container/glossary.md) | 依赖注入 |
-| circuit_breaker | [术语表](./circuit_breaker/glossary.md) | 熔断器 |
+🟢 **新手入门**：README → glossary
 
 ## 术语
 
-### 单例模式 (Singleton)
+### Dotty
 
-确保类只有一个实例的模式。
+字典包装器，支持点号深度访问嵌套字典。
 
-### 依赖注入 (Dependency Injection)
+### EventBus
 
-通过外部注入而非内部创建的方式提供依赖对象。
+事件总线，实现发布-订阅模式的核心组件。
 
-### 熔断器 (Circuit Breaker)
+### Event
 
-防止级联故障的模式，状态包括：Closed、Open、Half-Open。
+事件对象，包含事件类型、数据、时间戳。
 
-### 重试装饰器 (Retry Decorator)
+### Observer Pattern
 
-自动重试失败操作的装饰器。
+观察者模式，一种行为设计模式，定义对象间的一对多依赖关系。
 
-### 服务定位器 (Service Locator)
+### Lifecycle Protocol
 
-提供全局访问服务的方式。
+生命周期协议，定义服务的初始化、健康检查、关闭等行为接口。
+
+### HealthCheckable
+
+健康检查协议，实现此协议的类可提供健康状态检查。
+
+### Initializable
+
+初始化协议，支持显式初始化。
+
+### Shutdownable
+
+关闭协议，支持优雅关闭。
+
+### ServiceStatus
+
+服务状态枚举，包含服务的各种状态。
+
+### NotificationManager
+
+统一通知管理器，支持多种通知渠道。
+
+### NotificationTemplate
+
+通知消息模板，支持动态参数渲染。
+
+## 相关文档
+
+- [README](./README.md)
+- [核心概念](./concepts.md)

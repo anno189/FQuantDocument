@@ -38,10 +38,6 @@ FQAlgorithm/
 │   ├── __init__.py
 │   ├── base.py            # 过滤器基类
 │   └── pipeline.py        # 过滤器管道
-├── Signals/               # 信号生成
-│   ├── __init__.py
-│   ├── signal_generator.py # 信号生成器
-│   └── composite_signals.py # 复合信号
 ├── Evaluators/            # 策略评估
 │   ├── __init__.py
 │   ├── performance.py     # 绩效评估
@@ -155,33 +151,6 @@ pipeline.add_filter(tech_filter, priority=80)
 filtered_data = pipeline.execute(data)
 ```
 
-### 信号生成 Signals
-
-支持多种信号生成和复合信号。
-
-```python
-from FQBase.FQAlgorithm import (
-    SignalGenerator, SignalType, CompositeSignals,
-)
-
-# 创建信号生成器
-generator = SignalGenerator()
-
-# 金叉信号
-gold_cross = generator.generate(data, SignalType.GOLD_CROSS,
-                                params={'fast': 5, 'slow': 20})
-
-# 死叉信号
-death_cross = generator.generate(data, SignalType.DEATH_CROSS,
-                                 params={'fast': 5, 'slow': 20})
-
-# 复合信号
-composite = CompositeSignals()
-composite.add_signal(gold_cross)
-composite.add_signal(volume_signal)
-result = composite.combine()
-```
-
 ### 评估器 Evaluators
 
 支持策略绩效评估、风险指标计算、参数优化。
@@ -255,36 +224,6 @@ engineering = FeatureEngineering()
 result = engineering.transform(data)
 ```
 
-## Signal Generator 信号生成器
-
-`SignalGenerator` 提供基于指标的交易信号生成功能，支持交叉信号、阈值信号、背离信号等多种信号类型。
-
-### 文档
-
-- [API 文档](./signal-generator-api.md) - SignalGenerator 完整 API 参考
-- [开发指南](./signal-generator-dev.md) - 如何扩展和定制信号生成器
-- [应用示例](./signal-generator-examples.md) - 实际交易策略示例
-
-### 快速开始
-
-```python
-from FQFactor.signals.signal_generator import SignalGenerator, SignalType
-
-generator = SignalGenerator()
-
-# 金叉死叉信号
-signals = generator.cross_signal(fast_ma, slow_ma)
-
-# 超买超卖信号
-signals = generator.threshold_signal(rsi, upper=70, lower=30)
-
-# 背离信号
-signals = generator.divergence_signal(price, rsi)
-
-# 合并多个信号
-combined = generator.combine_signals([signals1, signals2], method="majority")
-```
-
 ## 导出 API
 
 ```python
@@ -304,11 +243,6 @@ __all__ = [
     "RiskMetrics",
     "ParameterOptimizer",
     "GeneticOptimizer",
-
-    # 信号
-    "SignalGenerator",
-    "SignalType",
-    "CompositeSignals",
 
     # 预处理
     "DataPreprocessor",
@@ -331,7 +265,7 @@ __all__ = [
 
 ```python
 from FQBase.FQAlgorithm import (
-    IndicatorCalculator, FilterPipeline, SignalGenerator,
+    IndicatorCalculator, FilterPipeline,
     PerformanceEvaluator, DataPreprocessor,
 )
 
@@ -345,12 +279,7 @@ ma5 = calculator.calculate(data, 'MA', period=5)
 ma20 = calculator.calculate(data, 'MA', period=20)
 kdj = calculator.calculate(data, 'KDJ')
 
-# 3. 信号生成
-generator = SignalGenerator()
-gold_cross = generator.generate(data, SignalType.GOLD_CROSS,
-                                params={'fast': 5, 'slow': 20})
-
-# 4. 过滤
+# 3. 过滤
 pipeline = FilterPipeline()
 pipeline.add_filter(price_filter)
 pipeline.add_filter(volume_filter)

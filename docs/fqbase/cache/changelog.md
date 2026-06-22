@@ -1,60 +1,76 @@
 ---
 title: Cache - 变更日志
-description: Cache 模块版本历史与更新说明
+description: Cache 版本历史与更新说明
 tag:
+  - fquant
   - fqbase
   - cache
+
+summary:
+  purpose: changelog
 ---
 
 # Cache - 变更日志
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 📖 索引 | [README](./README.md) → **[变更日志](./changelog.md)** |
+全部角色：README → changelog
 
-## v1.0.0 (当前版本)
+## v2.8.1 (2026-04-22)
 
 ### 新增
 
-- 首次发布 Cache 模块
-- **LocalCache**：本地内存缓存实现
-  - 支持 LRU/FIFO 驱逐策略
-  - 支持 TTL 过期（全局 + per-key）
-  - 惰性清理
-  - 线程安全
-  - 单例模式
-- **RedisCacheAdapter**：Redis 缓存适配器
-  - 支持 String/Hash/List/Set 四种数据结构
-  - prefix 键前缀隔离
-  - Pipeline 批量操作
-  - SCAN 键迭代
-  - pickle/msgpack 双重序列化
-  - pandas/numpy 自动序列化支持
-  - 连接池管理
-  - 健康检查（ping 方法）
-- **MongoCacheAdapter**：MongoDB 缓存适配器
-- **@local_cache**：本地缓存装饰器
-- **@redis_cache**：Redis 缓存装饰器，支持异步函数
-- 缓存接口层（CacheInterface）
-- 全局适配器管理（init_cache_adapter、get_cache_adapter、set_cache_adapter）
-- 缓存失效功能（invalidate_cache）
-- 缓存统计功能
+- 将缓存适配器实现拆分到 local_cache.py, redis_adapter.py, mongo_adapter.py
+- 本文件保留为向后兼容的重导出层
 
 ### 更改
 
-- 统一缓存 API 接口
-- 优化序列化性能
-- 修复 prefix 参数未生效的问题
-- 修复连接泄漏问题
+- CacheAdapters.py 改为重导出层 + 全局适配器管理
 
-### 已知问题
+## v2.8.0 (2026-03)
 
-- LocalCache 在极高并发下可能存在锁竞争
-- RedisCacheAdapter 的 safe_mode 参数需要进一步完善
+### 新增
+
+- MongoCacheAdapter MongoDB 缓存适配器
+- CacheMetricsCollector 缓存监控
+
+### 更改
+
+- 重构 CacheAdapters.py 结构
+
+## v2.7.0 (2026-02)
+
+### 新增
+
+- @redis_cache 装饰器支持 key_ttl_func 动态 TTL
+- 异步函数缓存支持
+
+## v2.6.0 (2026-01)
+
+### 新增
+
+- CacheContext 上下文管理器
+- 全局适配器管理
+
+### 修复
+
+- 修复 Redis 连接池泄漏问题
+
+## v2.5.0 (2025-12)
+
+### 新增
+
+- LocalCache 本地内存缓存
+- RedisCacheAdapter Redis 缓存适配器
+- create_cache 工厂方法
 
 ---
+
+## 弃用追踪
+
+| 弃用项 | 替代方案 | 迁移指南 | 弃用版本 |
+|--------|---------|---------|---------|
+| 直接实例化适配器 | 使用 create_cache 工厂方法 | `create_cache(config)` | v2.5.0 |
 
 ## 相关文档
 

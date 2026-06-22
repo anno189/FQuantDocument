@@ -1,49 +1,106 @@
 ---
-title: Foundation 模块 - 最佳实践
-description: Foundation 模块最佳实践
+title: Foundation - 最佳实践
+description: Foundation 使用最佳实践
 tag:
+  - fquant
   - fqbase
   - foundation
+
+summary:
+  purpose: best-practices
 ---
 
-# Foundation 模块 - 最佳实践
+# Foundation - 最佳实践
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🔵 开发者 | [README](./README.md) → [使用指南](./usage.md) → **[最佳实践](./best-practices.md)** |
+🔵🟡 **开发者+运维**：README → best-practices → configuration
 
-## 子模块最佳实践
+## 事件总线最佳实践
 
-| 子模块 | 最佳实践 | 说明 |
-|--------|----------|------|
-| validators | [最佳实践](./validators/best-practices.md) | 输入验证 |
-| exceptions | [最佳实践](./exceptions/best-practices.md) | 统一异常 |
-| retry | [最佳实践](./retry/best-practices.md) | 重试装饰器 |
-| dotty | [最佳实践](./dotty/best-practices.md) | 字典访问 |
-| singleton | [最佳实践](./singleton/best-practices.md) | 单例模式 |
-| lifecycle | [最佳实践](./lifecycle/best-practices.md) | 生命周期 |
-| container | [最佳实践](./container/best-practices.md) | 依赖注入 |
-| circuit_breaker | [最佳实践](./circuit_breaker/best-practices.md) | 熔断器 |
+### ✅ 推荐做法
 
-## 最佳实践
+1. **使用单例获取 EventBus**
+   ```python
+   from FQBase.Foundation import get_event_bus
+   bus = get_event_bus()
+   ```
 
-### 1. 优先使用依赖注入
+2. **设置合理的优先级**
+   ```python
+   bus.subscribe('event', handler, priority=10)
+   ```
 
-使用容器管理依赖，便于测试和替换实现。
+3. **使用弱引用防止内存泄漏**
+   ```python
+   bus.subscribe('event', handler, weak_ref=True)
+   ```
 
-### 2. 合理选择生命周期
+### ❌ 避免做法
 
-- 单例：全局配置、连接池
-- 瞬态：业务处理器
-- 作用域：请求上下文
+1. **不要创建多个 EventBus 实例**
+   ```python
+   bus1 = EventBus()
+   bus2 = EventBus()
+   ```
 
-### 3. 组合使用熔断器和重试
+2. **不要在订阅回调中阻塞**
+   ```python
+   def slow_handler(event):
+       time.sleep(60)
+   ```
 
-```python
-@circuit_breaker(name="api", failure_threshold=3)
-@retry(max_attempts=3)
-def call_api():
-    return api.get()
-```
+## 生命周期最佳实践
+
+### ✅ 推荐做法
+
+1. **组合多个协议**
+   ```python
+   class MyService(HealthCheckable, Initializable, Shutdownable):
+       pass
+   ```
+
+2. **返回详细的健康状态**
+   ```python
+   def health_check(self) -> HealthStatus:
+       return HealthStatus(
+           status=ServiceStatus.RUNNING,
+           details={'connections': 10, 'cache_hits': 1000}
+       )
+   ```
+
+## 通知服务最佳实践
+
+### ✅ 推荐做法
+
+1. **使用通知管理器统一管理**
+   ```python
+   manager = NotificationManager()
+   manager.add_handler('wecom', webhook_url='...')
+   ```
+
+2. **使用模板发送格式化消息**
+   ```python
+   template = NotificationTemplate(name='alert', content='{symbol} price: {price}')
+   template.render(symbol='AAPL', price=150)
+   ```
+
+## Dotty 最佳实践
+
+### ✅ 推荐做法
+
+1. **直接修改原字典**
+   ```python
+   d = dotty(data)
+   d['key.nested'] = 'value'
+   ```
+
+2. **使用 no_list 参数处理特殊键**
+   ```python
+   d = dotty({'1': 'one'}, no_list=True)
+   ```
+
+## 相关文档
+
+- [使用指南](./usage.md)
+- [配置指南](./configuration.md)

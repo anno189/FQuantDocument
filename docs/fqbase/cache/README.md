@@ -1,231 +1,189 @@
 ---
-title: Cache - 缓存层
-description: FQBase 缓存模块，提供 LocalCache、RedisCacheAdapter、MongoCacheAdapter 三种缓存实现
+title: Cache
+description: FQBase 缓存层，支持 Redis、Memory、MongoDB 等多种缓存后端
 tag:
+  - fquant
   - fqbase
   - cache
 
 summary:
-  type: infrastructure
+  type: cache
   complexity: medium
   maturity: stable
-  size: m
-  core_classes:
-    - LocalCache
-    - RedisCacheAdapter
-    - MongoCacheAdapter
-  key_functions:
-    - local_cache
-    - redis_cache
-    - init_cache_adapter
-    - get_cache_adapter
-    - set_cache_adapter
-  # ⚠️ AI 开发必需信息
+  size: medium
+  api_exports:
+    total: 41
+    classes: 23
+    functions: 254
+    constants: 0
+  features:
+    has_async: true
+    is_thread_safe: true
+    has_config: true
+    has_logging: true
+    has_security: false
   usage_scenarios:
-    - "频繁访问的数据需要缓存"
-    - "需要分布式缓存时用 Redis"
-    - "需要进程内缓存时用 LocalCache"
+    - "使用本地内存缓存实现快速访问"
+    - "使用 Redis 分布式缓存支持多进程共享"
+    - "使用 MongoDB 持久化缓存"
+    - "使用 @redis_cache 装饰器缓存函数结果"
+    - "实现多级缓存策略"
   warnings:
-    - "缓存一致性问题需注意"
-    - "Redis 连接失败会导致异常"
+    - "缓存一致性问题需要开发者自行处理"
+    - "TTL 设置不当可能导致数据过期或占用过多内存"
+    - "Redis 缓存适配器降级后会使用 LocalCache"
   limitations:
-    - "不支持缓存穿透"
-    - "不支持缓存失效策略"
+    - "需要 Redis/MongoDB 服务支持"
+  design_patterns:
+    - adapter
+    - factory
+    - decorator
 
 relationships:
   belongs_to:
     - fquant.fqbase
   depends_on:
-    - redis
-    - pymongo
+    - fquant.fqbase.infrastructure
+    - fquant.fqbase.config
+  used_by:
+    - fquant.fqdata
 
-concepts:
-  provides:
-    - name: 本地缓存
-      definition: 基于内存的缓存，支持 LRU/FIFO 驱逐和 TTL 过期
-    - name: Redis 缓存
-      definition: 基于 Redis 的分布式缓存，支持 String/Hash/List/Set 多种数据结构
-    - name: MongoDB 缓存
-      definition: 基于 MongoDB 的缓存，适用于文档存储场景
-    - name: 函数缓存装饰器
-      definition: @local_cache 和 @redis_cache 装饰器，为函数提供缓存能力
-    - name: 单例模式
-      definition: LocalCache 使用单例模式，相同配置共享实例
-    - name: 惰性清理
-      definition: LocalCache 采用惰性清理策略，仅在访问时清理过期项
-    - name: 序列化
-      definition: 支持 pickle 和 msgpack 序列化，自动处理 pandas/numpy 对象
+documentation_progress:
+  status: complete
+  level: L2
+  total_expected: 12
+  total_generated: 12
+  generated:
+    - README.md
+    - quick-start.md
+    - concepts.md
+    - api.md
+    - usage.md
+    - examples.md
+    - glossary.md
+    - changelog.md
+    - best-practices.md
+    - integrations.md
+    - troubleshooting.md
+    - configuration.md
+  missing: []
+
+maintenance:
+  source_hash: "924c74b94ffc44c89bb1e61e9a9e955df5d8ddeadeba439e75da456e05f8059a"
+  source_mtime: 1776813854
+  source_files:
+    - "CacheAdapters.py"
+    - "__init__.py"
+    - "_interface.py"
+    - "_interfaces.py"
+    - "_local_backend.py"
+    - "_mongo_backend.py"
+    - "_redis_backend.py"
+    - "_serializers.py"
+    - "config_protocol.py"
+    - "exceptions.py"
+    - "local_cache.py"
+    - "metrics.py"
+    - "mongo_adapter.py"
+    - "redis_adapter.py"
+    - "redis_conn.py"
+  last_updated: "2026-04"
 ---
 
-# Cache - 缓存层
+# Cache
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [速查表](./cheatsheet.md) → [动手实验室](./workshop.md) → [使用指南](./usage.md) → [案例库](./examples.md) |
-| 🔵 开发者 | [README](./README.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) → [设计原则](./design.md) → [API参考](./api.md) → [开发指南](./development.md) → [最佳实践](./best-practices.md) |
-| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [配置指南](./configuration.md) → [安全指南](./security.md) → [故障排查](./troubleshooting.md) → [常见问题](./faq.md) |
-| 🟠 架构师 | [README](./README.md) → [技术架构](./architecture.md) → [设计模式](./patterns.md) → [技术权衡](./tradeoff.md) → [决策指南](./decision-guide.md) → [案例研究](./case-studies.md) → [数据流](./data-flow.md) |
-| 📚 案例库 | **[案例库](./examples.md)** → [案例研究](./case-studies.md) → [决策指南](./decision-guide.md) → [数据流](./data-flow.md) → [设计模式](./patterns.md) → [技术权衡](./tradeoff.md) |
-| 📖 索引 | [README](./README.md) → [变更日志](./changelog.md) |
+🟢 **新手入门**：README → quick-start → examples → concepts → glossary → usage
+
+🔵 **开发者**：README → api → usage → concepts → examples
+
+🟡 **运维/安全**：README → changelog → configuration → troubleshooting → best-practices
 
 ## 一句话总览
 
-📌 **FQBase 统一的缓存抽象层，支持本地内存、Redis、MongoDB 三种缓存实现**
+📌 **FQBase 多级缓存层，支持 LocalMemory、Redis、MongoDB 三种缓存后端，提供统一的缓存接口和 @redis_cache 装饰器。**
+
+## ⚠️ AI 开发必读
+
+### 使用场景
+
+✅ **应该使用**：
+- 需要缓存函数结果 → 使用 `@redis_cache` 装饰器
+- 需要多进程共享缓存 → 使用 Redis 缓存
+- 需要持久化缓存 → 使用 MongoDB 缓存
+- 开发环境快速测试 → 使用 LocalCache
+
+❌ **不应该使用**：
+- 对数据一致性要求极高的场景（缓存存在更新延迟）
+- 敏感数据缓存（缓存无加密）
+
+### 注意事项
+
+1. **缓存降级**
+   - Redis 连接失败时自动降级到 LocalCache
+   - 使用 `init_cache_adapter()` 初始化时会自动选择可用后端
+
+2. **键生成策略**
+   - 装饰器使用 SHA256 哈希生成缓存键
+   - 可通过 `key_prefix` 参数自定义键前缀
+
+3. **TTL 设置**
+   - 默认 TTL 300 秒
+   - 可通过 `key_ttl_func` 动态设置 TTL
+
+### 已知限制
+
+- LocalCache 不支持跨进程共享
+- MongoDB 缓存性能低于 Redis
+- 缓存一致性问题需要业务层处理
+
+### 依赖
+
+| 依赖类型 | 模块 | 说明 |
+|---------|------|------|
+| 必须 | redis | Redis 客户端 |
+| 可选 | pymongo | MongoDB 客户端 |
+| 内置 | hashlib | 键生成 |
 
 **TL;DR**：
-- 解决什么问题：统一缓存 API，屏蔽不同缓存实现的差异，提供 LocalCache、RedisCacheAdapter、MongoCacheAdapter 三种实现
-- 核心能力：本地缓存（LRU/FIFO驱逐+TTL）、Redis缓存（多种数据结构+prefix）、装饰器缓存
-- 入门难度：🔵 中等
+- 解决什么问题：提供统一的缓存抽象，支持多种后端自动降级
+- 核心能力：适配器模式、工厂方法、@redis_cache 装饰器
+- 入门难度：🟢 简单
 
-**快速判断**：当您需要缓存数据时，使用本模块。
+**快速判断**：当您需要 缓存函数结果/跨进程共享缓存/多级缓存 时，使用 Cache。
 
-## 知识脉络
+## 架构图
 
-🧑‍🎓 **从零到精通的推荐学习顺序**：
+```mermaid
+graph TB
+    subgraph Cache["Cache"]
+        factory["create_cache - 工厂方法"]
+        decorator["@redis_cache - 装饰器"]
+        global["全局适配器管理"]
+        local["LocalCache - 本地内存"]
+        redis["RedisCacheAdapter - Redis"]
+        mongo["MongoCacheAdapter - MongoDB"]
+    end
+```
 
-1. [快速入门](./quick-start.md) - 5 分钟上手
-2. [核心概念](./concepts.md) - 理解 LocalCache、RedisCacheAdapter、序列化等核心概念
-3. [技术架构](./architecture.md) - 理解分层设计和组件关系
-4. [使用指南](./usage.md) - 深入学习三种缓存的使用方法
-5. [动手实验室](./workshop.md) - 实践练习
-6. [最佳实践](./best-practices.md) - 升华理解
+## 缓存后端对比
 
-⏱️ 预计学习时间：2-3 小时
-
-## 前置知识
-
-在开始学习本模块前，建议先掌握：
-
-| 知识领域 | 建议资源 | 状态 |
-|---------|---------|------|
-| Python 基础 | [官方教程](https://docs.python.org/zh-cn/3/tutorial/) | ⬜ |
-| Redis 基础 | [Redis 文档](https://redis.io/docs/) | ⬜ |
-| 缓存概念 | [Wikipedia](https://en.wikipedia.org/wiki/Cache_(computing)) | ⬜ |
-
-## 适用场景
-
-✅ **推荐使用**：
-- 需要缓存函数计算结果（使用 @local_cache 或 @redis_cache 装饰器）
-- 需要缓存数据库查询结果（跨进程共享使用 RedisCacheAdapter）
-- 需要跨进程共享缓存数据（Redis/MongoDB 缓存）
-- 需要缓存热点数据（支持 TTL 过期）
-- 需要缓存 pandas DataFrame/numpy 数组（内置序列化支持）
-
-❌ **不推荐使用**：
-- 对延迟极其敏感的超高频场景（考虑直接内存访问）
-- 超大数据量缓存（考虑专门的数据存储如 HBase）
-
-💡 **与其他模块的关系**：
-- 被 [FQData](../fqdata/README.md) 中的查询模块使用
-- 被 [FQFactor](../fqfactor/README.md) 中的因子计算使用
-
-## 概述
-
-Cache 模块是 FQBase 的缓存抽象层，提供统一的缓存接口，支持三种缓存实现：
-
-| 缓存类型 | 类/函数 | 适用场景 | 核心特性 |
-|---------|---------|---------|---------|
-| 本地内存缓存 | `LocalCache`, `@local_cache` | 单进程、简单场景、低延迟需求 | LRU/FIFO 驱逐、TTL 过期、惰性清理、线程安全、单例模式 |
-| Redis 缓存 | `RedisCacheAdapter`, `@redis_cache` | 分布式、多进程共享、多种数据结构 | String/Hash/List/Set、prefix 前缀、Pipeline 批量、SCAN 迭代 |
-| MongoDB 缓存 | `MongoCacheAdapter` | 文档存储、需要复杂查询 | 自动索引、TTL 索引、文档模型 |
-
-## 核心组件
-
-| 组件 | 说明 | 文档 |
-|------|------|------|
-| LocalCache | 本地内存缓存，支持 LRU/FIFO 和 TTL | [API](./api.md#localcache) |
-| RedisCacheAdapter | Redis 缓存适配器，支持多种数据结构 | [API](./api.md#rediscacheadapter) |
-| MongoCacheAdapter | MongoDB 缓存适配器 | [API](./api.md#mongocacheadapter) |
-| local_cache | 本地缓存装饰器 | [API](./api.md#local_cache) |
-| redis_cache | Redis 缓存装饰器，支持异步 | [API](./api.md#redis_cache) |
-| _serializers | 序列化模块，支持 pickle/msgpack | [API](./api.md#序列化) |
-
-## 关键特性详解
-
-### LocalCache 特性
-
-1. **双驱逐策略**：支持 LRU（最近最少使用）和 FIFO（先进先出）
-2. **TTL 过期**：支持全局 TTL 和 per-key TTL
-3. **惰性清理**：仅在访问时清理过期项，减少 CPU 开销
-4. **单例模式**：相同 (name, maxsize, ttl, eviction) 配置共享实例
-5. **实例数量限制**：默认最多 100 个实例，可通过环境变量配置
-6. **后台清理线程**：可选的后台线程定期清理过期实例
-7. **批量操作**：get_many、set_many、delete_many 优化性能
-
-### RedisCacheAdapter 特性
-
-1. **多种数据结构**：String、Hash、List、Set
-2. **prefix 前缀**：自动为键添加前缀，支持键隔离
-3. **Pipeline 批量**：减少网络往返，提高批量操作性能
-4. **SCAN 迭代**：安全地遍历大量键（替代 KEYS 命令）
-5. **双重序列化**：支持 pickle（默认）和 msgpack，可选 safe_mode
-6. **连接池管理**：_RedisClientManager 单例管理连接池
-7. **健康检查**：ping() 方法检测连接状态
-8. **自动重连**：_ensure_connected() 自动重连断开的连接
-
-### 装饰器特性
-
-1. **@local_cache**：为函数提供本地缓存能力
-2. **@redis_cache**：为函数提供 Redis 缓存能力，支持异步函数
-3. **自定义 TTL 函数**：key_ttl_func 参数支持 per-key TTL
-4. **key_prefix**：统一缓存键前缀，避免冲突
+| 后端 | 适用场景 | 优点 | 缺点 |
+|------|---------|------|------|
+| LocalCache | 开发环境、单进程 | 零依赖、高性能 | 不支持分布式 |
+| Redis | 生产环境、多进程 | 高性能、支持分布式 | 需要 Redis 服务 |
+| MongoDB | 需要持久化 | 数据持久化 | 性能较低 |
 
 ## 快速链接
 
-| 文档 | 说明 |
+| 需求 | 文档 |
 |------|------|
-| [快速入门](./quick-start.md) | 5分钟快速上手 |
-| [术语表](./glossary.md) | 术语定义 |
-| [核心概念](./concepts.md) | 核心概念详解 |
-| [框架集成](./framework.md) | 框架集成方式 |
-| [技术架构](./architecture.md) | 技术架构说明 |
-| [API参考](./api.md) | API参考文档 |
-| [案例库](./examples.md) | 案例库 |
-| [速查表](./cheatsheet.md) | 快速参考 |
-| [动手实验室](./workshop.md) | 动手练习 |
-
-## 快速定位
-
-我不知道这个，应该去哪找？
-
-| 场景 | 文档 |
-|------|------|
-| 我不了解这个术语 | [术语表](./glossary.md) |
-| 三种缓存怎么选？ | [技术架构](./architecture.md) 或 [决策指南](./decision-guide.md) |
-| 遇到错误/问题 | [故障排查](./troubleshooting.md) |
-| 如何配置选项？ | [配置指南](./configuration.md) |
-| 如何优化性能？ | [性能调优](./performance.md) |
-| 如何与其他模块集成？ | [集成指南](./integrations.md) |
-| 需要参考实际案例 | [案例库](./examples.md) |
-| LocalCache 和 Redis 怎么选？ | [三种缓存机制的场景化对比分析](./cache_comparison.md) |
-| RedisCacheAdapter 和 DirectRedis 有什么区别？ | [CacheAdapters 与 DirectRedis 比较](./cache_adapters_directredis.md) |
-
-## 安装
-
-```bash
-pip install fquant-base
-```
-
-Redis 额外依赖：
-```bash
-pip install fquant-base[redis]
-```
-
-MongoDB 额外依赖：
-```bash
-pip install fquant-base[mongo]
-```
+| 快速入门 | [快速入门](./quick-start.md) |
+| 查看 API | [API参考](./api.md) |
+| 配置指南 | [配置指南](./configuration.md) |
+| 故障排查 | [故障排查](./troubleshooting.md) |
 
 ## 相关文档
 
-| 类型 | 文档 | 链接 |
-|------|------|------|
-| 项目首页 | FQBase 首页 | [README](../README.md) |
-| 快速入门 | 快速入门 | [快速入门](./quick-start.md) |
-| 架构 | 系统架构 | [技术架构](./architecture.md) |
-| 对比分析 | 三种缓存机制对比 | [cache_comparison.md](./cache_comparison.md) |
-| 对比分析 | Redis 客户端对比 | [cache_adapters_directredis.md](./cache_adapters_directredis.md) |
-| 对比分析 | JsonStorage 对比 | [cache_adapters_jsonstorage.md](./cache_adapters_jsonstorage.md) |
-| 对比分析 | 缓存作用域分析 | [cache_scope.md](./cache_scope.md) |
+- [FQBase README](../README.md)

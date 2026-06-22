@@ -1,142 +1,171 @@
 ---
 title: Cache - 配置指南
-description: Cache 模块配置选项详解
+description: Cache 配置选项详解与初始化生命周期
 tag:
+  - fquant
   - fqbase
   - cache
+
+summary:
+  purpose: configuration
 ---
 
 # Cache - 配置指南
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → **[配置指南](./configuration.md)** → [安全指南](./security.md) → [故障排查](./troubleshooting.md) → [常见问题](./faq.md) |
+🟡 **运维**：README → configuration → troubleshooting → best-practices
 
-## 概述
+## 初始化与生命周期
 
-本指南介绍 Cache 模块的所有配置选项。
+### 初始化
 
-## 环境变量配置
+```python
+from FQBase.Cache import init_cache_adapter, create_cache
+
+# 方式1: 从环境变量初始化
+init_cache_adapter()
+
+# 方式2: 手动创建
+from FQBase.Cache import RedisCacheAdapter, CacheConfig
+config = CacheConfig(cache_type='redis', redis_host='localhost')
+cache = RedisCacheAdapter(config)
+```
+
+### 生命周期
+
+| 阶段 | 方法 | 说明 |
+|------|------|------|
+| 初始化 | `init_cache_adapter()` | 从环境变量初始化全局适配器 |
+| 获取 | `get_cache_adapter()` | 获取全局适配器 |
+| 设置 | `set_cache_adapter()` | 设置全局适配器 |
+| 失效 | `invalidate_cache()` | 使缓存失效 |
+
+## 配置选项
+
+### CacheConfig
+
+| 选项 | 类型 | 默认值 | 描述 |
+|------|------|--------|------|
+| cache_type | str | memory | 缓存类型：memory/redis/mongo |
+| ttl_default | int | 0 | 默认 TTL（秒），0 表示永不过期 |
+
+### RedisConfigProtocol
+
+| 选项 | 类型 | 默认值 | 描述 |
+|------|------|--------|------|
+| redis_host | str | localhost | Redis 主机 |
+| redis_port | int | 6379 | Redis 端口 |
+| redis_password | str | None | Redis 密码 |
+| redis_db | int | 0 | Redis 数据库编号 |
+| redis_max_connections | int | 50 | 最大连接数 |
+| redis_timeout | int | 10 | 连接超时（秒） |
+
+### MongoConfigProtocol
+
+| 选项 | 类型 | 默认值 | 描述 |
+|------|------|--------|------|
+| mongo_uri | str | mongodb://localhost:27017 | MongoDB URI |
+| mongo_database | str | cache | 数据库名 |
+| mongo_collection | str | cache_data | 集合名 |
+| mongo_ttl | int | 3600 | 默认 TTL（秒） |
+
+## 环境变量
 
 | 变量 | 类型 | 默认值 | 描述 |
 |------|------|--------|------|
-| CACHE_TYPE | str | 'local' | 缓存类型：'local', 'redis', 'mongo' |
-| REDIS_HOST | str | 'localhost' | Redis 主机地址 |
+| CACHE_TYPE | str | memory | 缓存类型：memory/redis/mongo |
+| REDIS_HOST | str | localhost | Redis 主机 |
 | REDIS_PORT | int | 6379 | Redis 端口 |
-| REDIS_DB | int | 0 | Redis 数据库编号 |
 | REDIS_PASSWORD | str | None | Redis 密码 |
-| MONGO_URI | str | 'mongodb://localhost:27017' | MongoDB 连接字符串 |
-| LOCAL_CACHE_MAXSIZE | int | 128 | LocalCache 默认最大大小 |
-| LOCAL_CACHE_TTL | int | 0 | LocalCache 默认 TTL |
+| REDIS_DB | int | 0 | Redis 数据库编号 |
 
-## LocalCache 配置
+## 配置优先级
 
-```python
-from FQBase.Cache import LocalCache
+1. 环境变量 → 2. 显式传入配置 → 3. 默认值
 
-cache = LocalCache(
-    name='my_cache',    # 缓存名称（用于单例识别）
-    maxsize=128,       # 最大缓存条目数
-    ttl=300,          # 默认 TTL（秒），0 表示永不过期
-    eviction='lru'   # 驱逐策略：'lru' 或 'fifo'
-)
-```
+## 配置示例
 
-### 参数说明
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| name | str | 'default' | 缓存实例名称，用于单例识别 |
-| maxsize | int | 128 | 最大缓存条目数 |
-| ttl | int | 0 | 默认 TTL（秒），0=永不过期 |
-| eviction | str | 'lru' | 驱逐策略：'lru'（最近最少使用）或 'fifo'（先进先出） |
-
-## RedisCacheAdapter 配置
-
-```python
-from FQBase.Cache import RedisCacheAdapter
-
-redis = RedisCacheAdapter(
-    host='localhost',              # Redis 主机
-    port=6379,                    # Redis 端口
-    db=0,                        # 数据库编号
-    password=None,                # 密码
-    prefix='myapp:',              # 键前缀
-    pickle_first=False,           # 序列化优先级
-    safe_mode=False,             # 安全模式
-    socket_timeout=5,            # socket 超时
-    socket_connect_timeout=5,    # 连接超时
-    max_connections=50          # 最大连接数
-)
-```
-
-### 参数说明
-
-| 参数 | 类型 | 默认值 | 说明 |
-|------|------|--------|------|
-| host | str | 'localhost' | Redis 主机地址 |
-| port | int | 6379 | Redis 端口 |
-| db | int | 0 | 数据库编号 |
-| password | str | None | 密码认证 |
-| prefix | str | '' | 键前缀 |
-| pickle_first | bool | False | True=优先 pickle，False=优先 msgpack |
-| safe_mode | bool | False | True=禁用 pickle，仅用 msgpack |
-| socket_timeout | int | 5 | socket 超时（秒） |
-| socket_connect_timeout | int | 5 | 连接超时（秒） |
-| max_connections | int | 50 | 连接池最大连接数 |
-
-## MongoCacheAdapter 配置
-
-```python
-from FQBase.Cache import MongoCacheAdapter
-
-mongo = MongoCacheAdapter(
-    connection_string='mongodb://localhost:27017',
-    database='cache_db',
-    collection='cache_collection',
-    ttl=3600
-)
-```
-
-### 参数说明
-
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| connection_string | str | 是 | MongoDB 连接字符串 |
-| database | str | 是 | 数据库名称 |
-| collection | str | 是 | 集合名称 |
-| ttl | int | 否 | 默认 TTL（秒） |
-
-## 配置文件
-
-### 使用 YAML
-
-```yaml
-# config/cache.yaml
-cache:
-  type: redis
-  redis:
-    host: localhost
-    port: 6379
-    db: 0
-    prefix: myapp:
-  local:
-    maxsize: 128
-    ttl: 300
-```
-
-### 使用环境变量
+### 最小配置（LocalCache）
 
 ```bash
-export CACHE_TYPE=redis
-export REDIS_HOST=localhost
-export REDIS_PORT=6379
-export REDIS_DB=0
+# .env
+CACHE_TYPE=memory
 ```
 
----
+```python
+from FQBase.Cache import create_cache
+cache = create_cache()
+```
+
+### Redis 配置
+
+```bash
+# .env
+CACHE_TYPE=redis
+REDIS_HOST=redis.example.com
+REDIS_PORT=6379
+REDIS_PASSWORD=secret
+```
+
+```python
+from FQBase.Cache import create_cache
+cache = create_cache()
+```
+
+### MongoDB 配置
+
+```bash
+# .env
+CACHE_TYPE=mongo
+MONGO_URI=mongodb://mongo.example.com:27017
+MONGO_DATABASE=my_cache
+```
+
+```python
+from FQBase.Cache import create_cache
+cache = create_cache()
+```
+
+### 完整配置
+
+```python
+from FQBase.Cache import RedisCacheAdapter, CacheConfig
+
+config = CacheConfig(
+    cache_type='redis',
+    redis_host='redis.example.com',
+    redis_port=6379,
+    redis_password='secret',
+    redis_max_connections=100,
+    redis_timeout=30,
+)
+cache = RedisCacheAdapter(config)
+```
+
+## 动态配置
+
+### 切换缓存后端
+
+```python
+from FQBase.Cache import set_cache_adapter, LocalCache
+
+# 切换到 LocalCache
+set_cache_adapter(LocalCache(name="temp"))
+
+# 切换回 Redis
+from FQBase.Cache import RedisCacheAdapter
+set_cache_adapter(RedisCacheAdapter())
+```
+
+### 监听配置变更
+
+```python
+from FQBase.Cache import get_cache_adapter
+
+adapter = get_cache_adapter()
+adapter.set("config:last_update", str(time.time()))
+```
 
 ## 相关文档
 

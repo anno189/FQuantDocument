@@ -1,299 +1,116 @@
 ---
 title: Config - 故障排查
-description: FQBase 配置中心常见问题与解决方案
+description: Config 常见问题与解决方案
 tag:
+  - fquant
   - fqbase
   - config
+
+summary:
+  purpose: troubleshooting
 ---
 
 # Config - 故障排查
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [配置指南](./configuration.md) → [安全指南](./security.md) → **[故障排查](./troubleshooting.md)** → [常见问题](./faq.md) |
-
-## 子模块故障排查
-
-| 子模块 | 故障排查 | 说明 |
-|--------|----------|------|
-| base | [故障排查](./base/troubleshooting.md) | 基础配置问题 |
-| business | [故障排查](./business/troubleshooting.md) | 业务配置问题 |
-
+🟡🔵 **运维+开发者**：README → troubleshooting → configuration → best-practices
 
 ## 概述
 
-配置中心的常见问题和解决方案。
+本文档帮助您诊断和解决使用 Config 模块时的常见问题。
 
 ## 常见问题
 
-### 问题 1: get_env 返回 None
+### 问题 1: 环境变量未生效
 
 **症状：**
-- `get_env('KEY')` 返回 `None`
-- 配置值读取失败
+- get_env() 返回默认值而非配置的值
+- .env 文件被忽略
 
 **可能原因：**
-- 环境变量文件未加载
-- 环境变量名称拼写错误
-- 配置文件路径不正确
+- .env 文件路径错误
+- 环境变量名拼写错误
+- load_env() 未被调用
 
 **解决方案：**
 
-1. 确认已调用 load_env()：
+1. 检查 .env 文件位置
+```bash
+# .env 应在项目根目录
+cat .env
+```
 
+2. 确保调用 load_env()
 ```python
 from FQBase.Config import load_env, get_env
 
-# 加载环境变量
-load_env()
-
-# 然后获取
-value = get_env('KEY')
+load_env()  # 先加载
+value = get_env("KEY")  # 再获取
 ```
 
-2. 检查环境变量名称：
-
-```python
-# 确认 .env 文件中的键名
-# DEBUG=true (不是 debug=true)
-print(get_env('DEBUG'))  # 大小写敏感
-```
-
-3. 检查配置文件路径：
-
-```python
-# 使用绝对路径
-load_env('/absolute/path/to/.env')
-```
-
----
-
-### 问题 2: DATABASE 连接失败
+### 问题 2: MongoDB 连接失败
 
 **症状：**
-- `DATABASE` 访问报错
-- MongoDB 连接超时
+- SETTING.get_mongo() 返回默认值
+- 数据库连接超时
 
 **可能原因：**
-- MongoDB 服务未运行
-- 连接字符串错误
-- 网络问题
+- MONGODB_URI 环境变量未设置
+- MongoDB 服务未启动
 
 **解决方案：**
 
-1. 检查 MongoDB 服务：
-
+1. 检查环境变量
 ```bash
-# 启动 MongoDB
-mongod --dbpath /data/db
+echo $MONGODB_URI
 ```
 
-2. 验证连接字符串：
+2. 验证 MongoDB 服务
+```bash
+redis-cli ping  # 检查 MongoDB
+```
+
+### 问题 3: 配置监听不工作
+
+**症状：**
+- 配置文件变化但回调未触发
+
+**可能原因：**
+- 监听的文件路径错误
+- 回调函数未正确注册
+
+**解决方案：**
+
+```python
+from FQBase.Config import watch_config
+
+watcher = watch_config(["config.ini"])
+watcher.add_callback(lambda cfg: print(f"变更: {cfg}"))
+```
+
+## FAQ
+
+### Q: 如何查看所有配置？
+
+```python
+from FQBase.Config import SETTING, GLOBALMAP, get_cache_config
+
+print(f"MongoDB: {SETTING.get_mongo()}")
+print(f"数据路径: {GLOBALMAP.FQDATA_PATH}")
+print(f"缓存配置: {get_cache_config()}")
+```
+
+### Q: 如何在运行时更改配置？
 
 ```python
 from FQBase.Config import SETTING
 
-# 测试连接
-uri = SETTING.get_mongo()
-print(f"连接: {uri}")
+SETTING.change(ip="newhost", port=27017)
 ```
-
-3. 检查网络连通性：
-
-```bash
-ping localhost
-```
-
----
-
-### 问题 3: 缓存配置无效
-
-**症状：**
-- 缓存类型切换不生效
-- 缓存过期时间无效
-
-**可能原因：**
-- 缓存配置在创建后未保存
-- 缓存后端服务未运行
-
-**解决方案：**
-
-1. 重新创建缓存配置：
-
-```python
-from FQBase.Config import CacheConfig, set_cache_config
-
-# 重新设置缓存配置
-config = CacheConfig(cache_type='redis', ttl=1800)
-set_cache_config(config)
-```
-
-2. 检查缓存服务状态：
-
-```bash
-# Redis
-redis-cli ping
-
-# MongoDB
-mongosh -u admin -p --authenticationDatabase admin
-```
-
----
-
-### 问题 4: ConfigWatcher 回调不触发
-
-**症状：**
-- 注册的回调函数不执行
-- 配置变更未被监听
-
-**可能原因：**
-- 回调函数签名不正确
-- 监听键名不匹配
-
-**解决方案：**
-
-1. 检查回调函数签名：
-
-```python
-# 正确的回调函数
-def my_callback(key, value):
-    print(f"{key} 已变更为 {value}")
-
-watcher.watch('database', callback=my_callback)
-```
-
-2. 检查监听键名：
-
-```python
-# 确保监听正确的键名
-watcher.watch('database', callback=on_change)  # 不是 'db' 或 'mongo'
-```
-
----
-
-### 问题 5: 路径配置为 None
-
-**症状：**
-- `FQDATA_PATH` 等路径返回 `None`
-- 路径未正确初始化
-
-**可能原因：**
-- 配置文件未创建
-- 路径未在配置文件中设置
-
-**解决方案：**
-
-1. 检查配置文件：
-
-```bash
-# 确认 setting.json 存在
-cat FQData/setting.json
-```
-
-2. 手动设置路径：
-
-```python
-from FQBase.Config import SETTING
-
-# 获取路径
-fqdata_path = SETTING.get_fqdata_path()
-```
-
----
-
-## 错误参考
-
-### 错误代码
-
-| 代码 | 错误 | 描述 | 解决方案 |
-|------|------|------|---------|
-| 001 | EnvNotLoaded | 环境变量未加载 | 调用 load_env() |
-| 002 | ConfigNotFound | 配置文件不存在 | 检查文件路径 |
-| 003 | DatabaseConnectionFailed | 数据库连接失败 | 检查 MongoDB 服务 |
-| 004 | CacheTypeInvalid | 缓存类型无效 | 使用 'redis' 或 'mongo' |
-| 005 | PathNotConfigured | 路径未配置 | 检查 setting.json |
-
-### 错误处理模式
-
-```python
-from FQBase.Config import (
-    get_env,
-    SETTING,
-    ConfigValidationError,
-)
-
-try:
-    value = get_env('REQUIRED_KEY')
-    if value is None:
-        raise ValueError("必需的配置项未设置")
-except Exception as e:
-    print(f"配置错误: {e}")
-```
-
----
-
-## 诊断工具
-
-### 启用调试日志
-
-```python
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger("fqbase.config")
-logger.debug("调试信息")
-```
-
-### 配置健康检查
-
-```python
-from FQBase.Config import (
-    get_env,
-    SETTING,
-    DATABASE,
-    get_cache_config,
-)
-
-def health_check():
-    results = {}
-    
-    # 检查环境变量
-    results['env'] = get_env('DEBUG') is not None
-    
-    # 检查数据库
-    try:
-        results['database'] = SETTING.get_mongo() is not None
-    except:
-        results['database'] = False
-    
-    # 检查缓存配置
-    results['cache'] = get_cache_config() is not None
-    
-    return results
-
-print(health_check())
-```
-
----
-
-## 获取帮助
-
-### 联系支持前
-
-1. 启用调试日志
-2. 收集错误日志
-3. 记录错误代码和消息
-4. 记录重现步骤
-
-### 联系支持
-
-- 邮箱：support@fquant.com
-- GitHub Issues：https://github.com/fquant/fquant/issues
 
 ## 相关文档
 
-- [常见问题](./faq.md)
 - [最佳实践](./best-practices.md)
 - [API参考](./api.md)
+- [配置指南](./configuration.md)

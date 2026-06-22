@@ -1,326 +1,178 @@
 ---
 title: Cache - 使用指南
-description: Cache 模块详细使用指南
+description: Cache 详细使用指南
 tag:
+  - fquant
   - fqbase
   - cache
+
+summary:
+  purpose: usage
 ---
 
 # Cache - 使用指南
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [速查表](./cheatsheet.md) → [动手实验室](./workshop.md) → **[使用指南](./usage.md)** → [案例库](./examples.md) |
-| 🔵 开发者 | [README](./README.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) → [设计原则](./design.md) → [API参考](./api.md) → [开发指南](./development.md) → **[使用指南](./usage.md)** → [最佳实践](./best-practices.md) |
+🔵 **开发者**：README → api → usage → concepts → examples
 
 ## 概述
 
-本指南详细介绍如何使用 Cache 模块的三种缓存实现，包括 LocalCache、RedisCacheAdapter、MongoCacheAdapter，以及装饰器用法。
+本指南详细说明如何在各种场景下使用 Cache 模块。
 
-## LocalCache 使用
+## 基本用法
+
+### 创建缓存实例
+
+```python
+from FQBase.Cache import create_cache, LocalCache, RedisCacheAdapter
+
+# 工厂方法（自动选择后端）
+cache = create_cache()
+
+# 直接创建 LocalCache
+local_cache = LocalCache(name="my_cache", ttl=3600)
+
+# 直接创建 Redis 缓存
+redis_cache = RedisCacheAdapter()
+```
 
 ### 基本操作
 
 ```python
-from FQBase.Cache import LocalCache
-
-# 创建缓存实例
-cache = LocalCache(name='my_cache', maxsize=128, ttl=300)
+cache = create_cache()
 
 # 设置缓存
-cache.set('key1', 'value1')
-cache.set('key2', 'value2', ttl=60)  # 覆盖默认 TTL
+cache.set("key", "value", ttl=3600)
 
 # 获取缓存
-value = cache.get('key1')
-value = cache.get('key1', default='default_value')  # 设置默认值
+value = cache.get("key", default="default_value")
 
 # 删除缓存
-cache.delete('key1')
+cache.delete("key")
 
-# 检查存在
-exists = cache.exists('key1')
-
-# 清空缓存
+# 清空所有缓存
 cache.clear()
 ```
 
-### 批量操作
+## 常见用例
+
+### 用例 1: 使用 @redis_cache 装饰器
+
+**场景：** 缓存函数结果，避免重复计算
 
 ```python
-# 批量设置
-cache.set_many({
-    'key1': 'value1',
-    'key2': 'value2',
-    'key3': 'value3'
-}, ttl=300)
+from FQBase.Cache import redis_cache, init_cache_adapter
 
-# 批量获取
-values = cache.get_many(['key1', 'key2', 'key3'])
-# 返回: {'key1': 'value1', 'key2': 'value2'}（key3 不存在则不返回）
+init_cache_adapter()
 
-# 批量删除
-deleted_count = cache.delete_many(['key1', 'key2'])
+@redis_cache(ttl=300, key_prefix="stock")
+def get_stock_price(code):
+    return fetch_price_from_api(code)
+
+# 获取股票价格（首次调用）
+price = get_stock_price("000001")
+
+# 后续调用在 TTL 有效期内返回缓存结果
+price = get_stock_price("000001")
 ```
 
-### TTL 操作
+### 用例 2: 动态 TTL
+
+**场景：** 根据参数动态设置缓存时间
 
 ```python
-# 设置 TTL
-cache.set('key1', 'value1', ttl=3600)
-
-# 获取剩余 TTL
-remaining = cache.ttl('key1')
-# 返回: 3600（秒），-1（永不过期），-2（键不存在）
-
-# 设置过期时间
-cache.expire('key1', 1800)  # 30 分钟后过期
+@redis_cache(ttl=300, key_ttl_func=lambda symbol, date: 3600 if date > "2024-01-01" else 86400)
+def get_market_data(symbol, date):
+    return fetch_market_data(symbol, date)
 ```
 
-### 统计信息
+### 用例 3: 全局缓存适配器
+
+**场景：** 在多个模块间共享缓存
 
 ```python
-# 获取统计信息
-stats = cache.stats
-print(stats)
-# {'hits': 100, 'misses': 20, 'hit_rate': '83.33%', 'evictions': 5, ...}
+from FQBase.Cache import get_cache_adapter, set_cache_adapter
+
+# 模块 A
+adapter = get_cache_adapter()
+adapter.set("shared_key", "shared_value")
+
+# 模块 B
+adapter = get_cache_adapter()
+value = adapter.get("shared_key")
 ```
 
-## RedisCacheAdapter 使用
+### 用例 4: 缓存上下文管理器
 
-### String 操作
+**场景：** 临时切换缓存适配器
 
 ```python
-from FQBase.Cache import RedisCacheAdapter
+from FQBase.Cache import CacheContext, LocalCache
 
-redis = RedisCacheAdapter(host='localhost', port=6379, prefix='myapp:')
+default_adapter = get_cache_adapter()
 
-# 基本操作
-redis.set('name', '张三', ttl=3600)
-value = redis.get('name')
+with CacheContext(LocalCache(name="temp")):
+    cache = get_cache_adapter()
+    cache.set("temp_key", "temp_value")
 
-# 批量操作
-redis.mset({'key1': 'value1', 'key2': 'value2'})
-values = redis.mget('key1', 'key2')
-
-# 删除
-redis.delete('name')
-exists = redis.exists('name')
-
-# TTL
-redis.expire('name', 1800)
-ttl = redis.ttl('name')
+# 退出上下文后恢复原适配器
 ```
 
-### Hash 操作
+### 用例 5: 缓存清除和统计
+
+**场景：** 管理缓存生命周期
 
 ```python
-# 设置 Hash
-redis.hset('user:1', 'name', '张三')
-redis.hset('user:1', 'age', '30')
+@redis_cache(ttl=300, key_prefix="data")
+def fetch_data():
+    return expensive_operation()
 
-# 批量设置
-redis.hmset('user:1', {'name': '张三', 'age': 30, 'city': '北京'})
+# 获取缓存统计
+stats = fetch_data.cache_stats()
+print(f"缓存键数量: {stats['keys']}")
 
-# 获取单个字段
-name = redis.hget('user:1', 'name')
-
-# 批量获取字段
-values = redis.hmget('user:1', 'name', 'age', 'city')
-
-# 获取所有字段
-user = redis.hgetall('user:1')
-# 返回: {'name': '张三', 'age': '30', 'city': '北京'}
-
-# 获取所有值
-values = redis.hvals('user:1')
-
-# 删除字段
-redis.hdel('user:1', 'age')
+# 清除缓存
+fetch_data.cache_clear()
 ```
 
-### List 操作
+## 异步支持
 
 ```python
-# 插入
-redis.lpush('queue', 'task1')  # 左侧插入
-redis.rpush('queue', 'task2')  # 右侧插入
+from FQBase.Cache import redis_cache, init_cache_adapter
 
-# 获取
-tasks = redis.lrange('queue', 0, -1)  # 获取所有
+init_cache_adapter()
 
-# 弹出
-task = redis.lpop('queue')  # 左侧弹出
-task = redis.rpop('queue')  # 右侧弹出
-
-# 长度
-length = redis.llen('queue')
-```
-
-### Set 操作
-
-```python
-# 添加成员
-redis.sadd('tags', 'python', 'redis', 'cache', 'python')  # python 只会添加一次
-
-# 获取所有成员
-tags = redis.smembers('tags')
-
-# 检查成员
-is_member = redis.sismember('tags', 'python')
-
-# 成员数量
-count = redis.scard('tags')
-
-# 移除成员
-redis.srem('tags', 'cache')
-
-# 随机弹出
-random_member = redis.spop('tags')
-```
-
-### 使用 prefix 隔离
-
-```python
-# 不同 prefix 隔离不同业务
-user_cache = RedisCacheAdapter(prefix='user:')
-order_cache = RedisCacheAdapter(prefix='order:')
-
-user_cache.set('1', {'name': '张三'})   # 实际键: user:1
-order_cache.set('1', {'id': 1})          # 实际键: order:1
-
-print(user_cache.get('1'))  # {'name': '张三'}
-print(order_cache.get('1'))  # {'id': 1}
-```
-
-### Pipeline 批量操作
-
-```python
-# 使用 Pipeline 减少网络往返
-pipe = redis._client.pipeline()
-pipe.set('key1', 'value1')
-pipe.set('key2', 'value2')
-pipe.get('key1')
-pipe.get('key2')
-results = pipe.execute()
-# results: [True, True, 'value1', 'value2']
-```
-
-### SCAN 安全遍历
-
-```python
-# 使用 SCAN 遍历大量键（替代 KEYS，避免阻塞）
-keys = redis.scan(match='user:*', count=1000)
-# 返回匹配 'user:*' 的键列表
-```
-
-## 装饰器使用
-
-### @local_cache
-
-```python
-from FQBase.Cache import local_cache
-
-@local_cache(maxsize=128, ttl=300)
-def expensive_computation(x, y):
-    print("执行计算...")
-    return x + y
-
-# 第一次调用
-result1 = expensive_computation(1, 2)  # 输出: 执行计算...
-
-# 第二次调用（使用缓存）
-result2 = expensive_computation(1, 2)  # 不输出，直接返回缓存结果
-```
-
-### @redis_cache
-
-```python
-from FQBase.Cache import redis_cache
-
-@redis_cache(ttl=3600, key_prefix='fetch_data')
-def fetch_data_from_api(data_id):
-    return api_client.get(f'/data/{data_id}')
-
-# 异步函数支持
-@redis_cache(ttl=600, key_prefix='async_fetch')
-async def async_fetch_data(data_id):
-    return await api_client.async_get(f'/data/{data_id}')
-```
-
-### 自定义 TTL
-
-```python
-# 使用 key_ttl_func 为不同参数设置不同 TTL
-def get_ttl_by_data_type(func, args, kwargs):
-    data_type = kwargs.get('data_type') or args[0] if args else 'default'
-    ttl_map = {
-        'realtime': 60,      # 实时数据 60 秒
-        'daily': 3600,       # 日数据 1 小时
-        'historical': 86400  # 历史数据 1 天
-    }
-    return ttl_map.get(data_type, 300)
-
-@local_cache(ttl=300, key_ttl_func=get_ttl_by_data_type)
-def get_market_data(data_type):
-    return fetch_market_data(data_type)
-```
-
-## 配置
-
-### LocalCache 配置
-
-```python
-cache = LocalCache(
-    name='my_cache',    # 缓存名称（用于单例识别）
-    maxsize=128,       # 最大条目数
-    ttl=300,           # 默认 TTL（秒），0=永不过期
-    eviction='lru'     # 驱逐策略：'lru' 或 'fifo'
-)
-```
-
-### RedisCacheAdapter 配置
-
-```python
-redis = RedisCacheAdapter(
-    host='localhost',
-    port=6379,
-    db=0,
-    password=None,
-    prefix='myapp:',              # 键前缀
-    pickle_first=False,           # 序列化优先级
-    safe_mode=False,             # 安全模式
-    socket_timeout=5,            # socket 超时
-    socket_connect_timeout=5,    # 连接超时
-    max_connections=50          # 最大连接数
-)
+@redis_cache(ttl=300)
+async def fetch_async_data(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.json()
 ```
 
 ## 错误处理
 
 ```python
-from FQBase.Cache import RedisCacheAdapter
-import redis as redis_lib
+from FQBase.Cache import (
+    get_cache_adapter,
+    CacheError,
+    CacheConnectionError,
+    CacheSerializationError,
+)
 
 try:
-    redis = RedisCacheAdapter(host='localhost', port=6379)
-    redis.set('key', 'value')
-except redis_lib.ConnectionError as e:
-    print(f"Redis 连接失败: {e}")
-except redis_lib.TimeoutError as e:
-    print(f"Redis 操作超时: {e}")
-except Exception as e:
-    print(f"其他错误: {e}")
+    adapter = get_cache_adapter()
+    adapter.set("key", {"data": "value"})
+except CacheConnectionError:
+    print("缓存连接失败，使用降级方案")
+except CacheSerializationError:
+    print("数据序列化失败")
+except CacheError as e:
+    print(f"缓存错误: {e}")
 ```
-
----
 
 ## 相关文档
 
 - [API参考](./api.md)
-- [开发指南](./development.md)
 - [最佳实践](./best-practices.md)
 - [故障排查](./troubleshooting.md)
-- [三种缓存机制对比](./cache_comparison.md)

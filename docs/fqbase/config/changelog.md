@@ -1,56 +1,75 @@
 ---
 title: Config - 变更日志
-description: FQBase 配置中心版本历史与更新说明
+description: Config 版本历史与更新说明
 tag:
+  - fquant
   - fqbase
   - config
+
+summary:
+  purpose: changelog
 ---
 
 # Config - 变更日志
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 📖 索引 | [README](./README.md) → **[变更日志](./changelog.md)** |
+全部角色：README → changelog
 
-## 子模块变更日志
-
-| 子模块 | 变更日志 | 说明 |
-|--------|----------|------|
-| base | [变更日志](./base/changelog.md) | 基础配置变更 |
-| business | [变更日志](./business/changelog.md) | 业务配置变更 |
-
-
-## v1.0.0 (2024-01)
+## v2.9.0 (2026-04)
 
 ### 新增
 
-- 首次发布 Config 配置中心模块
-- 环境变量管理（load_env, get_env, reload_env, get_secure_env）
-- MongoDB 配置（SETTING, DATABASE, DATABASE_ASYNC）
-- 缓存配置（CacheConfig, get_cache_config, set_cache_config）
-- 配置监听（ConfigWatcher, ConfigWatcherManager, watch_config）
-- 路径配置（FQDATA_PATH, SETTING_PATH, CACHE_PATH, LOG_PATH 等）
+- EnvManager 类统一管理环境变量
+- get_secure_env() 安全获取敏感配置
+- ConfigWatcherManager 管理多个配置监听器
+- watch_config() 快捷函数
 
 ### 更改
 
-- 重构 Config 目录结构，分为 base 和 business 两个子模块
+- 重构配置加载顺序：环境变量 > .env > config.ini > 默认值
+- SETTING 和 GLOBALMAP 保持单例模式
 
-### 子模块
+## v2.8.0 (2026-03)
 
-- **base/**: 基础配置（L3 完整文档）
-  - env.py: 环境变量管理
-  - setting.py: MongoDB 连接配置
-  - cache_config.py: 缓存配置
-  - config_watcher.py: 配置监听
+### 新增
 
-- **business/**: 业务配置（L2 标准文档）
-  - datasource_config.py: 数据源配置
-  - ip_list.py: IP 列表管理
+- GlobalMap 类统一管理路径配置
+- 路径属性：FQDATA_PATH, CACHE_PATH, LOG_PATH 等
+
+### 更改
+
+- 统一使用 GlobalMap 而非分散的路径常量
+
+## v2.7.0 (2026-02)
+
+### 新增
+
+- CacheConfig 缓存配置类
+- get_cache_config / set_cache_config 函数
+
+## v2.6.0 (2026-01)
+
+### 新增
+
+- ConfigWatcher 配置监听器
+- 支持热更新配置
+
+## v2.5.0 (2025-12)
+
+### 新增
+
+- Setting 类 MongoDB 配置
+- get_env / load_env 环境变量函数
+
+---
+
+## 弃用追踪
+
+| 弃用项 | 替代方案 | 迁移指南 | 弃用版本 |
+|--------|---------|---------|---------|
+| 直接导入路径常量 | 使用 GLOBALMAP | `from FQBase.Config import FQDATA_PATH` → `GLOBALMAP.FQDATA_PATH` | v2.8.0 |
 
 ## 相关文档
 
 - [README](./README.md)
-- [base/CHANGELOG](./base/changelog.md)
-- [business/CHANGELOG](./business/changelog.md)

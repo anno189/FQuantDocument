@@ -284,6 +284,89 @@ data = adapter.get_future_daily(code='IF2401', start='2024-01-01', end='2024-12-
 
 ---
 
+### datasource_config.py
+
+#### DataSourceConfig
+
+数据源配置单例类。
+
+```python
+from FQData.DataSource import DataSourceConfig, get_datasource_priority
+
+# 获取配置
+config = DataSourceConfig()
+priority = config.get_priority('stock')
+```
+
+| 方法 | 说明 |
+|------|------|
+| `get(key, default)` | 获取配置值，支持点号分隔 |
+| `get_priority(asset_type)` | 获取指定资产类型的数据源优先级 |
+| `get_health_check_enabled()` | 获取健康检查是否启用 |
+| `get_health_check_timeout()` | 获取健康检查超时时间 |
+
+#### get_datasource_priority()
+
+```python
+def get_datasource_priority(asset_type: str) -> List[str]
+```
+
+获取数据源优先级。
+
+**参数**: `asset_type` - 资产类型 (stock/index/future/bond/option/hk_stock/us_stock)
+
+**返回**: 数据源代号列表
+
+```python
+priority = get_datasource_priority('stock')
+# ['tdx', 'jq']
+```
+
+#### get_health_check_config()
+
+```python
+def get_health_check_config() -> Dict[str, Any]
+```
+
+获取健康检查配置。
+
+---
+
+### ip_list.py
+
+#### TDXIPListManager
+
+通达信 IP 列表管理器。
+
+```python
+from FQData.DataSource import TDXIPListManager, get_TDX_stock_ip_list
+
+# 获取股票服务器列表
+stock_ips = TDXIPListManager.get_stock_list()
+```
+
+| 方法 | 说明 |
+|------|------|
+| `get_info_list()` | 获取资讯服务器列表 |
+| `get_stock_list()` | 获取股票行情服务器列表 |
+| `get_future_list()` | 获取期货行情服务器列表 |
+| `exclude_from_stock_ip_list(exclude_list)` | 从股票列表中排除指定 IP |
+| `exclude_from_future_ip_list(exclude_list)` | 从期货列表中排除指定 IP |
+
+#### IP 列表函数
+
+```python
+from FQData.DataSource import (
+    get_TDX_info_ip_list,
+    get_TDX_stock_ip_list,
+    get_TDX_future_ip_list,
+    exclude_from_TDX_stock_ip_list,
+    exclude_from_TDX_future_ip_list,
+)
+```
+
+---
+
 ## 相关文档
 
 - [README](README.md)

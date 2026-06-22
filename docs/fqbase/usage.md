@@ -2,186 +2,164 @@
 title: FQBase - 使用指南
 description: FQBase 详细使用指南
 tag:
+  - fquant
   - fqbase
+
+summary:
+  purpose: usage
 ---
 
 # FQBase - 使用指南
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → [速查表](./cheatsheet.md) → [动手实验室](./workshop.md) → **[使用指南](./usage.md)** → [案例库](./examples.md) |
-| 🔵 开发者 | [README](./README.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) → [设计原则](./design.md) → [API参考](./api.md) → [开发指南](./development.md) → **[使用指南](./usage.md)** → [最佳实践](./best-practices.md) |
-
-## 子模块使用指南
-
-| 子模块 | 使用指南 | 说明 |
-|--------|----------|------|
-| Core | [使用指南](./core/usage.md) | 事件总线、日志、通知 |
-| Foundation | [使用指南](./foundation/usage.md) | 验证、异常、重试、单例 |
-| Util | [使用指南](./util/usage.md) | 工具函数 |
-| Config | [使用指南](./config/usage.md) | 配置管理 |
-| Cache | [使用指南](./cache/usage.md) | 缓存抽象 |
-| Date | [使用指南](./date/usage.md) | 日期时间 |
-| DataStore | [使用指南](./datastore/usage.md) | 数据存储 |
-| Crawler | [使用指南](./crawler/usage.md) | 网页爬虫 |
-
+🔵 **开发者**：README → api → usage → concepts → examples
 
 ## 概述
 
-详细说明如何有效使用 FQBase 的各个模块。
+本指南详细说明如何在各种场景下使用 FQBase。
 
 ## 基本用法
 
-### 安装
-
-```bash
-pip install fquant-fqbase
-```
-
-### 快速开始
+### 使用日志
 
 ```python
-from FQBase.Core import (
-    get_event_bus,
-    get_logger,
-    NotificationManager,
-    Event,
-)
-from FQBase.Foundation import retry
+from FQBase.Infrastructure import get_logger
 
-# 创建实例
-event_bus = get_event_bus()
-logger = get_logger('my_module')
-notifier = NotificationManager()
+logger = get_logger(__name__)
+logger.info("Starting operation")
+logger.warning("Warning message")
+logger.error("Error occurred", exc_info=True)
+```
 
-# 订阅事件
-@event_bus.subscribe('task_completed')
-def on_task_completed(event):
-    logger.info(f"任务完成: {event.data}")
-    notifier.send(f"任务完成", channel='SYSTEM')
+### 使用单例
 
-# 发布事件
-event_bus.publish(Event('task_completed', {'task_id': 123}))
+```python
+from FQBase.Infrastructure import singleton
+
+@singleton
+class Cache:
+    def __init__(self):
+        self._cache = {}
+
+    def get(self, key):
+        return self._cache.get(key)
+
+    def set(self, key, value):
+        self._cache[key] = value
 ```
 
 ## 常见用例
 
-### 用例 1: 交易信号通知系统
+### 用例 1: 配置管理
 
-**场景：** 当交易策略产生信号时，发送企业微信通知
-
-**代码：**
+**场景：** 管理 MongoDB 连接配置
 
 ```python
-from FQBase.Core import get_event_bus, get_logger, NotificationManager, Event
-from FQBase.Foundation import retry
+from FQBase.Config import SETTING, GLOBALMAP
 
-# 初始化组件
-event_bus = get_event_bus()
-logger = get_logger('strategy')
-notifier = NotificationManager()
+# 获取 MongoDB URI
+uri = SETTING.get_mongo()
 
-# 订阅交易信号
-@event_bus.subscribe('trade_signal')
-def handle_trade_signal(event):
-    signal = event.data
-    logger.info(f"交易信号: {signal}")
-    
-    # 发送通知
-    message = f"{signal['code']} - {signal['signal']} @ {signal['price']}"
-    notifier.send(message, channel='WECOM')
-
-# 策略产生信号
-def on_signal(code, signal_type, price):
-    event_bus.publish(Event('trade_signal', {
-        'code': code,
-        'signal': signal_type,
-        'price': price
-    }))
+# 获取路径配置
+fqdata_path = GLOBALMAP.FQDATA_PATH
+cache_path = GLOBALMAP.CACHE_PATH
 ```
 
-### 用例 2: 带重试的数据获取
+### 用例 2: 事件驱动
 
-**场景：** 从外部 API 获取数据，失败时自动重试
-
-**代码：**
+**场景：** 实现松耦合的组件通信
 
 ```python
-from FQBase.Foundation import retry
-from FQBase.Cache import CacheAdapter
-import requests
+from FQBase.Foundation import EventBus, Event
 
-cache = CacheAdapter()
+bus = EventBus()
 
-@retry(max_attempts=3, delay=1, backoff=2, exceptions=(requests.RequestException,))
-def fetch_market_data(code):
-    # 尝试从缓存获取
-    cached = cache.get(f"market:{code}")
-    if cached:
-        return cached
-    
-    # 从外部获取
-    response = requests.get(f"https://api.example.com/quote/{code}")
-    data = response.json()
-    
-    # 存入缓存（5分钟）
-    cache.set(f"market:{code}", data, ttl=300)
-    return data
+def on_data_received(event):
+    print(f"Data: {event.data}")
+
+bus.subscribe("data", on_data_received)
+bus.publish(Event("data", {"value": 42}))
 ```
 
-### 用例 3: 配置管理
+### 用例 3: 缓存策略
 
-**场景：** 使用环境变量配置应用
-
-**代码：**
+**场景：** 实现多级缓存
 
 ```python
-from FQBase.Config import load_env, get_env
+from FQBase.Cache import create_cache, RedisCacheAdapter, LocalCache
 
-# 加载 .env 文件
-load_env('.env')
+# 从环境变量创建缓存
+cache = create_cache()
 
-# 获取配置
-API_KEY = get_env('API_KEY')
-DEBUG = get_env('DEBUG', default=False)
-PORT = get_env('PORT', default=8080, type=int)
+# 直接使用
+cache.set("key", {"data": "value"}, ttl=3600)
+result = cache.get("key")
 ```
 
-## 配置
+### 用例 4: 数据库操作
 
-### 基本配置
+**场景：** MongoDB CRUD 操作
 
-```yaml
-fqbase:
-  event_bus:
-    enabled: true
-    max_history: 100
-  logger:
-    level: INFO
-  notification:
-    enabled: true
+```python
+from FQBase.DataStore import get_mongo_db
+
+db = get_mongo_db(database="mydb")
+db.insert_one("users", {"name": "test", "age": 25})
+user = db.find_one("users", {"name": "test"})
+db.update_one("users", {"name": "test"}, {"$set": {"age": 30}})
+db.delete_one("users", {"name": "test"})
 ```
+
+### 用例 5: 爬虫
+
+**场景：** 抓取网页数据
+
+```python
+from FQBase.Crawler import BaseCrawler, PageParser
+
+class MyCrawler(BaseCrawler):
+    def __init__(self):
+        super().__init__(use_browser=False, delay=1.0)
+
+    def parse_list(self, url):
+        html = self.fetch_url(url)
+        return PageParser.extract_by_css(html, "div.item", ["title", "href"])
+
+crawler = MyCrawler()
+items = crawler.parse_list("http://example.com/list")
+```
+
+## 方案对比
+
+| 对比项 | FQBase | 其他方案 |
+|--------|--------|---------|
+| 日志 | 统一日志系统 | 各自实现 |
+| 缓存 | 多后端支持 | 硬编码单一后端 |
+| 数据库 | 门面模式封装 | 直接调用 pymongo |
+| 爬虫 | Selenium+requests | 仅 requests |
 
 ## 错误处理
 
 ```python
-from FQBase.Foundation import FQException, ValidationError, handle_exception
-from FQBase.Core import get_logger
-
-logger = get_logger('error_handler')
+from FQBase.Infrastructure.exceptions import (
+    FQException,
+    DataSourceException,
+    safe_execute,
+    handle_exception,
+)
 
 try:
-    validate_code('invalid_code')
-except ValidationError as e:
-    logger.error(f"验证错误: {e}")
+    result = risky_operation()
 except FQException as e:
-    logger.exception(f"FQ异常: {e}")
+    handle_exception(e, logger=logger)
+
+# 或使用 safe_execute
+result = safe_execute(risky_operation, default_value=None, logger=logger)
 ```
 
 ## 相关文档
 
 - [API参考](./api.md)
-- [开发指南](./development.md)
 - [最佳实践](./best-practices.md)
+- [故障排查](./troubleshooting.md)

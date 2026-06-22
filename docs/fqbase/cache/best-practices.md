@@ -1,217 +1,120 @@
 ---
 title: Cache - 最佳实践
-description: Cache 模块最佳实践与建议
+description: Cache 最佳实践与建议
 tag:
+  - fquant
   - fqbase
   - cache
+
+summary:
+  purpose: best-practices
 ---
 
 # Cache - 最佳实践
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🔵 开发者 | [README](./README.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) → [设计原则](./design.md) → [API参考](./api.md) → [开发指南](./development.md) → [使用指南](./usage.md) → **[最佳实践](./best-practices.md)** |
-| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → [配置指南](./configuration.md) → [安全指南](./security.md) → [故障排查](./troubleshooting.md) → [常见问题](./faq.md) → **[最佳实践](./best-practices.md)** |
+🔵🟡 **开发者+运维**：README → best-practices → configuration → troubleshooting
 
 ## 概述
 
-本指南汇总使用 Cache 模块的最佳实践，帮助您在实际项目中高效使用缓存。
+本文档提供使用 Cache 模块的最佳实践。
 
 ## 性能最佳实践
 
-### 1. 选择合适的缓存级别
+### 技巧 1: 合理选择缓存后端
 
-| 场景 | 推荐 | 原因 |
-|------|------|------|
-| 单进程、低延迟 | `@local_cache` | 无网络开销，延迟最低 |
-| 多进程/多实例共享 | `@redis_cache` | 跨进程共享 |
-| 简单配置 | `@lru_cache` | Python 内置，无需额外依赖 |
+**建议：** 根据场景选择合适的缓存后端。
 
-### 2. 使用批量操作
+| 场景 | 推荐后端 | 原因 |
+|------|---------|------|
+| 开发环境 | LocalCache | 零依赖、快速 |
+| 单进程生产 | LocalCache | 最高性能 |
+| 多进程/分布式 | Redis | 跨进程共享 |
+| 需要持久化 | MongoDB | 数据持久化 |
+
+### 技巧 2: 合理设置 TTL
+
+**建议：** 根据数据更新频率设置 TTL。
 
 ```python
-# ❌ 不好：多次网络往返
-for key in keys:
-    cache.set(key, values[key])
+# 实时数据：短 TTL
+@redis_cache(ttl=60)
+def get_stock_price(symbol):
+    return fetch_price(symbol)
 
-# ✅ 好：批量操作
-cache.set_many(values)
+# 日数据：长 TTL
+@redis_cache(ttl=86400)
+def get_daily_summary(date):
+    return fetch_summary(date)
 ```
 
-### 3. 设置合理的 TTL
+### 技巧 3: 使用键前缀避免冲突
+
+**建议：** 为不同功能设置不同的键前缀。
 
 ```python
-# 频繁变化的数据
-@redis_cache(ttl=60, key_prefix='market')
-def get_market_data():
-    return fetch_market()
-
-# 相对稳定的数据
-@redis_cache(ttl=86400, key_prefix='config')
-def get_system_config():
-    return load_config()
-```
-
-### 4. 使用 prefix 隔离
-
-```python
-# 按业务隔离
-user_cache = RedisCacheAdapter(prefix='user:')
-order_cache = RedisCacheAdapter(prefix='order:')
-```
-
-## 安全最佳实践
-
-### 1. 避免缓存穿透
-
-```python
+@redis_cache(ttl=300, key_prefix="user")
 def get_user(user_id):
-    cache_key = f"user:{user_id}"
-    result = cache.get(cache_key)
-    
-    if result is not None:
-        # 区分"未命中"和"缓存空值"
-        if result is NULL_MARKER:
-            return None
-        return result
-    
-    user = db.get_user(user_id)
-    # 空值也缓存，避免缓存穿透
-    cache.set(cache_key, user if user else NULL_MARKER, ttl=300)
-    return user
-```
+    pass
 
-### 2. 保护敏感数据
-
-```python
-# ❌ 不好：缓存敏感信息
-cache.set("user:password:1", "secret")
-
-# ✅ 好：加密或标记
-cache.set("user:password:1", encrypt(password))
-# 或完全不缓存
-```
-
-### 3. 使用安全模式
-
-```python
-# 禁用 pickle（仅使用 msgpack）
-redis = RedisCacheAdapter(safe_mode=True)
+@redis_cache(ttl=300, key_prefix="stock")
+def get_stock(symbol):
+    pass
 ```
 
 ## 错误处理最佳实践
 
-### 1. 实现缓存降级
+### 使用异常处理
 
 ```python
-def get_data(key):
-    try:
-        return cache.get(key)
-    except Exception as e:
-        logger.warning(f"缓存获取失败: {e}")
-        # 降级到数据库
-        return db.get(key)
-```
-
-### 2. 设置超时
-
-```python
-redis = RedisCacheAdapter(
-    socket_timeout=5,
-    socket_connect_timeout=3
+from FQBase.Cache import (
+    get_cache_adapter,
+    CacheError,
+    CacheConnectionError,
+    CacheSerializationError,
 )
-```
 
-### 3. 重试机制
-
-```python
-from functools import wraps
-import time
-
-def retry_on_failure(max_retries=3, delay=1):
-    def decorator(func):
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            for i in range(max_retries):
-                try:
-                    return func(*args, **kwargs)
-                except Exception as e:
-                    if i == max_retries - 1:
-                        raise
-                    time.sleep(delay)
-            return None
-        return wrapper
-    return decorator
-
-@retry_on_failure(max_retries=3)
-def get_cached_data(key):
-    return cache.get(key)
+try:
+    cache = get_cache_adapter()
+    cache.set("key", data)
+except CacheConnectionError:
+    logger.warning("Redis 连接失败，使用降级方案")
+except CacheSerializationError:
+    logger.error("数据序列化失败")
+except CacheError as e:
+    logger.error(f"缓存错误: {e}")
 ```
 
 ## 配置最佳实践
 
-### 1. 使用环境变量
-
-```bash
-# .env
-CACHE_TYPE=redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_DB=0
-```
-
-### 2. 使用连接池
+### 使用环境变量
 
 ```python
-redis = RedisCacheAdapter(
-    host='localhost',
-    port=6379,
-    max_connections=50,
-    socket_timeout=5
-)
-```
-
-### 3. 合理设置 maxsize
-
-```python
-# LocalCache：根据内存和访问模式设置
-cache = LocalCache(
-    maxsize=1000,  # 估算：条目数 * 平均大小 < 可用内存 50%
-    ttl=3600       # 根据数据更新频率
-)
-```
-
-## 监控最佳实践
-
-### 1. 监控缓存命中率
-
-```python
-def report_cache_stats():
-    stats = cache.stats
-    metrics.gauge('cache.hits', stats['hits'])
-    metrics.gauge('cache.misses', stats['misses'])
-    metrics.gauge('cache.hit_rate', float(stats['hit_rate'].rstrip('%')))
-```
-
-### 2. 监控内存使用
-
-```python
-import psutil
 import os
+from FQBase.Cache import RedisCacheAdapter, CacheConfig
 
-def get_cache_memory():
-    process = psutil.Process(os.getpid())
-    return process.memory_info().rss
+config = CacheConfig(
+    cache_type='redis',
+    redis_host=os.getenv('REDIS_HOST', 'localhost'),
+    redis_port=int(os.getenv('REDIS_PORT', 6379)),
+    redis_password=os.getenv('REDIS_PASSWORD'),
+)
 ```
 
----
+### 降级策略
+
+```python
+def get_cache_with_fallback():
+    try:
+        return RedisCacheAdapter()
+    except CacheConnectionError:
+        logger.warning("Redis 不可用，降级到 LocalCache")
+        return LocalCache(name="fallback")
+```
 
 ## 相关文档
 
 - [API参考](./api.md)
 - [使用指南](./usage.md)
-- [开发指南](./development.md)
-- [故障排查](./troubleshooting.md)
-- [三种缓存机制对比](./cache_comparison.md)
+- [配置指南](./configuration.md)

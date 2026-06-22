@@ -1,98 +1,85 @@
 ---
 title: Config - 术语表
-description: FQBase 配置中心术语定义与解释
+description: Config 术语定义与解释
 tag:
+  - fquant
   - fqbase
   - config
+
+summary:
+  purpose: glossary
 ---
 
 # Config - 术语表
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟢 新手入门 | [README](./README.md) → [快速入门](./quick-start.md) → **[术语表](./glossary.md)** → [核心概念](./concepts.md) → [框架集成](./framework.md) → [技术架构](./architecture.md) |
-
-## 子模块术语表
-
-| 子模块 | 术语表 | 说明 |
-|--------|---------|------|
-| base | [术语表](./base/glossary.md) | 基础配置术语 |
-| business | [术语表](./business/glossary.md) | 业务配置术语 |
-
+🟢 **新手**：README → glossary → quick-start → usage
 
 ## 概述
 
-配置中心的核心术语定义，帮助理解配置管理的基本概念。
+本文档定义了 Config 模块中使用的核心术语。
 
 ## 术语
 
-### 环境变量
+### 单例模式 (Singleton)
 
-**定义：** 操作系统级别的键值对，用于存储配置信息
-
-**示例：**
-
-```python
-# .env 文件
-DEBUG=true
-MONGODB_URL=mongodb://localhost:27017
-```
-
-### 单例模式
-
-**定义：** 设计模式，确保一个类只有一个实例
+**定义：** 确保一个类只有一个实例，并提供全局访问点。
 
 **示例：**
 
 ```python
 from FQBase.Config import SETTING
-# 多次导入获取同一实例
+
+# 全局唯一实例
+uri = SETTING.get_mongo()
 ```
 
-### 懒加载
+### 环境变量 (Environment Variable)
 
-**定义：** 延迟初始化策略，只在首次使用时才创建对象
+**定义：** 操作系统级别的键值对，用于配置应用程序。
 
 **示例：**
 
 ```python
-from FQBase.Config import DATABASE
-# 首次访问时才建立数据库连接
+import os
+mongo_uri = os.getenv("MONGODB_URI")
 ```
 
-### 配置监听
+### 配置层级 (Configuration Hierarchy)
 
-**定义：** 监听配置变化并触发回调的机制
+**定义：** 配置的优先级顺序。
+
+**优先级：** 环境变量 > .env 文件 > config.ini > 默认值
+
+### 配置监听 (Configuration Watching)
+
+**定义：** 监控配置文件变化并触发回调。
 
 **示例：**
 
 ```python
-watcher.watch('database', callback=on_change)
+from FQBase.Config import watch_config
+
+watcher = watch_config(["MONGODB_URI"])
+watcher.add_callback(callback)
 ```
 
-### 缓存类型
+### 懒加载 (Lazy Loading)
 
-**定义：** 缓存后端的类型，目前支持 Redis 和 MongoDB
+**定义：** 延迟到首次使用时才加载资源。
 
-**值：**
-- `redis`: Redis 缓存
-- `mongo`: MongoDB 缓存
+**示例：**
 
-### 路径配置
+```python
+from FQBase.Config import get_database
 
-**定义：** 应用中各类目录路径的集中管理
-
-**类型：**
-- FQDATA_PATH: 数据目录
-- SETTING_PATH: 设置目录
-- CACHE_PATH: 缓存目录
-- LOG_PATH: 日志目录
+# 首次调用时才初始化数据库
+db = get_database()
+```
 
 ## 相关文档
 
 - [README](./README.md)
 - [快速入门](./quick-start.md)
 - [核心概念](./concepts.md)
-- [使用指南](./usage.md)

@@ -1,134 +1,164 @@
 ---
 title: FQBase - 配置指南
-description: FQBase 配置选项详解
+description: FQBase 配置选项详解与初始化生命周期
 tag:
+  - fquant
   - fqbase
+
+summary:
+  purpose: configuration
 ---
 
 # FQBase - 配置指南
 
 ## 阅读路径
 
-| 角色 | 阅读路径 |
-|------|---------|
-| 🟡 运维/安全 | [README](./README.md) → [技术架构](./architecture.md) → **[配置指南](./configuration.md)** → [安全指南](./security.md) → [故障排查](./troubleshooting.md) → [常见问题](./faq.md) |
+🟡 **运维**：README → configuration → troubleshooting → best-practices
 
-## 子模块配置指南
+## 初始化与生命周期
 
-| 子模块 | 配置指南 | 说明 |
-|--------|----------|------|
-| Core | [配置指南](./core/configuration.md) | 事件总线、日志、通知 |
-| Config | [配置指南](./config/configuration.md) | 配置管理 |
-| Cache | [配置指南](./cache/configuration.md) | 缓存抽象 |
+### 初始化
 
+```python
+from FQBase.Infrastructure import init_logging
+from FQBase.Config import load_env
 
-## 概述
-
-FQBase 所有配置选项的详细说明。
-
-## 配置文件
-
-### 文件位置
-
-```yaml
-# 默认位置
-config/fqbase.yaml
-
-# 自定义位置
-config/custom/fqbase.yaml
+load_env()
+init_logging(config_path="logging.yaml")
 ```
 
-### 基本配置
+### 生命周期
 
-```yaml
-fqbase:
-  enabled: true
-  version: "1.0.0"
-```
+| 阶段 | 方法 | 说明 |
+|------|------|------|
+| 加载环境 | `load_env()` | 加载 .env 文件 |
+| 初始化日志 | `init_logging()` | 配置日志系统 |
+| 创建缓存 | `create_cache()` | 初始化缓存适配器 |
+| 连接数据库 | `get_database()` | 建立 MongoDB 连接 |
 
 ## 配置选项
 
 ### 核心选项
 
-| 选项 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| enabled | bool | true | 启用/禁用模块 |
-| version | str | "1.0.0" | 版本号 |
-
-### EventBus 选项
+#### MongoDB 配置
 
 | 选项 | 类型 | 默认值 | 描述 |
 |------|------|--------|------|
-| event_bus.enabled | bool | true | 启用事件总线 |
-| event_bus.max_history | int | 100 | 历史事件最大数量 |
-| event_bus.async | bool | false | 异步事件分发 |
+| MONGODB_URI | str | mongodb://localhost:27017 | MongoDB 连接 URI |
+| MONGODB_DATABASE | str | quantaxis | 默认数据库名 |
+| MONGODB_MAX_POOL_SIZE | int | 50 | 最大连接池大小 |
+| MONGODB_MIN_POOL_SIZE | int | 10 | 最小连接池大小 |
 
-### Logger 选项
-
-| 选项 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| logger.level | str | INFO | 日志级别 |
-| logger.format | str | "%(asctime)s..." | 日志格式 |
-| logger.handlers | list | ["console"] | 输出处理器 |
-
-### Notification 选项
+#### Redis 缓存配置
 
 | 选项 | 类型 | 默认值 | 描述 |
 |------|------|--------|------|
-| notification.enabled | bool | true | 启用通知 |
-| notification.channels | list | ["SYSTEM"] | 启用的渠道 |
+| REDIS_HOST | str | localhost | Redis 主机 |
+| REDIS_PORT | int | 6379 | Redis 端口 |
+| REDIS_PASSWORD | str | None | Redis 密码 |
+| REDIS_DB | int | 0 | Redis 数据库编号 |
+| REDIS_MAX_CONNECTIONS | int | 50 | 最大连接数 |
+
+### 高级选项
+
+#### 路径配置
+
+| 选项 | 类型 | 默认值 | 描述 |
+|------|------|--------|------|
+| FQUANT_ROOT_PATH | str | ~/.fqdata | FQuant 根目录 |
+| FQUANT_FQDATA_PATH | str | ~/.fqdata | 数据目录 |
+| FQUANT_INDEX_PATH | str | None | 索引目录 |
+| FQUANT_START_DATE | str | 2021-01-01 | 数据起始日期 |
+
+#### 日志配置
+
+| 选项 | 类型 | 默认值 | 描述 |
+|------|------|--------|------|
+| LOG_LEVEL | str | INFO | 日志级别 |
+| LOG_PATH | str | ~/.fqdata/log | 日志目录 |
 
 ## 环境变量
 
 | 变量 | 类型 | 默认值 | 描述 |
 |------|------|--------|------|
-| FQBASE_ENABLED | bool | true | 通过环境变量启用模块 |
-| FQBASE_LOG_LEVEL | str | INFO | 日志级别 |
-| FQBASE_REDIS_HOST | str | localhost | Redis 主机 |
+| FQUANT_ROOT_PATH | str | ~/.fqdata | 根路径 |
+| FQUANT_FQDATA_PATH | str | ~/.fqdata | 数据路径 |
+| FQUANT_INDEX_PATH | str | None | 索引路径 |
+| FQUANT_START_DATE | str | 2021-01-01 | 起始日期 |
+| MONGODB_URI | str | mongodb://localhost:27017 | MongoDB URI |
+| REDIS_HOST | str | localhost | Redis 主机 |
+| REDIS_PORT | int | 6379 | Redis 端口 |
+| REDIS_PASSWORD | str | None | Redis 密码 |
+| CHROME_DRIVER_PATH | str | /usr/local/bin/chromedriver | ChromeDriver 路径 |
+
+## 配置优先级
+
+1. 环境变量 → 2. .env 文件 → 3. config.ini → 4. 默认值
 
 ## 配置示例
 
 ### 最小配置
 
-```yaml
-fqbase:
-  enabled: true
+```bash
+# .env
+MONGODB_URI=mongodb://localhost:27017
 ```
 
 ### 完整配置
 
-```yaml
-fqbase:
-  enabled: true
-  version: "1.0.0"
-  
-event_bus:
-  enabled: true
-  max_history: 100
-  async: false
-
-logger:
-  level: DEBUG
-  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-  handlers:
-    - console
-    - file
-
-notification:
-  enabled: true
-  channels:
-    - WECOM
-    - SERVERCHAN
+```bash
+# .env
+MONGODB_URI=mongodb://user:pass@host:27017
+REDIS_HOST=redis.example.com
+REDIS_PORT=6379
+REDIS_PASSWORD=secret
+FQUANT_ROOT_PATH=/data/fquant
+LOG_LEVEL=DEBUG
 ```
 
-## 配置优先级
+```yaml
+# logging.yaml
+version: 1
+formatters:
+  default:
+    format: '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+handlers:
+  console:
+    class: logging.StreamHandler
+  file:
+    class: logging.handlers.RotatingFileHandler
+    filename: /data/fquant/logs/app.log
+root:
+  level: INFO
+  handlers: [console, file]
+```
 
-配置值按以下顺序解析（从高到低）：
+## 动态配置
 
-1. 环境变量
-2. 命令行参数
-3. 配置文件
-4. 默认值
+### 更新缓存配置
+
+```python
+from FQBase.Config import CacheConfig, set_cache_config
+
+new_config = CacheConfig(
+    cache_type="redis",
+    redis_host="new-host",
+    redis_port=6379
+)
+set_cache_config(new_config)
+```
+
+### 监听配置变更
+
+```python
+from FQBase.Config import ConfigWatcher, watch_config
+
+def on_change(key, value):
+    logger.info(f"Config changed: {key} = {value}")
+
+watcher = watch_config(["MONGODB_URI", "REDIS_HOST"])
+watcher.add_callback(on_change)
+```
 
 ## 相关文档
 
